@@ -8,7 +8,15 @@
         <div id="remotes"></div>
         <script src="bundle.js"></script>
         <script>
-
+            window.c = new ConversantAPI();
+            var p = new m.Auth.ProfileInfo('a','b','c',new m.Auth.OrganizationRoles('d'),'e')
+            c.addTeamMember(p).then(function(res){
+                alert('got the result')
+                console.log('res',res)
+            },function(err){
+                console.log('err',err)
+            })
+            //self.postMessage(JSON.stringify(p),'*');
         </script>
     </body>
 </html>
