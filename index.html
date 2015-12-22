@@ -68,11 +68,11 @@
             <p>You application is hosted in an iframe. Commonication with the iframe is brokered through the <code>window.postMessage</code> api.  The main conversant application connects to the cluster via a websocket.  Messages all have a strong <code>type</code>.  These types are the basis for interacting with the system.  For more information on the <code>types</code> that are available to use as a thirs party developer, view the <code>types</code> documentation.</p>
 
             <ul>
-              <li><code>conversant root</code> is the conversant.im site that maintains the websocket connection to the backend cluster.</li>
-              <li><code>hosted application</code> referse to all applications that are loaded in the <code>personal</code> or <code>sync</code> iframes.  These applications are communicated with over the <code>postMessage</code> channel.</li>
+              <li><code>host</code> is the conversant.im site that maintains the websocket connection to the backend cluster.</li>
+              <li><code>application</code> referse to all applications that are loaded in the <code>personal</code> or <code>sync</code> iframes.  These applications are communicated with over the <code>postMessage</code> channel.</li>
             </ul>
 
-            <p>Data that enters the system via the websocket is pused to applications to react to.  Additionally data that is pushed onto the stream will eventually make its way to the cluster via the websocket and results will be pushed down to the <code>conversant root</code> and then made available to your <code>hosted application</code>.</p>
+            <p>Data that enters the system via the websocket is pused to applications to react to.  Additionally data that is pushed onto the stream will eventually make its way to the cluster via the websocket and results will be pushed down to the <code>host</code> and then made available to your <code>application</code>.</p>
 
             <h2><a id="user-content-usage" class="anchor" href="#usage" aria-hidden="true"><span class="octicon octicon-link"></span></a>Usage</h2>
 
@@ -96,6 +96,78 @@
 
 <pre lang="nodejs"><code>node build.js
 </code></pre>
+
+            <h2><a id="user-content-getting-started" class="anchor" href="#getting-started" aria-hidden="true"><span class="octicon octicon-link"></span></a>Getting Started</h2>
+
+            <h3><a id="user-content-register-your-application" class="anchor" href="#register-your-application" aria-hidden="true"><span class="octicon octicon-link"></span></a>Register your application</h3>
+
+            <p>TODO: docs on where and how to register your application with conversant.im
+              NOTE: people will require SSL certs for self hosted applicatons
+              NOTE: public vs. private apps
+              NOTE: include the <code>origin</code> the app will be hosted on</p>
+
+            <h3><a id="user-content-the-code" class="anchor" href="#the-code" aria-hidden="true"><span class="octicon octicon-link"></span></a>The Code</h3>
+
+            <p>A full reference of types and API documentation can be found here: <a href="http://conversant-im.github.io/conversant-client-api/docs.html">http://conversant-im.github.io/conversant-client-api/docs.html</a></p>
+
+            <div class="highlight highlight-source-js"><pre><span class="pl-k">var</span> conversant <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">ConversantAPI</span>();
+<span class="pl-smi">conversant</span>.<span class="pl-en">init</span>(<span class="pl-k">function</span>(<span class="pl-smi">appInit</span>){
+  <span class="pl-k">var</span> profile <span class="pl-k">=</span> <span class="pl-smi">appInit</span>.<span class="pl-c1">profile</span>; <span class="pl-c">// This is of type m.Auth.ProfileInfo</span>
+  <span class="pl-k">var</span> collaboration <span class="pl-k">=</span> <span class="pl-smi">appInit</span>.<span class="pl-smi">collaboration</span>; <span class="pl-c">// This is of type m.Collaboration.Collaboration</span>
+  <span class="pl-k">var</span> team <span class="pl-k">=</span> <span class="pl-smi">appInit</span>.<span class="pl-smi">team</span>; <span class="pl-c">// This is of type m.Collaboration.SyncUserEvent[]</span>
+  <span class="pl-k">var</span> peers <span class="pl-k">=</span> <span class="pl-smi">appInit</span>.<span class="pl-smi">peers</span>; <span class="pl-c">// This is of type m.Peers.PeerState[]</span>
+
+  <span class="pl-c">// we can listen for types that our application can respond to like this.</span>
+  <span class="pl-smi">conversant</span>.<span class="pl-en">addResponder</span>(<span class="pl-smi">m</span>.<span class="pl-smi">Collaboration</span>.<span class="pl-smi">SyncViewEvent</span>.<span class="pl-c1">type</span>(),<span class="pl-k">function</span>(<span class="pl-smi">sync</span>){
+    <span class="pl-c">// sync will be of type m.Collaboration.SyncViewEvent</span>
+  });
+
+  <span class="pl-c">// alternatively if you prefer to deal with an Rx.Subscription directly</span>
+  <span class="pl-c">// See documentation on RxJS for ways of working with subscriptions</span>
+  <span class="pl-k">var</span> subscription <span class="pl-k">=</span> <span class="pl-smi">conversant</span>.<span class="pl-en">addResponder</span>(<span class="pl-smi">m</span>.<span class="pl-smi">Collaboration</span>.<span class="pl-smi">SyncViewEvent</span>.<span class="pl-c1">type</span>());
+
+
+  <span class="pl-c">// Here is an example of calling the API to add a guest account.</span>
+  <span class="pl-k">var</span> guest <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">m.Auth</span>.<span class="pl-en">ProfileInfo</span>(<span class="pl-smi">profile</span>.<span class="pl-smi">orgId</span>, <span class="pl-s"><span class="pl-pds">'</span>email<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>some@email.com<span class="pl-pds">'</span></span>, <span class="pl-smi">m</span>.<span class="pl-smi">Auth</span>.<span class="pl-smi">OrganizationRoles</span>.<span class="pl-en">guest</span>(), <span class="pl-s"><span class="pl-pds">'</span>Sponge Bob<span class="pl-pds">'</span></span>);
+
+  <span class="pl-smi">conversant</span>.<span class="pl-en">addGuest</span>(guest).<span class="pl-en">then</span>(<span class="pl-k">function</span>(<span class="pl-smi">primaryProfile</span>){
+    <span class="pl-c">// addGuest returns a Promise that will be filled with m.Auth.PrimaryProfile</span>
+    <span class="pl-k">var</span> guestProfile <span class="pl-k">=</span> primaryProfile;   <span class="pl-c">// type m.Auth.PrimaryProfile</span>
+  });
+});</pre></div>
+
+            <h3><a id="user-content-word-of-caution-on-promise" class="anchor" href="#word-of-caution-on-promise" aria-hidden="true"><span class="octicon octicon-link"></span></a>Word of Caution on Promise</h3>
+
+            <p>Do not use Promise API when events happen in close time proximaty to one another.  Use <code>addResponder</code> instead and filter the data for your expected result.  Here is an example of what <code>NOT TO DO</code>.</p>
+
+            <div class="highlight highlight-source-js"><pre><span class="pl-k">var</span> bob <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">m.Auth</span>.<span class="pl-en">ProfileInfo</span>(<span class="pl-smi">profile</span>.<span class="pl-smi">orgId</span>, <span class="pl-s"><span class="pl-pds">'</span>email<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>some@email.com<span class="pl-pds">'</span></span>, <span class="pl-smi">m</span>.<span class="pl-smi">Auth</span>.<span class="pl-smi">OrganizationRoles</span>.<span class="pl-en">guest</span>(), <span class="pl-s"><span class="pl-pds">'</span>Sponge Bob<span class="pl-pds">'</span></span>);
+<span class="pl-k">var</span> patrick <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">m.Auth</span>.<span class="pl-en">ProfileInfo</span>(<span class="pl-smi">profile</span>.<span class="pl-smi">orgId</span>, <span class="pl-s"><span class="pl-pds">'</span>email<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>some2@email.com<span class="pl-pds">'</span></span>, <span class="pl-smi">m</span>.<span class="pl-smi">Auth</span>.<span class="pl-smi">OrganizationRoles</span>.<span class="pl-en">guest</span>(), <span class="pl-s"><span class="pl-pds">'</span>Patrick<span class="pl-pds">'</span></span>);
+
+<span class="pl-smi">conversant</span>.<span class="pl-en">addGuest</span>(bob).<span class="pl-en">then</span>(<span class="pl-k">function</span>(<span class="pl-smi">primaryProfile</span>){
+  <span class="pl-en">console</span>.<span class="pl-c1">log</span>(<span class="pl-s"><span class="pl-pds">'</span>bob?<span class="pl-pds">'</span></span>,primaryProfile);
+});
+<span class="pl-smi">conversant</span>.<span class="pl-en">addGuest</span>(patrick).<span class="pl-en">then</span>(<span class="pl-k">function</span>(<span class="pl-smi">primaryProfile</span>){
+  <span class="pl-en">console</span>.<span class="pl-c1">log</span>(<span class="pl-s"><span class="pl-pds">'</span>patrick?<span class="pl-pds">'</span></span>,primaryProfile);
+});
+
+<span class="pl-c">// The order that these events will be serviced by the backend cluster is Not garenteed.  </span>
+<span class="pl-c">// So for example it is possible that `patrick` returned before `bob` or `bob` then `patric`.</span>
+<span class="pl-c">// In addition which ever one is returned first will fill BOTH promises.</span>
+</pre></div>
+
+            <p>The order that these events will be serviced by the backend cluster is Not garenteed. So for example it is possible that <code>patrick</code> returned before <code>bob</code> or <code>bob</code> then <code>patric</code>. In addition which ever one is returned first will fill BOTH promises.  So for example if patric was returned first.  You would get.
+              *<code>&gt; bob? &lt;patric object&gt;</code>
+              *<code>&gt; patrick? &lt;patric object&gt;</code></p>
+
+            <p>If you need to predictably handle these you would do it as follows.</p>
+
+            <div class="highlight highlight-source-js"><pre><span class="pl-smi">conversant</span>.<span class="pl-en">addResponder</span>(<span class="pl-smi">m</span>.<span class="pl-smi">Auth</span>.<span class="pl-smi">PrimaryProfile</span>.<span class="pl-c1">type</span>(),<span class="pl-k">function</span>(<span class="pl-smi">profile</span>){
+  <span class="pl-k">if</span>( <span class="pl-smi">profile</span>.<span class="pl-smi">primary</span>.<span class="pl-smi">fullName</span> <span class="pl-k">==</span> <span class="pl-s"><span class="pl-pds">'</span>Sponge Bob<span class="pl-pds">'</span></span> ){
+    <span class="pl-c">// do stuff..</span>
+  }<span class="pl-k">else</span> <span class="pl-k">if</span>(<span class="pl-smi">profile</span>.<span class="pl-smi">primary</span>.<span class="pl-smi">fullName</span> <span class="pl-k">==</span> <span class="pl-s"><span class="pl-pds">'</span>Patrick<span class="pl-pds">'</span></span>){
+    <span class="pl-c">// other stuff</span>
+  }
+});</pre></div>
           </article>
 
         </section>
