@@ -105,8 +105,8 @@ conversant.addGuest(patrick).then(function(primaryProfile){
 
 ```
 The order that these events will be serviced by the backend cluster is Not garenteed. So for example it is possible that `patrick` returned before `bob` or `bob` then `patric`. In addition which ever one is returned first will fill BOTH promises.  So for example if patric was returned first.  You would get.
-`> bob? <patric object>`
-`> patrick? <patric object>`
+*`> bob? <patric object>`
+*`> patrick? <patric object>`
 
 If you need to predictably handle these you would do it as follows.
 ```javascript
