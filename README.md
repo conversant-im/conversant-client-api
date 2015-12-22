@@ -10,7 +10,7 @@ Your application can exist in 2 `states`.
 * `personal` is the application state that each individual user sees the application in the `application panel`.  This state is the workspace that is unique to each user as they prepare content to be collaborated on in the `sync` state.
 * `sync` is a shared application view that is common to all users that are present in the collaboration.  Each users interactions to your app in the `sync` state should update all other views accordingly.
 
-// TODO IMG
+![diagram](http://conversant-im.github.io/conversant-client-api/images/api1.png)
 
 #### A word on restoring state.
 Your application is responsible for reporting `view state` when a user enter messages into the chat stream.  In addition users can `restore` state at the instance of a paticular chat message.  Your application will receive this restore state and must respond to restore your applications state to the one reported.
