@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Class: API</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Class: API</h1>
+
+    
+
+
+
+
+<section>
+
+<header>
+    
+        <h2>API</h2>
+        
+            <div class="class-description">API
+base class for api implementation.</div>
+        
+    
+</header>
+
+<article>
+    <div class="container-overview">
+    
+        
+
+    
+    <h2>Constructor</h2>
+    
+
+    <h4 class="name" id="API"><span class="type-signature"></span>new API<span class="signature">()</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="conversant-api.js.html">conversant-api.js</a>, <a href="conversant-api.js.html#line10">line 10</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+    </div>
+
+    
+
+    
+
+    
+
+     
+
+    
+
+    
+
+    
+        <h3 class="subsection-title">Methods</h3>
+
+        
+            
+
+    
+
+    <h4 class="name" id="addGuest"><span class="type-signature"></span>addGuest<span class="signature">(profile)</span><span class="type-signature"> &rarr; {Promise}</span></h4>
+
+    
+
+
+
+<div class="description">
+    addGuest(profile:Auth.ProfileInfo):Future[Auth.PrimaryProfile]
+Add a guest account to the system.  You will need to pass in the provider type and unique
+id for that provider.  Examples of providers and valid id are:
+   provider: 'email',  id: 'user@gmail.com'
+   or
+   provider: 'phone', id: '+1.777.222.1111'
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>profile</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="Auth.ProfileInfo.html">Auth.ProfileInfo</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">profile for the new guest of type 'm.Auth.ProfileInfo'</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="conversant-api.js.html">conversant-api.js</a>, <a href="conversant-api.js.html#line63">line 63</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    promise  that will be filled with {Auth.PrimaryProfile}
+This function returns a promise that will be filled with an instance of
+'m.Auth.PrimaryProfile' for the guest that was created
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Promise</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="addResponder"><span class="type-signature"></span>addResponder<span class="signature">(type, fun)</span><span class="type-signature"> &rarr; {Rx.Subscription}</span></h4>
+
+    
+
+
+
+<div class="description">
+    addResponder
+The method allows you to register handlers for data of a certain 'type'.  When data of this
+type passes through the stream each of your registered handlers will be called with an
+opportunity to react on this data.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>type</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">A String indicating the ES6 class name that you want to subscribe to</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>fun</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The function that will receive data. The data will be instances of the
+type parameter passed in.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="conversant-api.js.html">conversant-api.js</a>, <a href="conversant-api.js.html#line34">line 34</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Rx.Subscription</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="syncUser"><span class="type-signature"></span>syncUser<span class="signature">(sync)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    def syncUser(sync:Collaboration.SyncUserEvent):Unit
+Synchronize user state.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>sync</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="Collaboration.SyncUserEvent.html">Collaboration.SyncUserEvent</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The synchronize event to be shared with other users on the system.  This parameter is
+of type 'm.Collaboration.SyncUserEvent'</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="conversant-api.js.html">conversant-api.js</a>, <a href="conversant-api.js.html#line80">line 80</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="syncView"><span class="type-signature"></span>syncView<span class="signature">(sync)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    def syncView(sync:Collaboration.SyncViewEvent):Unit
+Synchronize view/app state in the synchronization pannel.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>sync</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">m.Collaboration.SyncViewEvent</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The synchronize event bring application state in sync.  This parameter is
+of type 'm.Collaboration.SyncViewEvent'</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="conversant-api.js.html">conversant-api.js</a>, <a href="conversant-api.js.html#line93">line 93</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+    
+
+    
+
+    
+</article>
+
+</section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="API.html">API</a></li><li><a href="Apps.App.html">App</a></li><li><a href="Auth.OrganizationRoles.html">OrganizationRoles</a></li><li><a href="Auth.PrimaryProfile.html">PrimaryProfile</a></li><li><a href="Auth.ProfileInfo.html">ProfileInfo</a></li><li><a href="Auth.UserAction.html">UserAction</a></li><li><a href="Auth.UserState.html">UserState</a></li><li><a href="Collaboration.SyncUserEvent.html">SyncUserEvent</a></li><li><a href="Collaboration.SyncViewEvent.html">SyncViewEvent</a></li><li><a href="Collaboration.ViewerState.html">ViewerState</a></li><li><a href="ConversantAPI.html">ConversantAPI</a></li><li><a href="Geom.Transform3d.html">Transform3d</a></li><li><a href="Model.html">Model</a></li><li><a href="Resource.html">Resource</a></li><li><a href="Resource.Resource.html">Resource</a></li><li><a href="Type.html">Type</a></li></ul><h3>Namespaces</h3><ul><li><a href="Apps.html">Apps</a></li><li><a href="Auth.html">Auth</a></li><li><a href="Collaboration.html">Collaboration</a></li><li><a href="Geom.html">Geom</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Tue Dec 22 2015 12:05:14 GMT-0800 (PST)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: model.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: model.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>"use strict"
+
+/**
+ * @class Type
+ * Helper class for doing runtime type checking and error reporting.
+ */
+class Type{
+    static check(inst, type){
+        if( ! (inst instanceof type) ) {
+            throw new Error('[ERROR] Type Check failed. ' + typeof(inst) + ' is not ' + type)
+        }
+        return inst
+    }
+    static check(inst, type, fail){
+        if( ! (inst instanceof type) ) {
+            fail(new Error('[ERROR] Type Check failed. ' + typeof(inst) + ' is not ' + type))
+        }
+        return inst
+    }
+}
+
+/**
+ * @class Model
+ * Base type for all `Model` types in the system.
+ */
+class Model{
+    /**
+     *
+     * @param type {String} the full class name of the type be instantiated.
+     */
+    constructor(type){
+        this.$type = type;
+        console.log('created type: '+ type);
+    }
+}
+
+/**
+ * @namespace Auth
+ */
+let Auth = {};
+
+/**
+ * @class OrganizationRoles
+ * Construct an organization role.
+ */
+Auth.OrganizationRoles = class extends Model{
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    static type(){ return 'm.Auth.OrganizationRoles'}
+    constructor(role){
+        super(Auth.OrganizationRoles.type());
+        this.role = role;
+    }
+
+    /**
+     * Return OrganizationRoles TEAM
+     * @returns {OrganizationRoles}
+     */
+    static team(){ return new OrganizationRoles("team"); }
+    /**
+     * Return OrganizationRoles ADMIN
+     * @returns {OrganizationRoles}
+     */
+    static admin(){ return new OrganizationRoles("admin"); }
+    /**
+     * Return OrganizationRoles OWNER
+     * @returns {OrganizationRoles}
+     */
+    static owner(){ return new OrganizationRoles("owner"); }
+    /**
+     * Return OrganizationRoles ORGANIZATION
+     * @returns {OrganizationRoles}
+     */
+    static organization(){ return new OrganizationRoles("organization"); }
+    /**
+     * Return OrganizationRoles GUEST
+     * @returns {OrganizationRoles}
+     */
+    static guest(){ return new OrganizationRoles("guest"); }
+}
+
+/**
+ * @class ProfileInfo
+ * A simple view of a provider for a user.  Users can have many providers for many different organization.
+ * Users will typically have 1 provider="conversant" per orgId.
+ */
+Auth.ProfileInfo = class extends Model{
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    static type(){ return 'm.Auth.ProfileInfo'}
+
+    /**
+     *
+     * @param orgId {String}
+     * @param provider {String}
+     * @param id {String}
+     * @param role {Auth.OrganizationRoles}
+     * @param fullName {String}
+     */
+    constructor(orgId, provider, id, role, fullName){
+        super(Auth.ProfileInfo.type())
+        this.orgId = new String(orgId)
+        this.provider = new String(provider)
+        this.id = new String(id)
+        this.role = Type.check(role,Auth.OrganizationRoles)
+        this.fullName = new String(fullName)
+    }
+}
+
+/**
+ * @class PrimaryProfile
+ * A list of profiles that are known for that user under that organiztion.
+ * The primary will be a provider of type "conversant"
+ */
+Auth.PrimaryProfile = class extends Model{
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    static type(){ return 'm.Auth.PrimaryProfile'}
+
+    /**
+     *
+     * @param primary {Auth.ProfileInfo}
+     * @param providers {Auth.ProfileInfo[]}
+     */
+    constructor(primary, providers){
+        super(Auth.PrimaryProfile.type())
+        this.primary = Type.check(primary,Auth.ProfileInfo)
+        this.providers = providers.map( p => Type.check(primary,Auth.ProfileInfo) )
+    }
+}
+
+/**
+ * @class UserState
+ * Used to pass a user action that requires synchronization by the system.
+ */
+Auth.UserState = class extends Model{
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    static type(){ return 'm.Auth.UserState'}
+
+    /**
+     *
+     * @param isOnline {Boolean}
+     * @param action {Auth.UserState}
+     * @param state {Map}
+     */
+    constructor(isOnline, action, state){
+        super(Auth.UserState.type())
+        this.isOnline = new Boolean(isOnline)
+        this.action = Type.check(action, Auth.UserState)
+        this.state = state
+    }
+
+}
+
+/**
+ * @class UserAction
+ * Some User level event that requies syncing.
+ */
+Auth.UserAction = class extends Model{
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    static type(){ return 'm.Auth.UserAction'}
+
+    /**
+     *
+     * @param action {String}
+     */
+    constructor(action){
+        super(Auth.UserAction.type())
+        this.action = new String(action)
+    }
+
+    /**
+     * None User Action
+     * @returns {Auth.UserAction}
+     */
+    static none(){ return Auth.UserAction("none") }
+    /**
+     * typing User Action
+     * @returns {Auth.UserAction}
+     */
+    static typing(){ return Auth.UserAction("typing") }
+    /**
+     * online User Action
+     * @returns {Auth.UserAction}
+     */
+    static online(){ return Auth.UserAction("online") }
+    /**
+     * presence User Action
+     * @returns {Auth.UserAction}
+     */
+    static presence(){ return Auth.UserAction("presence") }
+    /**
+     * offline User Action
+     * @returns {Auth.UserAction}
+     */
+    static offline(){ return Auth.UserAction("offline") }
+    /**
+     * collaborationEnter User Action
+     * @returns {Auth.UserAction}
+     */
+    static collaborationEnter(){ return Auth.UserAction("collaborationEnter") }
+
+}
+
+/**
+ * @namespace Collaboration
+ */
+let Collaboration = {};
+
+/**
+ * @class ViewerState
+ * Used by applications to sync the view state of a sync panel.
+ */
+Collaboration.ViewerState = class extends Model{
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    static type(){ return 'm.Collaboration.ViewerState'}
+
+    /**
+     *
+     * @param app {Apps.App}
+     * @param resource {Resource.Resource}
+     * @param sampleTimeMs {Number}
+     * @param settings {Map}
+     * @param transform {Geom.Transform3d}
+     */
+    constructor(app, resource, sampleTimeMs, settings, transform){
+        super(Collaboration.ViewerState.type())
+        this.app = Type.check(app, Apps.App)
+        this.resource = Type.check(resource, Resource.Resource)
+        this.sampleTimeMs = new Number(sampleTimeMs)
+        this.settings = settings
+        this.transform = Type.check(transform, Geom.Transform3d)
+    }
+}
+
+/**
+ * @class SyncViewEvent
+ * Application Event to Sync the View state.
+ */
+Collaboration.SyncViewEvent = class extends Model{
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    static type(){ return 'm.Collaboration.SyncViewEvent'}
+
+    /**
+     *
+     * @param collaborationId {String}
+     * @param orgId {String}
+     * @param profile {Auth.ProfileInfo}
+     * @param viewerState {Collaboration.ViewerState}
+     */
+    constructor(collaborationId, orgId, profile, viewerState){
+        super(Collaboration.SyncViewEvent.type())
+        this.collaborationId = new String(collaborationId)
+        this.orgId = new String(orgId)
+        this.profile = Type.check(profile, Auth.ProfileInfo)
+        this.viewerState = Type.check(viewerState, Collaboration.ViewerState)
+    }
+}
+
+/**
+ * @class SyncUserEvent
+ * System level event for passing user state.
+ */
+Collaboration.SyncUserEvent = class extends Model{
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    static type(){ return 'm.Collaboration.SyncUserEvent'}
+
+    /**
+     *
+     * @param collaborationId {String}
+     * @param orgId {String}
+     * @param profile {Auth.ProfileInfo}
+     * @param userState {Auth.UserState}
+     */
+    constructor(collaborationId, orgId, profile, userState){
+        super(Collaboration.SyncUserEvent.type())
+        this.collaborationId = new String(collaborationId)
+        this.orgId = new String(orgId)
+        this.profile = Type.check(profile, Auth.ProfileInfo)
+        this.userState = Type.check(userState, Auth.UserState)
+    }
+}
+
+/**
+ * @namespace Apps
+ */
+let Apps = {};
+
+/**
+ * @class App
+ * Identifies an application of the system.
+ */
+Apps.App = class extends Model{
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    static type(){ return 'm.Apps.App'}
+
+    /**
+     *
+     * @param id {String}
+     * @param name {String}
+     * @param args {String}
+     */
+    constructor(id, name, args){
+        super(Apps.App.type())
+        this.id = new String(id)
+        this.name = new String(name)
+        this.args = args
+    }
+}
+
+/**
+ * @namespace Resource
+ */
+let Resource = {};
+
+/**
+ * @class Resource
+ */
+Resource.Resource = class extends Model{
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    static type(){ return 'm.Resource.Resource'}
+
+    /**
+     * @param uri {String}
+     * @param contentType {String}
+     * @param thumbnail {String}
+     */
+    constructor( uri, contentType, thumbnail ){
+        super(Resource.Resource.type())
+        this.uri = new String(uri)
+        this.contentType = new String(contentType)
+        this.thumbnail = new String(thumbnail)
+    }
+}
+
+/**
+ * @namespace Geom
+ */
+let Geom = {};
+
+/**
+ * @class Transform3d
+ * A 3D transformation
+ */
+Geom.Transform3d = class extends Model{
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    static type(){ return 'm.Geom.Transform3d'}
+
+    /**
+     *
+     * @param matrix {number[]}
+     */
+    constructor(matrix){
+        super(Geom.Transform3d.type())
+        this.matrix = matrix.map( x => new Number(x))
+        assert( this.matrix.length == (4 * 4) )
+    }
+
+    /**
+     * The identity matrix
+     * @returns {number[]}
+     */
+    static identity(){
+        return [1, 0, 0, 0,
+                0, 1, 0, 0,
+                0, 0, 1, 0,
+                0, 0, 0, 1]
+    }
+}
+
+
+module.exports = {
+    Type: Type,
+    Auth:{
+        OrganizationRoles: Auth.OrganizationRoles,
+        ProfileInfo: Auth.ProfileInfo
+    },
+    Collaboration:{
+        ViewerState: Collaboration.ViewerState,
+        SyncViewEvent: Collaboration.SyncViewEvent
+    },
+    Apps:{
+        App: Apps.App
+    },
+    Geom:{
+        Transform3d: Geom.Transform3d
+    },
+    Resource: {
+        Resource: Resource.Resource
+    }
+}
+
+
+// Expose to None NODE.js clients
+// TODO make this an option so we do not pollute the namespace
+window.m = module.exports
+
+
+
+
+
+
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="API.html">API</a></li><li><a href="Apps.App.html">App</a></li><li><a href="Auth.OrganizationRoles.html">OrganizationRoles</a></li><li><a href="Auth.PrimaryProfile.html">PrimaryProfile</a></li><li><a href="Auth.ProfileInfo.html">ProfileInfo</a></li><li><a href="Auth.UserAction.html">UserAction</a></li><li><a href="Auth.UserState.html">UserState</a></li><li><a href="Collaboration.SyncUserEvent.html">SyncUserEvent</a></li><li><a href="Collaboration.SyncViewEvent.html">SyncViewEvent</a></li><li><a href="Collaboration.ViewerState.html">ViewerState</a></li><li><a href="ConversantAPI.html">ConversantAPI</a></li><li><a href="Geom.Transform3d.html">Transform3d</a></li><li><a href="Model.html">Model</a></li><li><a href="Resource.html">Resource</a></li><li><a href="Resource.Resource.html">Resource</a></li><li><a href="Type.html">Type</a></li></ul><h3>Namespaces</h3><ul><li><a href="Apps.html">Apps</a></li><li><a href="Auth.html">Auth</a></li><li><a href="Collaboration.html">Collaboration</a></li><li><a href="Geom.html">Geom</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Tue Dec 22 2015 12:05:14 GMT-0800 (PST)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
