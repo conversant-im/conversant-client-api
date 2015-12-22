@@ -2,6 +2,13 @@
 Javascript API for conversant.im apps.
 Write custom applications that allow you and your team to collaborate and store conversation and view state `in context`. 
 
+## Index
+* [conversant.im](https://www.conversant.im)
+* [developer api](http://conversant-im.github.io/conversant-client-api/)
+* [api documentation](http://conversant-im.github.io/conversant-client-api/docs.html)
+* [live chat](https://nxtwv.conversant.im/client)
+* [issues / bugs](https://github.com/conversant-im/conversant-client-api/issues)
+
 ## Overview
 This api relies on a streaming based approach.  The underly data types describe the messages that can be pushed onto the stream or subscribed to react to when seen on the stream.  The first part of this documentation will server to outline terminology used in the system, as well as illustrate the flow of data through the system architecture. 
 
