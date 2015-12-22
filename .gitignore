@@ -5,6 +5,7 @@ tmp
 .history
 dist
 node_modules
+docs
 /.idea
 /*.iml
 /out

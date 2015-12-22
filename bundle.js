@@ -1,6 +1,7 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 "use strict";
-//import API from './api'
+
+var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
 
 var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
@@ -13,6 +14,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 var Rx = require('rx-lite');
 var m = require('./model');
 var mapper = require('./mapper');
+
+/**
+ * @class API
+ * base class for api implementation.
+ */
 
 var API = (function () {
 	function API(observer, observable) {
@@ -40,9 +46,11 @@ var API = (function () {
    * type passes through the stream each of your registered handlers will be called with an
    * opportunity to react on this data.
    *
-   * @param type - A String indicating the ES6 class name that you want to subscribe to
-   * @param fun - The function that will receive data. The data will be instances of the
+   * @param type {String} A String indicating the ES6 class name that you want to subscribe to
+   * @param fun {function} The function that will receive data. The data will be instances of the
    * type parameter passed in.
+   *
+   * @returns {Rx.Subscription}
       */
 
 	}, {
@@ -52,7 +60,7 @@ var API = (function () {
 			this.channelSubject.filter(function (x) {
 				return x.$type === type;
 			}).subscribe(subject);
-			var subscription = subject.subscribe(function (x) {
+			return subject.subscribe(function (x) {
 				return fun(x);
 			});
 		}
@@ -77,9 +85,9 @@ var API = (function () {
    *    or
    *    provider: 'phone', id: '+1.777.222.1111'
    *
-   * @param profile:m.Auth.ProfileInfo
+   * @param profile {Auth.ProfileInfo}
    * profile for the new guest of type 'm.Auth.ProfileInfo'
-   * @returns promise:Promise<m.Auth.PrimaryProfile>
+   * @returns promise {Promise} that will be filled with {Auth.PrimaryProfile}
    * This function returns a promise that will be filled with an instance of
    * 'm.Auth.PrimaryProfile' for the guest that was created
       */
@@ -101,7 +109,7 @@ var API = (function () {
    * def syncUser(sync:Collaboration.SyncUserEvent):Unit
    * Synchronize user state.
    *
-   * @param sync:m.Collaboration.SyncUserEvent
+   * @param sync {Collaboration.SyncUserEvent}
    * The synchronize event to be shared with other users on the system.  This parameter is
    * of type 'm.Collaboration.SyncUserEvent'
       */
@@ -117,7 +125,7 @@ var API = (function () {
    * def syncView(sync:Collaboration.SyncViewEvent):Unit
    * Synchronize view/app state in the synchronization pannel.
    *
-   * @param sync:m.Collaboration.SyncViewEvent
+   * @param sync {m.Collaboration.SyncViewEvent}
    * The synchronize event bring application state in sync.  This parameter is
    * of type 'm.Collaboration.SyncViewEvent'
       */
@@ -128,6 +136,8 @@ var API = (function () {
 			m.Type.check(profile, m.Collaboration.SyncViewEvent);
 			this.send(this.mapper.write(sync));
 		}
+
+		// ** INIT types...
 
 		// def sendChatMessage(author:Auth.ProfileInfo, cId: String, v:Collaboration.ViewerState, content:Option[String], contentClass:Collaboration.ContentClass):Unit
 		// def getUser(uuid:String):Future[Auth.PrimaryProfile]
@@ -149,8 +159,45 @@ var API = (function () {
 	return API;
 })();
 
+/**
+ * AppParameters is the initilization parameter passed in to your application.
+ * @see {ConversantAPI}
+ */
+
+var AppParameters =
+
+/**
+ *
+ * @param collaboration {Collaboration.Collaboration}
+ * @param profile {Auth.ProfileInfo}
+ * @param team {Collaboration.SyncUserEvent[]}
+    * @param peers {Peers.PeerState[]}
+    */
+function AppParameters(collaboration, profile, team, peers) {
+	_classCallCheck(this, AppParameters);
+
+	this.collaboration = Type.check(collaboration, m.Collaboration.Collaboration);
+	this.profile = Type.check(profile, m.Auth.ProfileInfo);
+	this.team = team.map(function (t) {
+		return Type.check(t, m.Collaboration.SyncUserEvent);
+	});
+	this.peers = peers.map(function (p) {
+		return Type.check(p, m.Peers.PeerState);
+	});
+};
+
+/**
+ * @class ConversantAPI
+ * An implementation of the API that uses window.postMessage as the channel to Observe and addEventListener(message)
+ * as the Observable
+ */
+
 var ConversantAPI = (function (_API) {
 	_inherits(ConversantAPI, _API);
+
+	/**
+  * Construct {Rx.Observer} and {Rx.Observable} for communication with the parent frame.
+  */
 
 	function ConversantAPI() {
 		_classCallCheck(this, ConversantAPI);
@@ -176,11 +223,37 @@ var ConversantAPI = (function (_API) {
 		return _possibleConstructorReturn(this, Object.getPrototypeOf(ConversantAPI).call(this, observer, observable));
 	}
 
+	/**
+  *
+  * @param fun {function}
+  * The function to be called when the application can be initialized.  The function will be called with
+  * an instance of {AppParameters}.
+     */
+
+	_createClass(ConversantAPI, [{
+		key: 'init',
+		value: function init(fun) {
+			var pCollaboration = _get(Object.getPrototypeOf(ConversantAPI.prototype), '_addFuture', this).call(this, m.Apps.InitCollaboration.type());
+			var pPofile = _get(Object.getPrototypeOf(ConversantAPI.prototype), '_addFuture', this).call(this, m.Apps.InitProfile.type());
+			var pTeam = _get(Object.getPrototypeOf(ConversantAPI.prototype), '_addFuture', this).call(this, m.Apps.InitTeam.type());
+			var pPeers = _get(Object.getPrototypeOf(ConversantAPI.prototype), '_addFuture', this).call(this, m.Apps.InitPeers.type());
+
+			Promise.all([pCollaboration, pPofile, pTeam, pPeers]).then(function (vals) {
+				var appParams = new AppParameters(vals[0], vals[1], vals[2], vals[3]);
+				fun(appParams);
+			});
+			_get(Object.getPrototypeOf(ConversantAPI.prototype), '_send', this).call(this, _get(Object.getPrototypeOf(ConversantAPI.prototype), 'mapper', this).write(m.Apps.Init));
+		}
+	}]);
+
 	return ConversantAPI;
 })(API);
 
-module.exports = ConversantAPI;
-window.ConversantAPI = ConversantAPI;
+module.exports = {
+	ConversantAPI: ConversantAPI,
+	AppParameters: AppParameters
+};
+window.ConversantAPI = module.exports;
 
 },{"./mapper":2,"./model":3,"rx-lite":5}],2:[function(require,module,exports){
 "use strict";
@@ -214,6 +287,11 @@ module.exports = {
 },{}],3:[function(require,module,exports){
 "use strict";
 
+/**
+ * @class Type
+ * Helper class for doing runtime type checking and error reporting.
+ */
+
 var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
@@ -225,385 +303,1126 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var Type = (function () {
-    function Type() {
-        _classCallCheck(this, Type);
+  function Type() {
+    _classCallCheck(this, Type);
+  }
+
+  _createClass(Type, null, [{
+    key: 'check',
+    value: function check(inst, type) {
+      if (!(inst instanceof type)) {
+        throw new Error('[ERROR] Type Check failed. ' + (typeof inst === 'undefined' ? 'undefined' : _typeof(inst)) + ' is not ' + type);
+      }
+      return inst;
     }
+  }, {
+    key: 'check',
+    value: function check(inst, type, fail) {
+      if (!(inst instanceof type)) {
+        fail(new Error('[ERROR] Type Check failed. ' + (typeof inst === 'undefined' ? 'undefined' : _typeof(inst)) + ' is not ' + type));
+      }
+      return inst;
+    }
+  }]);
 
-    _createClass(Type, null, [{
-        key: 'check',
-        value: function check(inst, type) {
-            if (!(inst instanceof type)) {
-                throw new Error('[ERROR] Type Check failed. ' + (typeof inst === 'undefined' ? 'undefined' : _typeof(inst)) + ' is not ' + type);
-            }
-            return inst;
-        }
-    }, {
-        key: 'check',
-        value: function check(inst, type, fail) {
-            if (!(inst instanceof type)) {
-                fail(new Error('[ERROR] Type Check failed. ' + (typeof inst === 'undefined' ? 'undefined' : _typeof(inst)) + ' is not ' + type));
-            }
-            return inst;
-        }
-    }]);
-
-    return Type;
+  return Type;
 })();
 
-var Model = function Model(type) {
-    _classCallCheck(this, Model);
+/**
+ * @class Model
+ * Base type for all `Model` types in the system.
+ */
 
-    this.$type = type;
-    console.log('created type: ' + type);
+var Model =
+/**
+ *
+ * @param type {String} the full class name of the type be instantiated.
+ */
+function Model(type) {
+  _classCallCheck(this, Model);
+
+  this.$type = type;
+  console.log('created type: ' + type);
 };
 
+/**
+ * @namespace Auth
+ */
+
 var Auth = {};
+
+/**
+ * @class OrganizationRoles
+ * Construct an organization role.
+ */
 Auth.OrganizationRoles = (function (_Model) {
-    _inherits(_class, _Model);
+  _inherits(_class, _Model);
 
-    _createClass(_class, null, [{
-        key: 'type',
-        value: function type() {
-            return 'm.Auth.OrganizationRoles';
-        }
-    }]);
+  _createClass(_class, null, [{
+    key: 'type',
 
-    function _class(role) {
-        _classCallCheck(this, _class);
-
-        var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(_class).call(this, Auth.OrganizationRoles.type()));
-
-        _this.role = role;
-        return _this;
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    value: function type() {
+      return 'm.Auth.OrganizationRoles';
     }
+  }]);
 
-    _createClass(_class, null, [{
-        key: 'team',
-        value: function team() {
-            return new OrganizationRoles("team");
-        }
-    }, {
-        key: 'admin',
-        value: function admin() {
-            return new OrganizationRoles("admin");
-        }
-    }, {
-        key: 'owner',
-        value: function owner() {
-            return new OrganizationRoles("owner");
-        }
-    }, {
-        key: 'organization',
-        value: function organization() {
-            return new OrganizationRoles("organization");
-        }
-    }]);
+  function _class(role) {
+    _classCallCheck(this, _class);
 
-    return _class;
+    var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(_class).call(this, Auth.OrganizationRoles.type()));
+
+    _this.role = role;
+    return _this;
+  }
+
+  /**
+   * Return OrganizationRoles TEAM
+   * @returns {OrganizationRoles}
+   */
+
+  _createClass(_class, null, [{
+    key: 'team',
+    value: function team() {
+      return new OrganizationRoles("team");
+    }
+    /**
+     * Return OrganizationRoles ADMIN
+     * @returns {OrganizationRoles}
+     */
+
+  }, {
+    key: 'admin',
+    value: function admin() {
+      return new OrganizationRoles("admin");
+    }
+    /**
+     * Return OrganizationRoles OWNER
+     * @returns {OrganizationRoles}
+     */
+
+  }, {
+    key: 'owner',
+    value: function owner() {
+      return new OrganizationRoles("owner");
+    }
+    /**
+     * Return OrganizationRoles ORGANIZATION
+     * @returns {OrganizationRoles}
+     */
+
+  }, {
+    key: 'organization',
+    value: function organization() {
+      return new OrganizationRoles("organization");
+    }
+    /**
+     * Return OrganizationRoles GUEST
+     * @returns {OrganizationRoles}
+     */
+
+  }, {
+    key: 'guest',
+    value: function guest() {
+      return new OrganizationRoles("guest");
+    }
+  }]);
+
+  return _class;
 })(Model);
+
+/**
+ * @class ProfileInfo
+ * A simple view of a provider for a user.  Users can have many providers for many different organization.
+ * Users will typically have 1 provider="conversant" per orgId.
+ */
 Auth.ProfileInfo = (function (_Model2) {
-    _inherits(_class2, _Model2);
+  _inherits(_class2, _Model2);
 
-    _createClass(_class2, null, [{
-        key: 'type',
-        value: function type() {
-            return 'm.Auth.ProfileInfo';
-        }
-    }]);
+  _createClass(_class2, null, [{
+    key: 'type',
 
-    function _class2(orgId, provider, id, role, fullName) {
-        _classCallCheck(this, _class2);
-
-        var _this2 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class2).call(this, Auth.ProfileInfo.type()));
-
-        _this2.orgId = new String(orgId);
-        _this2.provider = new String(provider);
-        _this2.id = new String(id);
-        _this2.role = Type.check(role, Auth.OrganizationRoles);
-        _this2.fullName = new String(fullName);
-        return _this2;
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    value: function type() {
+      return 'm.Auth.ProfileInfo';
     }
 
-    return _class2;
+    /**
+     *
+     * @param orgId {String}
+     * @param provider {String}
+     * @param id {String}
+     * @param role {Auth.OrganizationRoles}
+     * @param fullName {String}
+     */
+
+  }]);
+
+  function _class2(orgId, provider, id, role, fullName) {
+    _classCallCheck(this, _class2);
+
+    var _this2 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class2).call(this, Auth.ProfileInfo.type()));
+
+    _this2.orgId = new String(orgId);
+    _this2.provider = new String(provider);
+    _this2.id = new String(id);
+    _this2.role = Type.check(role, Auth.OrganizationRoles);
+    _this2.fullName = new String(fullName);
+    return _this2;
+  }
+
+  return _class2;
 })(Model);
+
+/**
+ * @class PrimaryProfile
+ * A list of profiles that are known for that user under that organiztion.
+ * The primary will be a provider of type "conversant"
+ */
 Auth.PrimaryProfile = (function (_Model3) {
-    _inherits(_class3, _Model3);
+  _inherits(_class3, _Model3);
 
-    _createClass(_class3, null, [{
-        key: 'type',
-        value: function type() {
-            return 'm.Auth.PrimaryProfile';
-        }
-    }]);
+  _createClass(_class3, null, [{
+    key: 'type',
 
-    function _class3(primary, providers) {
-        _classCallCheck(this, _class3);
-
-        var _this3 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class3).call(this, Auth.PrimaryProfile.type()));
-
-        _this3.primary = Type.check(primary, Auth.ProfileInfo);
-        _this3.providers = providers.map(function (p) {
-            return Type.check(primary, Auth.ProfileInfo);
-        });
-        return _this3;
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    value: function type() {
+      return 'm.Auth.PrimaryProfile';
     }
 
-    return _class3;
+    /**
+     *
+     * @param primary {Auth.ProfileInfo}
+     * @param providers {Auth.ProfileInfo[]}
+     */
+
+  }]);
+
+  function _class3(primary, providers) {
+    _classCallCheck(this, _class3);
+
+    var _this3 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class3).call(this, Auth.PrimaryProfile.type()));
+
+    _this3.primary = Type.check(primary, Auth.ProfileInfo);
+    _this3.providers = providers.map(function (p) {
+      return Type.check(primary, Auth.ProfileInfo);
+    });
+    return _this3;
+  }
+
+  return _class3;
 })(Model);
+
+/**
+ * @class UserState
+ * Used to pass a user action that requires synchronization by the system.
+ */
 Auth.UserState = (function (_Model4) {
-    _inherits(_class4, _Model4);
+  _inherits(_class4, _Model4);
 
-    _createClass(_class4, null, [{
-        key: 'type',
-        value: function type() {
-            return 'm.Auth.UserState';
-        }
-    }]);
+  _createClass(_class4, null, [{
+    key: 'type',
 
-    function _class4(isOnline, action, state) {
-        _classCallCheck(this, _class4);
-
-        var _this4 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class4).call(this, Auth.UserState.type()));
-
-        _this4.isOnline = new Boolean(isOnline);
-        _this4.action = Type.check(action, Auth.UserState);
-        _this4.state = state;
-        return _this4;
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    value: function type() {
+      return 'm.Auth.UserState';
     }
 
-    return _class4;
+    /**
+     *
+     * @param isOnline {Boolean}
+     * @param action {Auth.UserState}
+     * @param state {Map}
+     */
+
+  }]);
+
+  function _class4(isOnline, action, state) {
+    _classCallCheck(this, _class4);
+
+    var _this4 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class4).call(this, Auth.UserState.type()));
+
+    _this4.isOnline = new Boolean(isOnline);
+    _this4.action = Type.check(action, Auth.UserState);
+    _this4.state = state;
+    return _this4;
+  }
+
+  return _class4;
 })(Model);
+
+/**
+ * @class UserAction
+ * Some User level event that requies syncing.
+ */
 Auth.UserAction = (function (_Model5) {
-    _inherits(_class5, _Model5);
+  _inherits(_class5, _Model5);
 
-    _createClass(_class5, null, [{
-        key: 'type',
-        value: function type() {
-            return 'm.Auth.UserAction';
-        }
-    }]);
+  _createClass(_class5, null, [{
+    key: 'type',
 
-    function _class5(action) {
-        _classCallCheck(this, _class5);
-
-        var _this5 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class5).call(this, Auth.UserAction.type()));
-
-        _this5.action = new String(action);
-        return _this5;
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    value: function type() {
+      return 'm.Auth.UserAction';
     }
 
-    _createClass(_class5, null, [{
-        key: 'none',
-        value: function none() {
-            return Auth.UserAction("none");
-        }
-    }, {
-        key: 'typing',
-        value: function typing() {
-            return Auth.UserAction("typing");
-        }
-    }, {
-        key: 'online',
-        value: function online() {
-            return Auth.UserAction("online");
-        }
-    }, {
-        key: 'presence',
-        value: function presence() {
-            return Auth.UserAction("presence");
-        }
-    }, {
-        key: 'offline',
-        value: function offline() {
-            return Auth.UserAction("offline");
-        }
-    }, {
-        key: 'collaborationEnter',
-        value: function collaborationEnter() {
-            return Auth.UserAction("collaborationEnter");
-        }
-    }]);
+    /**
+     *
+     * @param action {String}
+     */
 
-    return _class5;
+  }]);
+
+  function _class5(action) {
+    _classCallCheck(this, _class5);
+
+    var _this5 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class5).call(this, Auth.UserAction.type()));
+
+    _this5.action = new String(action);
+    return _this5;
+  }
+
+  /**
+   * None User Action
+   * @returns {Auth.UserAction}
+   */
+
+  _createClass(_class5, null, [{
+    key: 'none',
+    value: function none() {
+      return Auth.UserAction("none");
+    }
+    /**
+     * typing User Action
+     * @returns {Auth.UserAction}
+     */
+
+  }, {
+    key: 'typing',
+    value: function typing() {
+      return Auth.UserAction("typing");
+    }
+    /**
+     * online User Action
+     * @returns {Auth.UserAction}
+     */
+
+  }, {
+    key: 'online',
+    value: function online() {
+      return Auth.UserAction("online");
+    }
+    /**
+     * presence User Action
+     * @returns {Auth.UserAction}
+     */
+
+  }, {
+    key: 'presence',
+    value: function presence() {
+      return Auth.UserAction("presence");
+    }
+    /**
+     * offline User Action
+     * @returns {Auth.UserAction}
+     */
+
+  }, {
+    key: 'offline',
+    value: function offline() {
+      return Auth.UserAction("offline");
+    }
+    /**
+     * collaborationEnter User Action
+     * @returns {Auth.UserAction}
+     */
+
+  }, {
+    key: 'collaborationEnter',
+    value: function collaborationEnter() {
+      return Auth.UserAction("collaborationEnter");
+    }
+  }]);
+
+  return _class5;
 })(Model);
 
+/**
+ * @namespace Collaboration
+ */
 var Collaboration = {};
+
+/**
+ * @class ViewerState
+ * Used by applications to sync the view state of a sync panel.
+ */
 Collaboration.ViewerState = (function (_Model6) {
-    _inherits(_class6, _Model6);
+  _inherits(_class6, _Model6);
 
-    _createClass(_class6, null, [{
-        key: 'type',
-        value: function type() {
-            return 'm.Collaboration.ViewerState';
-        }
-    }]);
+  _createClass(_class6, null, [{
+    key: 'type',
 
-    function _class6(app, resource, sampleTimeMs, settings, transform) {
-        _classCallCheck(this, _class6);
-
-        var _this6 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class6).call(this, Collaboration.ViewerState.type()));
-
-        _this6.app = Type.check(app, Apps.App);
-        _this6.resource = Type.check(resource, Resource.Resource);
-        _this6.sampleTimeMs = new Number(sampleTimeMs);
-        _this6.settings = settings;
-        _this6.transform = Type.check(transform, Geom.Transform3d);
-        return _this6;
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    value: function type() {
+      return 'm.Collaboration.ViewerState';
     }
 
-    return _class6;
+    /**
+     *
+     * @param app {Apps.App}
+     * @param resource {Resource.Resource}
+     * @param sampleTimeMs {Number}
+     * @param settings {Map}
+     * @param transform {Geom.Transform3d}
+     */
+
+  }]);
+
+  function _class6(app, resource, sampleTimeMs, settings, transform) {
+    _classCallCheck(this, _class6);
+
+    var _this6 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class6).call(this, Collaboration.ViewerState.type()));
+
+    _this6.app = Type.check(app, Apps.App);
+    _this6.resource = Type.check(resource, Resource.Resource);
+    _this6.sampleTimeMs = new Number(sampleTimeMs);
+    _this6.settings = settings;
+    _this6.transform = Type.check(transform, Geom.Transform3d);
+    return _this6;
+  }
+
+  return _class6;
 })(Model);
+
+/**
+ * @class SyncViewEvent
+ * Application Event to Sync the View state.
+ */
 Collaboration.SyncViewEvent = (function (_Model7) {
-    _inherits(_class7, _Model7);
+  _inherits(_class7, _Model7);
 
-    _createClass(_class7, null, [{
-        key: 'type',
-        value: function type() {
-            return 'm.Collaboration.SyncViewEvent';
-        }
-    }]);
+  _createClass(_class7, null, [{
+    key: 'type',
 
-    function _class7(collaborationId, orgId, profile, viewerState) {
-        _classCallCheck(this, _class7);
-
-        var _this7 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class7).call(this, Collaboration.SyncViewEvent.type()));
-
-        _this7.collaborationId = new String(collaborationId);
-        _this7.orgId = new String(orgId);
-        _this7.profile = Type.check(profile, Auth.ProfileInfo);
-        _this7.viewerState = Type.check(viewerState, Collaboration.ViewerState);
-        return _this7;
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    value: function type() {
+      return 'm.Collaboration.SyncViewEvent';
     }
 
-    return _class7;
+    /**
+     *
+     * @param collaborationId {String}
+     * @param orgId {String}
+     * @param profile {Auth.ProfileInfo}
+     * @param viewerState {Collaboration.ViewerState}
+     */
+
+  }]);
+
+  function _class7(collaborationId, orgId, profile, viewerState) {
+    _classCallCheck(this, _class7);
+
+    var _this7 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class7).call(this, Collaboration.SyncViewEvent.type()));
+
+    _this7.collaborationId = new String(collaborationId);
+    _this7.orgId = new String(orgId);
+    _this7.profile = Type.check(profile, Auth.ProfileInfo);
+    _this7.viewerState = Type.check(viewerState, Collaboration.ViewerState);
+    return _this7;
+  }
+
+  return _class7;
 })(Model);
+
+/**
+ * @class SyncUserEvent
+ * System level event for passing user state.
+ */
 Collaboration.SyncUserEvent = (function (_Model8) {
-    _inherits(_class8, _Model8);
+  _inherits(_class8, _Model8);
 
-    _createClass(_class8, null, [{
-        key: 'type',
-        value: function type() {
-            return 'm.Collaboration.SyncUserEvent';
-        }
-    }]);
+  _createClass(_class8, null, [{
+    key: 'type',
 
-    function _class8(collaborationId, orgId, profile, userState) {
-        _classCallCheck(this, _class8);
-
-        var _this8 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class8).call(this, Collaboration.SyncUserEvent.type()));
-
-        _this8.collaborationId = new String(collaborationId);
-        _this8.orgId = new String(orgId);
-        _this8.profile = Type.check(profile, Auth.ProfileInfo);
-        _this8.userState = Type.check(userState, Auth.UserState);
-        return _this8;
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    value: function type() {
+      return 'm.Collaboration.SyncUserEvent';
     }
 
-    return _class8;
+    /**
+     *
+     * @param collaborationId {String}
+     * @param orgId {String}
+     * @param profile {Auth.ProfileInfo}
+     * @param userState {Auth.UserState}
+     */
+
+  }]);
+
+  function _class8(collaborationId, orgId, profile, userState) {
+    _classCallCheck(this, _class8);
+
+    var _this8 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class8).call(this, Collaboration.SyncUserEvent.type()));
+
+    _this8.collaborationId = new String(collaborationId);
+    _this8.orgId = new String(orgId);
+    _this8.profile = Type.check(profile, Auth.ProfileInfo);
+    _this8.userState = Type.check(userState, Auth.UserState);
+    return _this8;
+  }
+
+  return _class8;
 })(Model);
 
+/**
+ * @class Collaboration
+ */
+Collaboration.Collaboration = (function (_Model9) {
+  _inherits(_class9, _Model9);
+
+  _createClass(_class9, null, [{
+    key: 'type',
+
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    value: function type() {
+      return 'm.Collaboration.Collaboration';
+    }
+
+    /**
+     *
+     * @param id {String}
+     * @param orgId {String}
+     * @param collaborationType {Collaboration.CollaborationType}
+     * @param members {Auth.ProfileInfo[]}
+     * @param name OPTIONAL {String}
+     * @param avatarUrl OPTIONAL {String}
+     * @param cover OPTIONAL {String}
+     * @param content {Collaboration.Content[]}
+     * @param settings {Map}
+     */
+
+  }]);
+
+  function _class9(id, orgId, collaborationType, members, name, avatarUrl, cover, content, settings) {
+    _classCallCheck(this, _class9);
+
+    var _this9 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class9).call(this, Collaboration.Collaboration.type()));
+
+    _this9.id = new String(id);
+    _this9.orgId = new String(orgId);
+    _this9.collaborationType = Type.check(collaborationType, Collaboration.CollaborationType);
+    _this9.members = members.map(function (m) {
+      return Type.check(m, Auth.ProfileInfo);
+    });
+    _this9.name = typeof name === "undefined" ? [] : [new String(name)];
+    _this9.avatarUrl = typeof avatarUrl === "undefined" ? [] : [new String(avatarUrl)];
+    _this9.cover = typeof cover === "undefined" ? [] : [new String(cover)];
+    _this9.content = content.map(function (c) {
+      return Type.check(c, Collaboration.Content);
+    });
+    _this9.settings = settings;
+    return _this9;
+  }
+
+  return _class9;
+})(Model);
+
+/**
+ * @class CollaborationType
+ */
+Collaboration.CollaborationType = (function (_Model10) {
+  _inherits(_class10, _Model10);
+
+  _createClass(_class10, null, [{
+    key: 'type',
+
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    value: function type() {
+      return 'm.Collaboration.CollaborationType';
+    }
+
+    /**
+     *
+     * @param name {String}
+     */
+
+  }]);
+
+  function _class10(name) {
+    _classCallCheck(this, _class10);
+
+    var _this10 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class10).call(this, Collaboration.CollaborationType.type()));
+
+    _this10.name = new String(name);
+    return _this10;
+  }
+
+  /**
+   * AD-HOC collaboration type
+   * @returns {Collaboration.CollaborationType}
+   */
+
+  _createClass(_class10, null, [{
+    key: 'adHoc',
+    value: function adHoc() {
+      return Collaboration.CollaborationType("ad-hoc");
+    }
+    /**
+     * GROUP collaboration type
+     * @returns {Collaboration.CollaborationType}
+     */
+
+  }, {
+    key: 'group',
+    value: function group() {
+      return Collaboration.CollaborationType("group");
+    }
+    /**
+     * CHANNEL collaboration type
+     * @returns {Collaboration.CollaborationType}
+     */
+
+  }, {
+    key: 'channel',
+    value: function channel() {
+      return Collaboration.CollaborationType("channel");
+    }
+    /**
+     * QUEUE collaboration type
+     * @returns {Collaboration.CollaborationType}
+     */
+
+  }, {
+    key: 'queue',
+    value: function queue() {
+      return Collaboration.CollaborationType("queue");
+    }
+  }]);
+
+  return _class10;
+})(Model);
+
+/**
+ * @class Content
+ */
+Collaboration.Content = (function (_Model11) {
+  _inherits(_class11, _Model11);
+
+  _createClass(_class11, null, [{
+    key: 'type',
+
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    value: function type() {
+      return 'm.Collaboration.Content';
+    }
+
+    /**
+     *
+     * @param id {String}
+     * @param collaborationId {String}
+     * @param orgId {String}
+     * @param timestamp {String}
+     * @param authors {Auth.ProfileInfo[]}
+     * @param seen {Auth.ProfileInfo[]}
+     * @param path OPTIONAL {String}
+     * @param sentiment OPTIONAL {String}
+     * @param nlp OPTIONAL {String}
+     * @param content OPTIONAL {String}
+     * @param meta {Map}
+     * @param contentType {String}
+     * @param contentClass {Collaboration.ContentClass}
+     * @param contentUri {String}
+     * @param view {Collaboration.ViewerState}
+     */
+
+  }]);
+
+  function _class11(id, collaborationId, orgId, timestamp, authors, seen, path, sentiment, nlp, content, meta, contentType, contentClass, contentUri, view) {
+    _classCallCheck(this, _class11);
+
+    var _this11 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class11).call(this, Collaboration.Content.type()));
+
+    _this11.id = new String(id);
+    _this11.collaborationId = new String(collaborationId);
+    _this11.orgId = new String(orgId);
+    _this11.timestamp = new String(timestamp);
+    _this11.authors = authors.map(function (a) {
+      return Type.check(a, Auth.ProfileInfo);
+    });
+    _this11.seen = seen.map(function (s) {
+      return Type.check(s, Auth.ProfileInfo);
+    });
+    _this11.path = typeof path === "undefined" ? [] : [new String(path)];
+    _this11.nlp = typeof nlp === "undefined" ? [] : [new String(nlp)];
+    _this11.sentiment = typeof sentiment === "undefined" ? [] : [new String(sentiment)];
+    _this11.content = typeof content === "undefined" ? [] : [new String(content)];
+    _this11.meta = meta;
+    _this11.contentType = new String(contentType);
+    _this11.contentClass = Type.check(contentClass, Collaboration.ContentClass);
+    _this11.contentUri = new String(contentUri);
+    _this11.view = Type.check(view, Collaboration.ViewerState);
+    return _this11;
+  }
+
+  return _class11;
+})(Model);
+
+/**
+ * @class ContentClass
+ */
+Collaboration.ContentClass = (function (_Model12) {
+  _inherits(_class12, _Model12);
+
+  _createClass(_class12, null, [{
+    key: 'type',
+
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    value: function type() {
+      return 'm.Collaboration.ContentClass';
+    }
+
+    /**
+     *
+     * @param className {String}
+     */
+
+  }]);
+
+  function _class12(className) {
+    _classCallCheck(this, _class12);
+
+    var _this12 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class12).call(this, Collaboration.ContentClass.type()));
+
+    _this12["class"] = new String(className);
+    return _this12;
+  }
+
+  /**
+   * MSG content class
+   * @returns {Collaboration.ContentClass}
+   */
+
+  _createClass(_class12, null, [{
+    key: 'msg',
+    value: function msg() {
+      return Collaboration.ContentClass("msg");
+    }
+    /**
+     * EVENT content class
+     * @returns {Collaboration.ContentClass}
+     */
+
+  }, {
+    key: 'event',
+    value: function event() {
+      return Collaboration.ContentClass("event");
+    }
+    /**
+     * LINK content class
+     * @returns {Collaboration.ContentClass}
+     */
+
+  }, {
+    key: 'link',
+    value: function link() {
+      return Collaboration.ContentClass("link");
+    }
+    /**
+     * GHOST content class
+     * @returns {Collaboration.ContentClass}
+     */
+
+  }, {
+    key: 'ghost',
+    value: function ghost() {
+      return Collaboration.ContentClass("ghost");
+    }
+    /**
+     * COMPACT content class
+     * @returns {Collaboration.ContentClass}
+     */
+
+  }, {
+    key: 'compact',
+    value: function compact() {
+      return Collaboration.ContentClass("compact");
+    }
+  }]);
+
+  return _class12;
+})(Model);
+
+/**
+ * @namespace Apps
+ */
 var Apps = {};
-Apps.App = (function (_Model9) {
-    _inherits(_class9, _Model9);
 
-    _createClass(_class9, null, [{
-        key: 'type',
-        value: function type() {
-            return 'm.Apps.App';
-        }
-    }]);
+/**
+ * @class App
+ * Identifies an application of the system.
+ */
+Apps.App = (function (_Model13) {
+  _inherits(_class13, _Model13);
 
-    function _class9(id, name, args) {
-        _classCallCheck(this, _class9);
+  _createClass(_class13, null, [{
+    key: 'type',
 
-        var _this9 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class9).call(this, Apps.App.type()));
-
-        _this9.id = new String(id);
-        _this9.name = new String(name);
-        _this9.args = args;
-        return _this9;
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    value: function type() {
+      return 'm.Apps.App';
     }
 
-    return _class9;
+    /**
+     *
+     * @param id {String}
+     * @param name {String}
+     * @param args {String}
+     */
+
+  }]);
+
+  function _class13(id, name, args) {
+    _classCallCheck(this, _class13);
+
+    var _this13 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class13).call(this, Apps.App.type()));
+
+    _this13.id = new String(id);
+    _this13.name = new String(name);
+    _this13.args = args;
+    return _this13;
+  }
+
+  return _class13;
 })(Model);
 
+/**
+ * @class Init
+ * Signal the host that the app is ready for initialization.
+ */
+Apps.Init = (function (_Model14) {
+  _inherits(_class14, _Model14);
+
+  _createClass(_class14, null, [{
+    key: 'type',
+
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    value: function type() {
+      return 'm.Apps.Init';
+    }
+
+    /**
+     *
+     */
+
+  }]);
+
+  function _class14() {
+    _classCallCheck(this, _class14);
+
+    return _possibleConstructorReturn(this, Object.getPrototypeOf(_class14).call(this, Apps.Init.type()));
+  }
+
+  return _class14;
+})(Model);
+
+/**
+ * @class InitProfile
+ */
+Apps.InitProfile = (function (_Model15) {
+  _inherits(_class15, _Model15);
+
+  _createClass(_class15, null, [{
+    key: 'type',
+
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    value: function type() {
+      return 'm.Apps.InitProfile';
+    }
+
+    /**
+     *
+     * @param profile {Auth.ProfileInfo}
+     */
+
+  }]);
+
+  function _class15(profile) {
+    _classCallCheck(this, _class15);
+
+    var _this15 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class15).call(this, Apps.InitProfile.type()));
+
+    _this15.profile = Type.check(profile, Auth.ProfileInfo);
+    return _this15;
+  }
+
+  return _class15;
+})(Model);
+
+/**
+ * @class InitCollaboration
+ */
+Apps.InitCollaboration = (function (_Model16) {
+  _inherits(_class16, _Model16);
+
+  _createClass(_class16, null, [{
+    key: 'type',
+
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    value: function type() {
+      return 'm.Apps.InitCollaboration';
+    }
+
+    /**
+     *
+     * @param collaboration {Collaboration.Collaboration}
+     */
+
+  }]);
+
+  function _class16(collaboration) {
+    _classCallCheck(this, _class16);
+
+    var _this16 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class16).call(this, Apps.InitCollaboration.type()));
+
+    _this16.collaboration = Type.check(collaboration, Collaboration.Collaboration);
+    return _this16;
+  }
+
+  return _class16;
+})(Model);
+
+/**
+ * @class InitTeam
+ */
+Apps.InitTeam = (function (_Model17) {
+  _inherits(_class17, _Model17);
+
+  _createClass(_class17, null, [{
+    key: 'type',
+
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    value: function type() {
+      return 'm.Apps.InitTeam';
+    }
+
+    /**
+     *
+     * @param team {Collaboration.SyncUserEvent[]}
+     */
+
+  }]);
+
+  function _class17(team) {
+    _classCallCheck(this, _class17);
+
+    var _this17 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class17).call(this, Apps.InitTeam.type()));
+
+    _this17.team = team.map(function (t) {
+      return Type.check(t, Collaboration.SyncUserEvent);
+    });
+    return _this17;
+  }
+
+  return _class17;
+})(Model);
+
+/**
+ * @class InitPeers
+ */
+Apps.InitPeers = (function (_Model18) {
+  _inherits(_class18, _Model18);
+
+  _createClass(_class18, null, [{
+    key: 'type',
+
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    value: function type() {
+      return 'm.Apps.InitPeers';
+    }
+
+    /**
+     *
+     * @param peers {Peers.PeerState[]}
+     */
+
+  }]);
+
+  function _class18(peers) {
+    _classCallCheck(this, _class18);
+
+    var _this18 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class18).call(this, Apps.InitPeers.type()));
+
+    _this18.peers = peers.map(function (p) {
+      return Type.check(t, Peers.PeerState);
+    });
+    return _this18;
+  }
+
+  return _class18;
+})(Model);
+
+/**
+ * @namespace Resource
+ */
 var Resource = {};
-Resource.Resource = (function (_Model10) {
-    _inherits(_class10, _Model10);
 
-    _createClass(_class10, null, [{
-        key: 'type',
-        value: function type() {
-            return 'm.Resource.Resource';
-        }
-    }]);
+/**
+ * @class Resource
+ */
+Resource.Resource = (function (_Model19) {
+  _inherits(_class19, _Model19);
 
-    function _class10(uri, contentType, thumbnail) {
-        _classCallCheck(this, _class10);
+  _createClass(_class19, null, [{
+    key: 'type',
 
-        var _this10 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class10).call(this, Resource.Resource.type()));
-
-        _this10.uri = new String(uri);
-        _this10.contentType = new String(contentType);
-        _this10.thumbnail = new String(thumbnail);
-        return _this10;
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    value: function type() {
+      return 'm.Resource.Resource';
     }
 
-    return _class10;
+    /**
+     * @param uri {String}
+     * @param contentType {String}
+     * @param thumbnail {String}
+     */
+
+  }]);
+
+  function _class19(uri, contentType, thumbnail) {
+    _classCallCheck(this, _class19);
+
+    var _this19 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class19).call(this, Resource.Resource.type()));
+
+    _this19.uri = new String(uri);
+    _this19.contentType = new String(contentType);
+    _this19.thumbnail = new String(thumbnail);
+    return _this19;
+  }
+
+  return _class19;
 })(Model);
 
+/**
+ * @namespace Geom
+ */
 var Geom = {};
-Geom.Transform3d = (function (_Model11) {
-    _inherits(_class11, _Model11);
 
-    _createClass(_class11, null, [{
-        key: 'type',
-        value: function type() {
-            return 'm.Geom.Transform3d';
-        }
-    }]);
+/**
+ * @class Transform3d
+ * A 3D transformation
+ */
+Geom.Transform3d = (function (_Model20) {
+  _inherits(_class20, _Model20);
 
-    function _class11(matrix) {
-        _classCallCheck(this, _class11);
+  _createClass(_class20, null, [{
+    key: 'type',
 
-        var _this11 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class11).call(this, Geom.Transform3d.type()));
-
-        _this11.matrix = matrix.map(function (x) {
-            return new Number(x);
-        });
-        assert(_this11.matrix.length == 4 * 4);
-        return _this11;
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    value: function type() {
+      return 'm.Geom.Transform3d';
     }
 
-    _createClass(_class11, null, [{
-        key: 'identity',
-        value: function identity() {
-            return [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
-        }
-    }]);
+    /**
+     *
+     * @param matrix {number[]}
+     */
 
-    return _class11;
+  }]);
+
+  function _class20(matrix) {
+    _classCallCheck(this, _class20);
+
+    var _this20 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class20).call(this, Geom.Transform3d.type()));
+
+    _this20.matrix = matrix.map(function (x) {
+      return new Number(x);
+    });
+    assert(_this20.matrix.length == 4 * 4);
+    return _this20;
+  }
+
+  /**
+   * The identity matrix
+   * @returns {number[]}
+   */
+
+  _createClass(_class20, null, [{
+    key: 'identity',
+    value: function identity() {
+      return [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
+    }
+  }]);
+
+  return _class20;
 })(Model);
 
 module.exports = {
-    Type: Type,
-    Auth: {
-        OrganizationRoles: Auth.OrganizationRoles,
-        ProfileInfo: Auth.ProfileInfo
-    },
-    Collaboration: {
-        ViewerState: Collaboration.ViewerState,
-        SyncViewEvent: Collaboration.SyncViewEvent
-    },
-    Apps: {
-        App: Apps.App
-    },
-    Geom: {
-        Transform3d: Geom.Transform3d
-    },
-    Resource: {
-        Resource: Resource.Resource
-    }
+  Type: Type,
+  Auth: Auth,
+  Collaboration: Collaboration,
+  Apps: Apps,
+  Geom: Geom,
+  Resource: Resource
 };
 
 // Expose to None NODE.js clients
