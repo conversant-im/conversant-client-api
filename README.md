@@ -24,10 +24,10 @@ Your application is responsible for reporting `view state` when a user enter mes
 
 #### Data flow.
 You application is hosted in an iframe. Commonication with the iframe is brokered through the `window.postMessage` api.  The main conversant application connects to the cluster via a websocket.  Messages all have a strong `type`.  These types are the basis for interacting with the system.  For more information on the `types` that are available to use as a thirs party developer, view the `types` documentation.
-* `conversant root` is the conversant.im site that maintains the websocket connection to the backend cluster.
-* `hosted application` referse to all applications that are loaded in the `personal` or `sync` iframes.  These applications are communicated with over the `postMessage` channel.
+* `host` is the conversant.im site that maintains the websocket connection to the backend cluster.
+* `application` referse to all applications that are loaded in the `personal` or `sync` iframes.  These applications are communicated with over the `postMessage` channel.
 
-Data that enters the system via the websocket is pused to applications to react to.  Additionally data that is pushed onto the stream will eventually make its way to the cluster via the websocket and results will be pushed down to the `conversant root` and then made available to your `hosted application`.
+Data that enters the system via the websocket is pused to applications to react to.  Additionally data that is pushed onto the stream will eventually make its way to the cluster via the websocket and results will be pushed down to the `host` and then made available to your `application`.
 
 ## Usage
 ### Node
