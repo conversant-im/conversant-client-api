@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Class: SyncUserEvent</title>
+    <title>JSDoc: Class: Content</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -17,7 +17,7 @@
 
 <div id="main">
 
-    <h1 class="page-title">Class: SyncUserEvent</h1>
+    <h1 class="page-title">Class: Content</h1>
 
     
 
@@ -29,10 +29,7 @@
 <header>
     
         <h2>
-            <span class="ancestors"><a href="Collaboration.html">Collaboration</a>.</span>SyncUserEvent</h2>
-        
-            <div class="class-description">SyncUserEvent
-System level event for passing user state.</div>
+            <span class="ancestors"><a href="Collaboration.html">Collaboration</a>.</span>Content</h2>
         
     
 </header>
@@ -43,10 +40,8 @@ System level event for passing user state.</div>
         
 
     
-    <h2>Constructor</h2>
-    
 
-    <h4 class="name" id="SyncUserEvent"><span class="type-signature"></span>new SyncUserEvent<span class="signature">(collaborationId, orgId, profile, userState)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="Content"><span class="type-signature"></span>new Content<span class="signature">(id, collaborationId, orgId, timestamp, authors, seen, path, sentiment, nlp, content, meta, contentType, contentClass, contentUri, view)</span><span class="type-signature"></span></h4>
 
     
 
@@ -81,6 +76,29 @@ System level event for passing user state.</div>
     </thead>
 
     <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>id</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
     
 
         <tr>
@@ -131,13 +149,13 @@ System level event for passing user state.</div>
 
         <tr>
             
-                <td class="name"><code>profile</code></td>
+                <td class="name"><code>timestamp</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type"><a href="Auth.ProfileInfo.html">Auth.ProfileInfo</a></span>
+<span class="param-type">String</span>
 
 
             
@@ -154,13 +172,243 @@ System level event for passing user state.</div>
 
         <tr>
             
-                <td class="name"><code>userState</code></td>
+                <td class="name"><code>authors</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type"><a href="Auth.UserState.html">Auth.UserState</a></span>
+<span class="param-type">Array.&lt;<a href="Auth.ProfileInfo.html">Auth.ProfileInfo</a>></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>seen</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Array.&lt;<a href="Auth.ProfileInfo.html">Auth.ProfileInfo</a>></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>path</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">OPTIONAL</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>sentiment</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">OPTIONAL</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>nlp</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">OPTIONAL</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>content</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">OPTIONAL</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>meta</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Map</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>contentType</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>contentClass</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="Collaboration.ContentClass.html">Collaboration.ContentClass</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>contentUri</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>view</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="Collaboration.ViewerState.html">Collaboration.ViewerState</a></span>
 
 
             
@@ -211,7 +459,7 @@ System level event for passing user state.</div>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="model.js.html">model.js</a>, <a href="model.js.html#line282">line 282</a>
+        <a href="model.js.html">model.js</a>, <a href="model.js.html#line411">line 411</a>
     </li></ul></dd>
     
 
@@ -311,7 +559,7 @@ System level event for passing user state.</div>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="model.js.html">model.js</a>, <a href="model.js.html#line287">line 287</a>
+        <a href="model.js.html">model.js</a>, <a href="model.js.html#line391">line 391</a>
     </li></ul></dd>
     
 
