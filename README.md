@@ -48,3 +48,73 @@ Alternativly you can build the latest source using `node` with the following com
 ```nodejs
 node build.js
 ```
+
+## Getting Started
+### Register your application
+TODO: docs on where and how to register your application with conversant.im
+NOTE: people will require SSL certs for self hosted applicatons
+NOTE: public vs. private apps
+NOTE: include the `origin` the app will be hosted on
+
+### The Code
+A full reference of types and API documentation can be found here: [http://conversant-im.github.io/conversant-client-api/docs.html](http://conversant-im.github.io/conversant-client-api/docs.html)
+```javascript
+var conversant = new ConversantAPI();
+conversant.init(function(appInit){
+  var profile = appInit.profile; // This is of type m.Auth.ProfileInfo
+  var collaboration = appInit.collaboration; // This is of type m.Collaboration.Collaboration
+  var team = appInit.team; // This is of type m.Collaboration.SyncUserEvent[]
+  var peers = appInit.peers; // This is of type m.Peers.PeerState[]
+  
+  // we can listen for types that our application can respond to like this.
+  conversant.addResponder(m.Collaboration.SyncViewEvent.type(),function(sync){
+    // sync will be of type m.Collaboration.SyncViewEvent
+  });
+  
+  // alternatively if you prefer to deal with an Rx.Subscription directly
+  // See documentation on RxJS for ways of working with subscriptions
+  var subscription = conversant.addResponder(m.Collaboration.SyncViewEvent.type());
+  
+  
+  // Here is an example of calling the API to add a guest account.
+  var guest = new m.Auth.ProfileInfo(profile.orgId, 'email', 'some@email.com', m.Auth.OrganizationRoles.guest(), 'Sponge Bob');
+  
+  conversant.addGuest(guest).then(function(primaryProfile){
+    // addGuest returns a Promise that will be filled with m.Auth.PrimaryProfile
+    var guestProfile = primaryProfile;   // type m.Auth.PrimaryProfile
+  });
+});
+```
+
+### Word of Caution on Promise
+Do not use Promise API when events happen in close time proximaty to one another.  Use `addResponder` instead and filter the data for your expected result.  Here is an example of what `NOT TO DO`.
+```javascript
+var bob = new m.Auth.ProfileInfo(profile.orgId, 'email', 'some@email.com', m.Auth.OrganizationRoles.guest(), 'Sponge Bob');
+var patrick = new m.Auth.ProfileInfo(profile.orgId, 'email', 'some2@email.com', m.Auth.OrganizationRoles.guest(), 'Patrick');
+
+conversant.addGuest(bob).then(function(primaryProfile){
+  console.log('bob?',primaryProfile);
+});
+conversant.addGuest(patrick).then(function(primaryProfile){
+  console.log('patrick?',primaryProfile);
+});
+
+// The order that these events will be serviced by the backend cluster is Not garenteed.  
+// So for example it is possible that `patrick` returned before `bob` or `bob` then `patric`.
+// In addition which ever one is returned first will fill BOTH promises.
+
+```
+The order that these events will be serviced by the backend cluster is Not garenteed. So for example it is possible that `patrick` returned before `bob` or `bob` then `patric`. In addition which ever one is returned first will fill BOTH promises.  So for example if patric was returned first.  You would get.
+`> bob? <patric object>`
+`> patrick? <patric object>`
+
+If you need to predictably handle these you would do it as follows.
+```javascript
+conversant.addResponder(m.Auth.PrimaryProfile.type(),function(profile){
+  if( profile.primary.fullName == 'Sponge Bob' ){
+    // do stuff..
+  }else if(profile.primary.fullName == 'Patrick'){
+    // other stuff
+  }
+});
+```
