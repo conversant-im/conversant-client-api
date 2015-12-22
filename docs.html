@@ -19,7 +19,7 @@
         if(iFrameID) {
           // here you can make the height, I delete it first, then I make it again
           iFrameID.height = "";
-          iFrameID.height = iFrameID.contentWindow.document.body.scrollHeight + "px";
+          iFrameID.height = (iFrameID.contentWindow.document.body.scrollHeight+50) + "px";
         }
       }
     </script>
@@ -39,7 +39,7 @@
       <div class="inner clearfix">
         <section id="main-content">
 
-          <iframe id="idIframe" onload="iframeLoaded()" src="docs/index.html" border="0"></iframe>
+          <iframe id="idIframe" onload="iframeLoaded()" style="border:0; width: 100%;" src="docs/index.html" border="0"></iframe>
 
         </section>
 
