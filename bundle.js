@@ -1,8 +1,6 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 "use strict";
 
-var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
-
 var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
@@ -37,6 +35,7 @@ var API = (function () {
 	_createClass(API, [{
 		key: '_send',
 		value: function _send(data) {
+			console.log('channelSubject.onNext', data);
 			this.channelSubject.onNext(data);
 		}
 
@@ -60,7 +59,7 @@ var API = (function () {
 			this.channelSubject.filter(function (x) {
 				return x.$type === type;
 			}).subscribe(subject);
-			return subject.subscribe(function (x) {
+			return typeof fun === "undefined" ? subject.subscribe() : subject.subscribe(function (x) {
 				return fun(x);
 			});
 		}
@@ -75,6 +74,16 @@ var API = (function () {
 				fun(x);
 				subscription.dispose();
 			});
+		}
+	}, {
+		key: '_futurePromise',
+		value: function _futurePromise(type) {
+			var _this = this;
+
+			var p = new Promise(function (resolve, reject) {
+				_this._addFuture(type, resolve);
+			});
+			return p;
 		}
 
 		/**
@@ -95,12 +104,12 @@ var API = (function () {
 	}, {
 		key: 'addGuest',
 		value: function addGuest(profile) {
-			var _this = this;
+			var _this2 = this;
 
 			var p = new Promise(function (resolve, reject) {
 				m.Type.check(profile, m.Auth.ProfileInfo, reject);
-				_this._addFuture(m.Auth.PrimaryProfile.type(), resolve);
-				_this.send(_this.mapper.write(profile));
+				_this2._addFuture(m.Auth.PrimaryProfile.type(), resolve);
+				_this2.send(_this2.mapper.write(profile));
 			});
 			return p;
 		}
@@ -176,13 +185,13 @@ var AppParameters =
 function AppParameters(collaboration, profile, team, peers) {
 	_classCallCheck(this, AppParameters);
 
-	this.collaboration = Type.check(collaboration, m.Collaboration.Collaboration);
-	this.profile = Type.check(profile, m.Auth.ProfileInfo);
+	this.collaboration = m.Type.check(collaboration, m.Collaboration.Collaboration);
+	this.profile = m.Type.check(profile, m.Auth.ProfileInfo);
 	this.team = team.map(function (t) {
-		return Type.check(t, m.Collaboration.SyncUserEvent);
+		return m.Type.check(t, m.Collaboration.SyncUserEvent);
 	});
 	this.peers = peers.map(function (p) {
-		return Type.check(p, m.Peers.PeerState);
+		return m.Type.check(p, m.Peers.PeerState);
 	});
 };
 
@@ -203,14 +212,19 @@ var ConversantAPI = (function (_API) {
 		_classCallCheck(this, ConversantAPI);
 
 		var observer = Rx.Observer.create(function (data) {
+			console.log('postMessage', data);
 			window.top.postMessage(data, '*');
 		});
 		console.log('Observable create');
 		var observable = Rx.Observable.create(function (obs) {
 			console.log('Observable');
 			window.addEventListener('message', function (event) {
-				console.log('origin', event);
-				obs.onNext(JSON.parse(event.data));
+				console.log('message', event);
+				if (event.data && event.data != '') {
+					try {
+						obs.onNext(JSON.parse(event.data));
+					} catch (e) {}
+				}
 			}, false);
 			//worker.onerror = function (err) {
 			//	obs.onError(err);
@@ -233,16 +247,16 @@ var ConversantAPI = (function (_API) {
 	_createClass(ConversantAPI, [{
 		key: 'init',
 		value: function init(fun) {
-			var pCollaboration = _get(Object.getPrototypeOf(ConversantAPI.prototype), '_addFuture', this).call(this, m.Apps.InitCollaboration.type());
-			var pPofile = _get(Object.getPrototypeOf(ConversantAPI.prototype), '_addFuture', this).call(this, m.Apps.InitProfile.type());
-			var pTeam = _get(Object.getPrototypeOf(ConversantAPI.prototype), '_addFuture', this).call(this, m.Apps.InitTeam.type());
-			var pPeers = _get(Object.getPrototypeOf(ConversantAPI.prototype), '_addFuture', this).call(this, m.Apps.InitPeers.type());
+			var pCollaboration = this._futurePromise(m.Apps.InitCollaboration.type());
+			var pPofile = this._futurePromise(m.Apps.InitProfile.type());
+			var pTeam = this._futurePromise(m.Apps.InitTeam.type());
+			var pPeers = this._futurePromise(m.Apps.InitPeers.type());
 
 			Promise.all([pCollaboration, pPofile, pTeam, pPeers]).then(function (vals) {
-				var appParams = new AppParameters(vals[0], vals[1], vals[2], vals[3]);
+				var appParams = new AppParameters(vals[0].collaboration, vals[1].profile, vals[2].team, vals[3].peers);
 				fun(appParams);
 			});
-			_get(Object.getPrototypeOf(ConversantAPI.prototype), '_send', this).call(this, _get(Object.getPrototypeOf(ConversantAPI.prototype), 'mapper', this).write(m.Apps.Init));
+			this._send(this.mapper.write(new m.Apps.Init()));
 		}
 	}]);
 
@@ -253,7 +267,7 @@ module.exports = {
 	ConversantAPI: ConversantAPI,
 	AppParameters: AppParameters
 };
-window.ConversantAPI = module.exports;
+window.conversant = module.exports;
 
 },{"./mapper":2,"./model":3,"rx-lite":5}],2:[function(require,module,exports){
 "use strict";
@@ -308,18 +322,14 @@ var Type = (function () {
   }
 
   _createClass(Type, null, [{
-    key: 'check',
-    value: function check(inst, type) {
-      if (!(inst instanceof type)) {
-        throw new Error('[ERROR] Type Check failed. ' + (typeof inst === 'undefined' ? 'undefined' : _typeof(inst)) + ' is not ' + type);
-      }
-      return inst;
-    }
-  }, {
-    key: 'check',
+    key: "check",
     value: function check(inst, type, fail) {
       if (!(inst instanceof type)) {
-        fail(new Error('[ERROR] Type Check failed. ' + (typeof inst === 'undefined' ? 'undefined' : _typeof(inst)) + ' is not ' + type));
+        if (type.type && inst.$type && type.type() == inst.$type) {
+          // FIXME: this is a hack until we have our own mapper.
+          return inst;
+        }
+        if (typeof fail === "undefined") throw new Error('[ERROR] Type Check failed. ' + (typeof inst === "undefined" ? "undefined" : _typeof(inst)) + ' is not ' + type);else fail(new Error('[ERROR] Type Check failed. ' + (typeof inst === "undefined" ? "undefined" : _typeof(inst)) + ' is not ' + type));
       }
       return inst;
     }
@@ -359,7 +369,7 @@ Auth.OrganizationRoles = (function (_Model) {
   _inherits(_class, _Model);
 
   _createClass(_class, null, [{
-    key: 'type',
+    key: "type",
 
     /**
      * Return the full class name of this type.
@@ -385,7 +395,7 @@ Auth.OrganizationRoles = (function (_Model) {
    */
 
   _createClass(_class, null, [{
-    key: 'team',
+    key: "team",
     value: function team() {
       return new OrganizationRoles("team");
     }
@@ -395,7 +405,7 @@ Auth.OrganizationRoles = (function (_Model) {
      */
 
   }, {
-    key: 'admin',
+    key: "admin",
     value: function admin() {
       return new OrganizationRoles("admin");
     }
@@ -405,7 +415,7 @@ Auth.OrganizationRoles = (function (_Model) {
      */
 
   }, {
-    key: 'owner',
+    key: "owner",
     value: function owner() {
       return new OrganizationRoles("owner");
     }
@@ -415,7 +425,7 @@ Auth.OrganizationRoles = (function (_Model) {
      */
 
   }, {
-    key: 'organization',
+    key: "organization",
     value: function organization() {
       return new OrganizationRoles("organization");
     }
@@ -425,7 +435,7 @@ Auth.OrganizationRoles = (function (_Model) {
      */
 
   }, {
-    key: 'guest',
+    key: "guest",
     value: function guest() {
       return new OrganizationRoles("guest");
     }
@@ -443,7 +453,7 @@ Auth.ProfileInfo = (function (_Model2) {
   _inherits(_class2, _Model2);
 
   _createClass(_class2, null, [{
-    key: 'type',
+    key: "type",
 
     /**
      * Return the full class name of this type.
@@ -489,7 +499,7 @@ Auth.PrimaryProfile = (function (_Model3) {
   _inherits(_class3, _Model3);
 
   _createClass(_class3, null, [{
-    key: 'type',
+    key: "type",
 
     /**
      * Return the full class name of this type.
@@ -530,7 +540,7 @@ Auth.UserState = (function (_Model4) {
   _inherits(_class4, _Model4);
 
   _createClass(_class4, null, [{
-    key: 'type',
+    key: "type",
 
     /**
      * Return the full class name of this type.
@@ -571,7 +581,7 @@ Auth.UserAction = (function (_Model5) {
   _inherits(_class5, _Model5);
 
   _createClass(_class5, null, [{
-    key: 'type',
+    key: "type",
 
     /**
      * Return the full class name of this type.
@@ -603,7 +613,7 @@ Auth.UserAction = (function (_Model5) {
    */
 
   _createClass(_class5, null, [{
-    key: 'none',
+    key: "none",
     value: function none() {
       return Auth.UserAction("none");
     }
@@ -613,7 +623,7 @@ Auth.UserAction = (function (_Model5) {
      */
 
   }, {
-    key: 'typing',
+    key: "typing",
     value: function typing() {
       return Auth.UserAction("typing");
     }
@@ -623,7 +633,7 @@ Auth.UserAction = (function (_Model5) {
      */
 
   }, {
-    key: 'online',
+    key: "online",
     value: function online() {
       return Auth.UserAction("online");
     }
@@ -633,7 +643,7 @@ Auth.UserAction = (function (_Model5) {
      */
 
   }, {
-    key: 'presence',
+    key: "presence",
     value: function presence() {
       return Auth.UserAction("presence");
     }
@@ -643,7 +653,7 @@ Auth.UserAction = (function (_Model5) {
      */
 
   }, {
-    key: 'offline',
+    key: "offline",
     value: function offline() {
       return Auth.UserAction("offline");
     }
@@ -653,7 +663,7 @@ Auth.UserAction = (function (_Model5) {
      */
 
   }, {
-    key: 'collaborationEnter',
+    key: "collaborationEnter",
     value: function collaborationEnter() {
       return Auth.UserAction("collaborationEnter");
     }
@@ -675,7 +685,7 @@ Collaboration.ViewerState = (function (_Model6) {
   _inherits(_class6, _Model6);
 
   _createClass(_class6, null, [{
-    key: 'type',
+    key: "type",
 
     /**
      * Return the full class name of this type.
@@ -720,7 +730,7 @@ Collaboration.SyncViewEvent = (function (_Model7) {
   _inherits(_class7, _Model7);
 
   _createClass(_class7, null, [{
-    key: 'type',
+    key: "type",
 
     /**
      * Return the full class name of this type.
@@ -763,7 +773,7 @@ Collaboration.SyncUserEvent = (function (_Model8) {
   _inherits(_class8, _Model8);
 
   _createClass(_class8, null, [{
-    key: 'type',
+    key: "type",
 
     /**
      * Return the full class name of this type.
@@ -805,7 +815,7 @@ Collaboration.Collaboration = (function (_Model9) {
   _inherits(_class9, _Model9);
 
   _createClass(_class9, null, [{
-    key: 'type',
+    key: "type",
 
     /**
      * Return the full class name of this type.
@@ -861,7 +871,7 @@ Collaboration.CollaborationType = (function (_Model10) {
   _inherits(_class10, _Model10);
 
   _createClass(_class10, null, [{
-    key: 'type',
+    key: "type",
 
     /**
      * Return the full class name of this type.
@@ -893,7 +903,7 @@ Collaboration.CollaborationType = (function (_Model10) {
    */
 
   _createClass(_class10, null, [{
-    key: 'adHoc',
+    key: "adHoc",
     value: function adHoc() {
       return Collaboration.CollaborationType("ad-hoc");
     }
@@ -903,7 +913,7 @@ Collaboration.CollaborationType = (function (_Model10) {
      */
 
   }, {
-    key: 'group',
+    key: "group",
     value: function group() {
       return Collaboration.CollaborationType("group");
     }
@@ -913,7 +923,7 @@ Collaboration.CollaborationType = (function (_Model10) {
      */
 
   }, {
-    key: 'channel',
+    key: "channel",
     value: function channel() {
       return Collaboration.CollaborationType("channel");
     }
@@ -923,7 +933,7 @@ Collaboration.CollaborationType = (function (_Model10) {
      */
 
   }, {
-    key: 'queue',
+    key: "queue",
     value: function queue() {
       return Collaboration.CollaborationType("queue");
     }
@@ -939,7 +949,7 @@ Collaboration.Content = (function (_Model11) {
   _inherits(_class11, _Model11);
 
   _createClass(_class11, null, [{
-    key: 'type',
+    key: "type",
 
     /**
      * Return the full class name of this type.
@@ -1007,7 +1017,7 @@ Collaboration.ContentClass = (function (_Model12) {
   _inherits(_class12, _Model12);
 
   _createClass(_class12, null, [{
-    key: 'type',
+    key: "type",
 
     /**
      * Return the full class name of this type.
@@ -1039,7 +1049,7 @@ Collaboration.ContentClass = (function (_Model12) {
    */
 
   _createClass(_class12, null, [{
-    key: 'msg',
+    key: "msg",
     value: function msg() {
       return Collaboration.ContentClass("msg");
     }
@@ -1049,7 +1059,7 @@ Collaboration.ContentClass = (function (_Model12) {
      */
 
   }, {
-    key: 'event',
+    key: "event",
     value: function event() {
       return Collaboration.ContentClass("event");
     }
@@ -1059,7 +1069,7 @@ Collaboration.ContentClass = (function (_Model12) {
      */
 
   }, {
-    key: 'link',
+    key: "link",
     value: function link() {
       return Collaboration.ContentClass("link");
     }
@@ -1069,7 +1079,7 @@ Collaboration.ContentClass = (function (_Model12) {
      */
 
   }, {
-    key: 'ghost',
+    key: "ghost",
     value: function ghost() {
       return Collaboration.ContentClass("ghost");
     }
@@ -1079,7 +1089,7 @@ Collaboration.ContentClass = (function (_Model12) {
      */
 
   }, {
-    key: 'compact',
+    key: "compact",
     value: function compact() {
       return Collaboration.ContentClass("compact");
     }
@@ -1101,7 +1111,7 @@ Apps.App = (function (_Model13) {
   _inherits(_class13, _Model13);
 
   _createClass(_class13, null, [{
-    key: 'type',
+    key: "type",
 
     /**
      * Return the full class name of this type.
@@ -1142,7 +1152,7 @@ Apps.Init = (function (_Model14) {
   _inherits(_class14, _Model14);
 
   _createClass(_class14, null, [{
-    key: 'type',
+    key: "type",
 
     /**
      * Return the full class name of this type.
@@ -1174,7 +1184,7 @@ Apps.InitProfile = (function (_Model15) {
   _inherits(_class15, _Model15);
 
   _createClass(_class15, null, [{
-    key: 'type',
+    key: "type",
 
     /**
      * Return the full class name of this type.
@@ -1210,7 +1220,7 @@ Apps.InitCollaboration = (function (_Model16) {
   _inherits(_class16, _Model16);
 
   _createClass(_class16, null, [{
-    key: 'type',
+    key: "type",
 
     /**
      * Return the full class name of this type.
@@ -1246,7 +1256,7 @@ Apps.InitTeam = (function (_Model17) {
   _inherits(_class17, _Model17);
 
   _createClass(_class17, null, [{
-    key: 'type',
+    key: "type",
 
     /**
      * Return the full class name of this type.
@@ -1284,7 +1294,7 @@ Apps.InitPeers = (function (_Model18) {
   _inherits(_class18, _Model18);
 
   _createClass(_class18, null, [{
-    key: 'type',
+    key: "type",
 
     /**
      * Return the full class name of this type.
@@ -1327,7 +1337,7 @@ Resource.Resource = (function (_Model19) {
   _inherits(_class19, _Model19);
 
   _createClass(_class19, null, [{
-    key: 'type',
+    key: "type",
 
     /**
      * Return the full class name of this type.
@@ -1372,7 +1382,7 @@ Geom.Transform3d = (function (_Model20) {
   _inherits(_class20, _Model20);
 
   _createClass(_class20, null, [{
-    key: 'type',
+    key: "type",
 
     /**
      * Return the full class name of this type.
@@ -1407,7 +1417,7 @@ Geom.Transform3d = (function (_Model20) {
    */
 
   _createClass(_class20, null, [{
-    key: 'identity',
+    key: "identity",
     value: function identity() {
       return [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
     }

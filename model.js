@@ -5,15 +5,15 @@
  * Helper class for doing runtime type checking and error reporting.
  */
 class Type{
-    static check(inst, type){
-        if( ! (inst instanceof type) ) {
-            throw new Error('[ERROR] Type Check failed. ' + typeof(inst) + ' is not ' + type)
-        }
-        return inst
-    }
     static check(inst, type, fail){
         if( ! (inst instanceof type) ) {
-            fail(new Error('[ERROR] Type Check failed. ' + typeof(inst) + ' is not ' + type))
+            if(type.type && inst.$type && type.type() == inst.$type){// FIXME: this is a hack until we have our own mapper.
+                return inst
+            }
+            if(typeof fail === "undefined")
+                throw new Error('[ERROR] Type Check failed. ' + typeof(inst) + ' is not ' + type)
+            else
+                fail(new Error('[ERROR] Type Check failed. ' + typeof(inst) + ' is not ' + type))
         }
         return inst
     }

@@ -4,18 +4,30 @@
         <title>Conversant API Demo</title>
     </head>
     <body>
-        <div id="remotes"></div>
+        <div id="remotes">
+            <h2>Demo App</h2>
+        </div>
         <script src="bundle.js"></script>
         <script>
-            window.c = new ConversantAPI();
-            var p = new m.Auth.ProfileInfo('a','b','c',new m.Auth.OrganizationRoles('d'),'e')
+            var c = new conversant.ConversantAPI();
+            window.c = c;   // debug in console
+            /*var p = new m.Auth.ProfileInfo('a','b','c',new m.Auth.OrganizationRoles('d'),'e')
             c.addTeamMember(p).then(function(res){
                 alert('got the result')
                 console.log('res',res)
             },function(err){
                 console.log('err',err)
-            })
+            })*/
             //self.postMessage(JSON.stringify(p),'*');
+
+            c.init(function(appInit){
+                var profile = appInit.profile; // This is of type m.Auth.ProfileInfo
+                var collaboration = appInit.collaboration; // This is of type m.Collaboration.Collaboration
+                var team = appInit.team; // This is of type m.Collaboration.SyncUserEvent[]
+                var peers = appInit.peers; // This is of type m.Peers.PeerState[]
+
+                alert('init...')
+            });
         </script>
     </body>
 </html>

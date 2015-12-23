@@ -16,6 +16,7 @@ class API {
 	}
 
 	_send(data){
+		console.log('channelSubject.onNext', data)
 		this.channelSubject.onNext(data)
 	}
 
@@ -44,6 +45,13 @@ class API {
 			fun(x)
 			subscription.dispose()
 		})
+	}
+
+	_futurePromise(type){
+		let p = new Promise((resolve, reject) => {
+			this._addFuture(type, resolve)
+		})
+		return p
 	}
 
 	/**
@@ -127,10 +135,10 @@ class AppParameters{
      * @param peers {Peers.PeerState[]}
      */
 	constructor(collaboration, profile, team, peers){
-		this.collaboration = Type.check(collaboration, m.Collaboration.Collaboration)
-		this.profile = Type.check(profile, m.Auth.ProfileInfo)
-		this.team = team.map( (t) => Type.check(t, m.Collaboration.SyncUserEvent) )
-		this.peers = peers.map( (p) => Type.check(p, m.Peers.PeerState) )
+		this.collaboration = m.Type.check(collaboration, m.Collaboration.Collaboration)
+		this.profile = m.Type.check(profile, m.Auth.ProfileInfo)
+		this.team = team.map( (t) => m.Type.check(t, m.Collaboration.SyncUserEvent) )
+		this.peers = peers.map( (p) => m.Type.check(p, m.Peers.PeerState) )
 	}
 }
 
@@ -146,14 +154,19 @@ class ConversantAPI extends API{
 	 */
 	constructor(){
 		let observer = Rx.Observer.create((data) => {
+			console.log('postMessage', data)
 			window.top.postMessage(data, '*')
 		})
 		console.log('Observable create')
 		let observable = Rx.Observable.create( (obs) => {
 			console.log('Observable')
 			window.addEventListener('message', (event) => {
-				console.log('origin',event)
-				obs.onNext(JSON.parse(event.data))
+				console.log('message',event)
+				if(event.data && event.data != ''){
+					try {
+						obs.onNext(JSON.parse(event.data))
+					} catch (e) { }
+				}
 			}, false)
 			//worker.onerror = function (err) {
 			//	obs.onError(err);
@@ -173,16 +186,16 @@ class ConversantAPI extends API{
 	 * an instance of {AppParameters}.
      */
 	init(fun){
-		let pCollaboration = super._addFuture(m.Apps.InitCollaboration.type())
-		let pPofile = super._addFuture(m.Apps.InitProfile.type())
-		let pTeam = super._addFuture(m.Apps.InitTeam.type())
-		let pPeers = super._addFuture(m.Apps.InitPeers.type())
+		let pCollaboration = this._futurePromise(m.Apps.InitCollaboration.type())
+		let pPofile = this._futurePromise(m.Apps.InitProfile.type())
+		let pTeam = this._futurePromise(m.Apps.InitTeam.type())
+		let pPeers = this._futurePromise(m.Apps.InitPeers.type())
 
 		Promise.all([pCollaboration, pPofile, pTeam, pPeers]).then( (vals) => {
-			let appParams = new AppParameters( vals[0], vals[1], vals[2], vals[3]  )
+			let appParams = new AppParameters( vals[0].collaboration, vals[1].profile, vals[2].team, vals[3].peers  )
 			fun(appParams)
 		})
-		super._send(super.mapper.write(m.Apps.Init))
+		this._send(this.mapper.write(new m.Apps.Init()))
 	}
 
 }
@@ -192,5 +205,5 @@ module.exports = {
 	ConversantAPI: ConversantAPI,
 	AppParameters: AppParameters
 };
-window.ConversantAPI = module.exports;
+window.conversant = module.exports;
 
