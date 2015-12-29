@@ -176,15 +176,20 @@ var API = (function () {
 var AppParameters =
 
 /**
- *
+ * @param app {Apps.App}
  * @param collaboration {Collaboration.Collaboration}
  * @param profile {Auth.ProfileInfo}
  * @param team {Collaboration.SyncUserEvent[]}
     * @param peers {Peers.PeerState[]}
     */
-function AppParameters(collaboration, profile, team, peers) {
+function AppParameters(app, isSyncMode, restoreState, collaboration, profile, team, peers) {
 	_classCallCheck(this, AppParameters);
 
+	this.app = m.Type.check(app, m.Apps.App);
+	this.isSyncMode = isSyncMode;
+	this.restoreState = restoreState.map(function (r) {
+		return m.Type.check(r, m.Collaboration.ViewerState);
+	});
 	this.collaboration = m.Type.check(collaboration, m.Collaboration.Collaboration);
 	this.profile = m.Type.check(profile, m.Auth.ProfileInfo);
 	this.team = team.map(function (t) {
@@ -208,7 +213,7 @@ var ConversantAPI = (function (_API) {
   * Construct {Rx.Observer} and {Rx.Observable} for communication with the parent frame.
   */
 
-	function ConversantAPI() {
+	function ConversantAPI(id) {
 		_classCallCheck(this, ConversantAPI);
 
 		var observer = Rx.Observer.create(function (data) {
@@ -234,7 +239,11 @@ var ConversantAPI = (function (_API) {
 				// onComplete
 			};
 		});
-		return _possibleConstructorReturn(this, Object.getPrototypeOf(ConversantAPI).call(this, observer, observable));
+
+		var _this3 = _possibleConstructorReturn(this, Object.getPrototypeOf(ConversantAPI).call(this, observer, observable));
+
+		_this3.id = id;
+		return _this3;
 	}
 
 	/**
@@ -247,16 +256,17 @@ var ConversantAPI = (function (_API) {
 	_createClass(ConversantAPI, [{
 		key: 'init',
 		value: function init(fun) {
+			var pApp = this._futurePromise(m.Apps.InitApp.type());
 			var pCollaboration = this._futurePromise(m.Apps.InitCollaboration.type());
 			var pPofile = this._futurePromise(m.Apps.InitProfile.type());
 			var pTeam = this._futurePromise(m.Apps.InitTeam.type());
 			var pPeers = this._futurePromise(m.Apps.InitPeers.type());
 
-			Promise.all([pCollaboration, pPofile, pTeam, pPeers]).then(function (vals) {
-				var appParams = new AppParameters(vals[0].collaboration, vals[1].profile, vals[2].team, vals[3].peers);
+			Promise.all([pApp, pCollaboration, pPofile, pTeam, pPeers]).then(function (vals) {
+				var appParams = new AppParameters(vals[0].app, vals[0].isSyncMode, vals[0].restoreState, vals[1].collaboration, vals[2].profile, vals[3].team, vals[4].peers);
 				fun(appParams);
 			});
-			this._send(this.mapper.write(new m.Apps.Init()));
+			this._send(this.mapper.write(new m.Apps.Init(this.id)));
 		}
 	}]);
 
@@ -564,7 +574,7 @@ Auth.UserState = (function (_Model4) {
 
     var _this4 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class4).call(this, Auth.UserState.type()));
 
-    _this4.isOnline = new Boolean(isOnline);
+    _this4.isOnline = isOnline;
     _this4.action = Type.check(action, Auth.UserState);
     _this4.state = state;
     return _this4;
@@ -1125,18 +1135,22 @@ Apps.App = (function (_Model13) {
      *
      * @param id {String}
      * @param name {String}
+     * @param icon {String}
+     * @param origin {String} The origin fo the iframe that the app will be hosted in
      * @param args {String}
      */
 
   }]);
 
-  function _class13(id, name, args) {
+  function _class13(id, name, icon, origin, args) {
     _classCallCheck(this, _class13);
 
     var _this13 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class13).call(this, Apps.App.type()));
 
     _this13.id = new String(id);
     _this13.name = new String(name);
+    _this13.icon = new String(icon);
+    _this13.origin = new String(origin);
     _this13.args = args;
     return _this13;
   }
@@ -1164,26 +1178,70 @@ Apps.Init = (function (_Model14) {
 
     /**
      *
+     * @param appId {String} Your app id to initialize
      */
 
   }]);
 
-  function _class14() {
+  function _class14(appId) {
     _classCallCheck(this, _class14);
 
-    return _possibleConstructorReturn(this, Object.getPrototypeOf(_class14).call(this, Apps.Init.type()));
+    var _this14 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class14).call(this, Apps.Init.type()));
+
+    _this14.appId = new String(appId);
+    return _this14;
   }
 
   return _class14;
 })(Model);
 
 /**
- * @class InitProfile
+ * @class InitApp
  */
-Apps.InitProfile = (function (_Model15) {
+Apps.InitApp = (function (_Model15) {
   _inherits(_class15, _Model15);
 
   _createClass(_class15, null, [{
+    key: "type",
+
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    value: function type() {
+      return 'm.Apps.InitApp';
+    }
+
+    /**
+     *
+     * @param profile {Apps.App}
+     * @param isSyncMode {Boolean} is your app loading in the sync panel or the app panel
+     * @param restoreState {Collaboration.ViewerState} OPTIONAL The view state that is to be restored
+     */
+
+  }]);
+
+  function _class15(app, isSyncMode, restoreState) {
+    _classCallCheck(this, _class15);
+
+    var _this15 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class15).call(this, Apps.InitApp.type()));
+
+    _this15.app = Type.check(app, Apps.App);
+    _this15.isSyncMode = isSyncMode;
+    _this15.restoreState = typeof restoreState === "undefined" ? [] : [Type.check(restoreState, Collaboration.ViewerState)];
+    return _this15;
+  }
+
+  return _class15;
+})(Model);
+
+/**
+ * @class InitProfile
+ */
+Apps.InitProfile = (function (_Model16) {
+  _inherits(_class16, _Model16);
+
+  _createClass(_class16, null, [{
     key: "type",
 
     /**
@@ -1201,25 +1259,25 @@ Apps.InitProfile = (function (_Model15) {
 
   }]);
 
-  function _class15(profile) {
-    _classCallCheck(this, _class15);
+  function _class16(profile) {
+    _classCallCheck(this, _class16);
 
-    var _this15 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class15).call(this, Apps.InitProfile.type()));
+    var _this16 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class16).call(this, Apps.InitProfile.type()));
 
-    _this15.profile = Type.check(profile, Auth.ProfileInfo);
-    return _this15;
+    _this16.profile = Type.check(profile, Auth.ProfileInfo);
+    return _this16;
   }
 
-  return _class15;
+  return _class16;
 })(Model);
 
 /**
  * @class InitCollaboration
  */
-Apps.InitCollaboration = (function (_Model16) {
-  _inherits(_class16, _Model16);
+Apps.InitCollaboration = (function (_Model17) {
+  _inherits(_class17, _Model17);
 
-  _createClass(_class16, null, [{
+  _createClass(_class17, null, [{
     key: "type",
 
     /**
@@ -1237,25 +1295,25 @@ Apps.InitCollaboration = (function (_Model16) {
 
   }]);
 
-  function _class16(collaboration) {
-    _classCallCheck(this, _class16);
+  function _class17(collaboration) {
+    _classCallCheck(this, _class17);
 
-    var _this16 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class16).call(this, Apps.InitCollaboration.type()));
+    var _this17 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class17).call(this, Apps.InitCollaboration.type()));
 
-    _this16.collaboration = Type.check(collaboration, Collaboration.Collaboration);
-    return _this16;
+    _this17.collaboration = Type.check(collaboration, Collaboration.Collaboration);
+    return _this17;
   }
 
-  return _class16;
+  return _class17;
 })(Model);
 
 /**
  * @class InitTeam
  */
-Apps.InitTeam = (function (_Model17) {
-  _inherits(_class17, _Model17);
+Apps.InitTeam = (function (_Model18) {
+  _inherits(_class18, _Model18);
 
-  _createClass(_class17, null, [{
+  _createClass(_class18, null, [{
     key: "type",
 
     /**
@@ -1273,27 +1331,27 @@ Apps.InitTeam = (function (_Model17) {
 
   }]);
 
-  function _class17(team) {
-    _classCallCheck(this, _class17);
+  function _class18(team) {
+    _classCallCheck(this, _class18);
 
-    var _this17 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class17).call(this, Apps.InitTeam.type()));
+    var _this18 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class18).call(this, Apps.InitTeam.type()));
 
-    _this17.team = team.map(function (t) {
+    _this18.team = team.map(function (t) {
       return Type.check(t, Collaboration.SyncUserEvent);
     });
-    return _this17;
+    return _this18;
   }
 
-  return _class17;
+  return _class18;
 })(Model);
 
 /**
  * @class InitPeers
  */
-Apps.InitPeers = (function (_Model18) {
-  _inherits(_class18, _Model18);
+Apps.InitPeers = (function (_Model19) {
+  _inherits(_class19, _Model19);
 
-  _createClass(_class18, null, [{
+  _createClass(_class19, null, [{
     key: "type",
 
     /**
@@ -1311,18 +1369,18 @@ Apps.InitPeers = (function (_Model18) {
 
   }]);
 
-  function _class18(peers) {
-    _classCallCheck(this, _class18);
+  function _class19(peers) {
+    _classCallCheck(this, _class19);
 
-    var _this18 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class18).call(this, Apps.InitPeers.type()));
+    var _this19 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class19).call(this, Apps.InitPeers.type()));
 
-    _this18.peers = peers.map(function (p) {
+    _this19.peers = peers.map(function (p) {
       return Type.check(t, Peers.PeerState);
     });
-    return _this18;
+    return _this19;
   }
 
-  return _class18;
+  return _class19;
 })(Model);
 
 /**
@@ -1333,10 +1391,10 @@ var Resource = {};
 /**
  * @class Resource
  */
-Resource.Resource = (function (_Model19) {
-  _inherits(_class19, _Model19);
+Resource.Resource = (function (_Model20) {
+  _inherits(_class20, _Model20);
 
-  _createClass(_class19, null, [{
+  _createClass(_class20, null, [{
     key: "type",
 
     /**
@@ -1355,18 +1413,18 @@ Resource.Resource = (function (_Model19) {
 
   }]);
 
-  function _class19(uri, contentType, thumbnail) {
-    _classCallCheck(this, _class19);
+  function _class20(uri, contentType, thumbnail) {
+    _classCallCheck(this, _class20);
 
-    var _this19 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class19).call(this, Resource.Resource.type()));
+    var _this20 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class20).call(this, Resource.Resource.type()));
 
-    _this19.uri = new String(uri);
-    _this19.contentType = new String(contentType);
-    _this19.thumbnail = new String(thumbnail);
-    return _this19;
+    _this20.uri = new String(uri);
+    _this20.contentType = new String(contentType);
+    _this20.thumbnail = new String(thumbnail);
+    return _this20;
   }
 
-  return _class19;
+  return _class20;
 })(Model);
 
 /**
@@ -1378,10 +1436,10 @@ var Geom = {};
  * @class Transform3d
  * A 3D transformation
  */
-Geom.Transform3d = (function (_Model20) {
-  _inherits(_class20, _Model20);
+Geom.Transform3d = (function (_Model21) {
+  _inherits(_class21, _Model21);
 
-  _createClass(_class20, null, [{
+  _createClass(_class21, null, [{
     key: "type",
 
     /**
@@ -1399,16 +1457,16 @@ Geom.Transform3d = (function (_Model20) {
 
   }]);
 
-  function _class20(matrix) {
-    _classCallCheck(this, _class20);
+  function _class21(matrix) {
+    _classCallCheck(this, _class21);
 
-    var _this20 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class20).call(this, Geom.Transform3d.type()));
+    var _this21 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class21).call(this, Geom.Transform3d.type()));
 
-    _this20.matrix = matrix.map(function (x) {
+    _this21.matrix = matrix.map(function (x) {
       return new Number(x);
     });
-    assert(_this20.matrix.length == 4 * 4);
-    return _this20;
+    assert(_this21.matrix.length == 4 * 4);
+    return _this21;
   }
 
   /**
@@ -1416,14 +1474,14 @@ Geom.Transform3d = (function (_Model20) {
    * @returns {number[]}
    */
 
-  _createClass(_class20, null, [{
+  _createClass(_class21, null, [{
     key: "identity",
     value: function identity() {
       return [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
     }
   }]);
 
-  return _class20;
+  return _class21;
 })(Model);
 
 module.exports = {

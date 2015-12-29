@@ -154,7 +154,7 @@ Auth.UserState = class extends Model{
      */
     constructor(isOnline, action, state){
         super(Auth.UserState.type())
-        this.isOnline = new Boolean(isOnline)
+        this.isOnline = isOnline
         this.action = Type.check(action, Auth.UserState)
         this.state = state
     }
@@ -494,12 +494,16 @@ Apps.App = class extends Model{
      *
      * @param id {String}
      * @param name {String}
+     * @param icon {String}
+     * @param origin {String} The origin fo the iframe that the app will be hosted in
      * @param args {String}
      */
-    constructor(id, name, args){
+    constructor(id, name, icon, origin, args){
         super(Apps.App.type())
         this.id = new String(id)
         this.name = new String(name)
+        this.icon = new String(icon)
+        this.origin = new String(origin)
         this.args = args
     }
 }
@@ -517,9 +521,36 @@ Apps.Init = class extends Model{
 
     /**
      *
+     * @param appId {String} Your app id to initialize
      */
-    constructor(){
+    constructor(appId){
         super(Apps.Init.type())
+        this.appId = new String(appId)
+    }
+}
+
+
+/**
+ * @class InitApp
+ */
+Apps.InitApp = class extends Model{
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    static type(){ return 'm.Apps.InitApp'}
+
+    /**
+     *
+     * @param profile {Apps.App}
+     * @param isSyncMode {Boolean} is your app loading in the sync panel or the app panel
+     * @param restoreState {Collaboration.ViewerState} OPTIONAL The view state that is to be restored
+     */
+    constructor(app, isSyncMode, restoreState){
+        super(Apps.InitApp.type())
+        this.app = Type.check(app, Apps.App)
+        this.isSyncMode = isSyncMode
+        this.restoreState = typeof restoreState === "undefined" ? [] : [Type.check(restoreState, Collaboration.ViewerState)]
     }
 }
 

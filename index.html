@@ -9,24 +9,22 @@
         </div>
         <script src="bundle.js"></script>
         <script>
-            var c = new conversant.ConversantAPI();
+            var c = new conversant.ConversantAPI('phr');
             window.c = c;   // debug in console
-            /*var p = new m.Auth.ProfileInfo('a','b','c',new m.Auth.OrganizationRoles('d'),'e')
-            c.addTeamMember(p).then(function(res){
-                alert('got the result')
-                console.log('res',res)
-            },function(err){
-                console.log('err',err)
-            })*/
-            //self.postMessage(JSON.stringify(p),'*');
 
             c.init(function(appInit){
+                console.log(appInit);
+                var app = appInit.app; // This is of type m.Apps.App
+                var isSyncMode = appInit.isSyncMode;
+                var restoreState = appInit.restoreState;
                 var profile = appInit.profile; // This is of type m.Auth.ProfileInfo
                 var collaboration = appInit.collaboration; // This is of type m.Collaboration.Collaboration
                 var team = appInit.team; // This is of type m.Collaboration.SyncUserEvent[]
                 var peers = appInit.peers; // This is of type m.Peers.PeerState[]
 
-                alert('init...')
+                var mode = isSyncMode ? "In Sync Panel" : "In App Panel"
+                console.log('restoreState', restoreState)
+                alert('init... ' + mode)
             });
         </script>
     </body>

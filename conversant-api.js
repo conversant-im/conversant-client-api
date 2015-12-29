@@ -128,13 +128,16 @@ class API {
 class AppParameters{
 
 	/**
-	 *
+	 * @param app {Apps.App}
 	 * @param collaboration {Collaboration.Collaboration}
 	 * @param profile {Auth.ProfileInfo}
 	 * @param team {Collaboration.SyncUserEvent[]}
      * @param peers {Peers.PeerState[]}
      */
-	constructor(collaboration, profile, team, peers){
+	constructor(app, isSyncMode, restoreState, collaboration, profile, team, peers){
+		this.app =  m.Type.check(app, m.Apps.App)
+		this.isSyncMode = isSyncMode
+		this.restoreState = restoreState.map( (r) => m.Type.check(r, m.Collaboration.ViewerState) )
 		this.collaboration = m.Type.check(collaboration, m.Collaboration.Collaboration)
 		this.profile = m.Type.check(profile, m.Auth.ProfileInfo)
 		this.team = team.map( (t) => m.Type.check(t, m.Collaboration.SyncUserEvent) )
@@ -152,7 +155,7 @@ class ConversantAPI extends API{
 	/**
 	 * Construct {Rx.Observer} and {Rx.Observable} for communication with the parent frame.
 	 */
-	constructor(){
+	constructor(id){
 		let observer = Rx.Observer.create((data) => {
 			console.log('postMessage', data)
 			window.top.postMessage(data, '*')
@@ -177,6 +180,7 @@ class ConversantAPI extends API{
 			}
 		})
 		super(observer, observable)
+		this.id = id
 	}
 
 	/**
@@ -186,16 +190,17 @@ class ConversantAPI extends API{
 	 * an instance of {AppParameters}.
      */
 	init(fun){
+		let pApp = this._futurePromise(m.Apps.InitApp.type())
 		let pCollaboration = this._futurePromise(m.Apps.InitCollaboration.type())
 		let pPofile = this._futurePromise(m.Apps.InitProfile.type())
 		let pTeam = this._futurePromise(m.Apps.InitTeam.type())
 		let pPeers = this._futurePromise(m.Apps.InitPeers.type())
 
-		Promise.all([pCollaboration, pPofile, pTeam, pPeers]).then( (vals) => {
-			let appParams = new AppParameters( vals[0].collaboration, vals[1].profile, vals[2].team, vals[3].peers  )
+		Promise.all([pApp, pCollaboration, pPofile, pTeam, pPeers]).then( (vals) => {
+			let appParams = new AppParameters( vals[0].app, vals[0].isSyncMode, vals[0].restoreState,  vals[1].collaboration, vals[2].profile, vals[3].team, vals[4].peers  )
 			fun(appParams)
 		})
-		this._send(this.mapper.write(new m.Apps.Init()))
+		this._send(this.mapper.write(new m.Apps.Init(this.id)))
 	}
 
 }
