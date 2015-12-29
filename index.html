@@ -28,10 +28,17 @@
                 var mode = c.isSyncMode ? "In Sync Panel" : "In App Panel"
                 console.log('restoreState', restoreState)
 
+                function handleSync(viewSync){
+                    var src = viewSync.resource.uri;
+                    $('#container').html('<img src="'+src+'" />');   // sync the view for all users
+                }
+
                 if(c.isSyncMode){
                     $.each(restoreState,function(i, state){
-                        var src = state.resource.uri;
-                        $('#container').append('<img src="'+src+'" />');   // sync the view for all users
+                        handleSync(state);
+                    });
+                    c.addResponder(m.Collaboration.SyncViewEvent.type(),function(sync){
+                        handleSync(sync.viewerState);
                     });
                 }else{
                     var spaceCats = [
