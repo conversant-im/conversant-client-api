@@ -126,27 +126,26 @@ var API = (function () {
 	}, {
 		key: 'syncUser',
 		value: function syncUser(sync) {
-			m.Type.check(profile, m.Collaboration.SyncUserEvent);
-			this.send(this.mapper.write(sync));
+			m.Type.check(sync, m.Collaboration.SyncUserEvent);
+			this._send(this.mapper.write(sync));
 		}
 
 		/**
    * def syncView(sync:Collaboration.SyncViewEvent):Unit
    * Synchronize view/app state in the synchronization pannel.
    *
-   * @param sync {m.Collaboration.SyncViewEvent}
+   * @param sync {m.Collaboration.ViewerState}
    * The synchronize event bring application state in sync.  This parameter is
-   * of type 'm.Collaboration.SyncViewEvent'
+   * of type 'm.Collaboration.ViewerState'
       */
 
 	}, {
 		key: 'syncView',
 		value: function syncView(sync) {
-			m.Type.check(profile, m.Collaboration.SyncViewEvent);
-			this.send(this.mapper.write(sync));
+			m.Type.check(sync, m.Collaboration.ViewerState);
+			var syncEvent = new m.Collaboration.SyncViewEvent(this.appParams.collaboration.id, this.appParams.collaboration.orgId, this.appParams.profile, sync);
+			this._send(this.mapper.write(syncEvent));
 		}
-
-		// ** INIT types...
 
 		// def sendChatMessage(author:Auth.ProfileInfo, cId: String, v:Collaboration.ViewerState, content:Option[String], contentClass:Collaboration.ContentClass):Unit
 		// def getUser(uuid:String):Future[Auth.PrimaryProfile]
@@ -182,11 +181,10 @@ var AppParameters =
  * @param team {Collaboration.SyncUserEvent[]}
     * @param peers {Peers.PeerState[]}
     */
-function AppParameters(app, isSyncMode, restoreState, collaboration, profile, team, peers) {
+function AppParameters(app, restoreState, collaboration, profile, team, peers) {
 	_classCallCheck(this, AppParameters);
 
 	this.app = m.Type.check(app, m.Apps.App);
-	this.isSyncMode = isSyncMode;
 	this.restoreState = restoreState.map(function (r) {
 		return m.Type.check(r, m.Collaboration.ViewerState);
 	});
@@ -243,6 +241,7 @@ var ConversantAPI = (function (_API) {
 		var _this3 = _possibleConstructorReturn(this, Object.getPrototypeOf(ConversantAPI).call(this, observer, observable));
 
 		_this3.id = id;
+		_this3.isSyncMode = window.name == 'sync';
 		return _this3;
 	}
 
@@ -256,6 +255,8 @@ var ConversantAPI = (function (_API) {
 	_createClass(ConversantAPI, [{
 		key: 'init',
 		value: function init(fun) {
+			var _this4 = this;
+
 			var pApp = this._futurePromise(m.Apps.InitApp.type());
 			var pCollaboration = this._futurePromise(m.Apps.InitCollaboration.type());
 			var pPofile = this._futurePromise(m.Apps.InitProfile.type());
@@ -263,7 +264,8 @@ var ConversantAPI = (function (_API) {
 			var pPeers = this._futurePromise(m.Apps.InitPeers.type());
 
 			Promise.all([pApp, pCollaboration, pPofile, pTeam, pPeers]).then(function (vals) {
-				var appParams = new AppParameters(vals[0].app, vals[0].isSyncMode, vals[0].restoreState, vals[1].collaboration, vals[2].profile, vals[3].team, vals[4].peers);
+				var appParams = new AppParameters(vals[0].app, vals[0].restoreState, vals[1].collaboration, vals[2].profile, vals[3].team, vals[4].peers);
+				_this4.appParams = appParams;
 				fun(appParams);
 			});
 			this._send(this.mapper.write(new m.Apps.Init(this.id)));
@@ -1221,13 +1223,12 @@ Apps.InitApp = (function (_Model15) {
 
   }]);
 
-  function _class15(app, isSyncMode, restoreState) {
+  function _class15(app, restoreState) {
     _classCallCheck(this, _class15);
 
     var _this15 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class15).call(this, Apps.InitApp.type()));
 
     _this15.app = Type.check(app, Apps.App);
-    _this15.isSyncMode = isSyncMode;
     _this15.restoreState = typeof restoreState === "undefined" ? [] : [Type.check(restoreState, Collaboration.ViewerState)];
     return _this15;
   }
@@ -1462,10 +1463,10 @@ Geom.Transform3d = (function (_Model21) {
 
     var _this21 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class21).call(this, Geom.Transform3d.type()));
 
-    _this21.matrix = matrix.map(function (x) {
-      return new Number(x);
-    });
-    assert(_this21.matrix.length == 4 * 4);
+    _this21.matrix = matrix;
+    if (_this21.matrix.length != 4 * 4) {
+      throw new Error('Matrix is not 4x4');
+    }
     return _this21;
   }
 
@@ -1477,7 +1478,7 @@ Geom.Transform3d = (function (_Model21) {
   _createClass(_class21, null, [{
     key: "identity",
     value: function identity() {
-      return [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
+      return new Geom.Transform3d([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]);
     }
   }]);
 

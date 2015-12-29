@@ -86,24 +86,23 @@ class API {
 	 * of type 'm.Collaboration.SyncUserEvent'
      */
 	syncUser(sync){
-		m.Type.check(profile, m.Collaboration.SyncUserEvent)
-		this.send(this.mapper.write(sync))
+		m.Type.check(sync, m.Collaboration.SyncUserEvent)
+		this._send(this.mapper.write(sync))
 	}
 
 	/**
 	 * def syncView(sync:Collaboration.SyncViewEvent):Unit
 	 * Synchronize view/app state in the synchronization pannel.
 	 *
-	 * @param sync {m.Collaboration.SyncViewEvent}
+	 * @param sync {m.Collaboration.ViewerState}
 	 * The synchronize event bring application state in sync.  This parameter is
-	 * of type 'm.Collaboration.SyncViewEvent'
+	 * of type 'm.Collaboration.ViewerState'
      */
 	syncView(sync){
-		m.Type.check(profile, m.Collaboration.SyncViewEvent)
-		this.send(this.mapper.write(sync))
+		m.Type.check(sync, m.Collaboration.ViewerState)
+		let syncEvent = new m.Collaboration.SyncViewEvent(this.appParams.collaboration.id,this.appParams.collaboration.orgId,this.appParams.profile,sync);
+		this._send(this.mapper.write(syncEvent))
 	}
-
-	// ** INIT types...
 
 	// def sendChatMessage(author:Auth.ProfileInfo, cId: String, v:Collaboration.ViewerState, content:Option[String], contentClass:Collaboration.ContentClass):Unit
 	// def getUser(uuid:String):Future[Auth.PrimaryProfile]
@@ -134,9 +133,8 @@ class AppParameters{
 	 * @param team {Collaboration.SyncUserEvent[]}
      * @param peers {Peers.PeerState[]}
      */
-	constructor(app, isSyncMode, restoreState, collaboration, profile, team, peers){
+	constructor(app, restoreState, collaboration, profile, team, peers){
 		this.app =  m.Type.check(app, m.Apps.App)
-		this.isSyncMode = isSyncMode
 		this.restoreState = restoreState.map( (r) => m.Type.check(r, m.Collaboration.ViewerState) )
 		this.collaboration = m.Type.check(collaboration, m.Collaboration.Collaboration)
 		this.profile = m.Type.check(profile, m.Auth.ProfileInfo)
@@ -181,6 +179,7 @@ class ConversantAPI extends API{
 		})
 		super(observer, observable)
 		this.id = id
+		this.isSyncMode = window.name == 'sync'
 	}
 
 	/**
@@ -197,7 +196,8 @@ class ConversantAPI extends API{
 		let pPeers = this._futurePromise(m.Apps.InitPeers.type())
 
 		Promise.all([pApp, pCollaboration, pPofile, pTeam, pPeers]).then( (vals) => {
-			let appParams = new AppParameters( vals[0].app, vals[0].isSyncMode, vals[0].restoreState,  vals[1].collaboration, vals[2].profile, vals[3].team, vals[4].peers  )
+			let appParams = new AppParameters( vals[0].app, vals[0].restoreState,  vals[1].collaboration, vals[2].profile, vals[3].team, vals[4].peers  )
+			this.appParams = appParams
 			fun(appParams)
 		})
 		this._send(this.mapper.write(new m.Apps.Init(this.id)))

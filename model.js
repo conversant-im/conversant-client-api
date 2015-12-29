@@ -546,10 +546,9 @@ Apps.InitApp = class extends Model{
      * @param isSyncMode {Boolean} is your app loading in the sync panel or the app panel
      * @param restoreState {Collaboration.ViewerState} OPTIONAL The view state that is to be restored
      */
-    constructor(app, isSyncMode, restoreState){
+    constructor(app, restoreState){
         super(Apps.InitApp.type())
         this.app = Type.check(app, Apps.App)
-        this.isSyncMode = isSyncMode
         this.restoreState = typeof restoreState === "undefined" ? [] : [Type.check(restoreState, Collaboration.ViewerState)]
     }
 }
@@ -684,8 +683,10 @@ Geom.Transform3d = class extends Model{
      */
     constructor(matrix){
         super(Geom.Transform3d.type())
-        this.matrix = matrix.map( x => new Number(x))
-        assert( this.matrix.length == (4 * 4) )
+        this.matrix = matrix
+        if( this.matrix.length != (4 * 4) ){
+            throw new Error('Matrix is not 4x4')
+        }
     }
 
     /**
@@ -693,10 +694,10 @@ Geom.Transform3d = class extends Model{
      * @returns {number[]}
      */
     static identity(){
-        return [1, 0, 0, 0,
+        return new Geom.Transform3d([1, 0, 0, 0,
                 0, 1, 0, 0,
                 0, 0, 1, 0,
-                0, 0, 0, 1]
+                0, 0, 0, 1]);
     }
 }
 

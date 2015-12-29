@@ -6,7 +6,11 @@
     <body>
         <div id="remotes">
             <h2>Demo App</h2>
+            <div id="container">
+
+            </div>
         </div>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
         <script src="bundle.js"></script>
         <script>
             var c = new conversant.ConversantAPI('phr');
@@ -15,17 +19,43 @@
             c.init(function(appInit){
                 console.log(appInit);
                 var app = appInit.app; // This is of type m.Apps.App
-                var isSyncMode = appInit.isSyncMode;
                 var restoreState = appInit.restoreState;
                 var profile = appInit.profile; // This is of type m.Auth.ProfileInfo
                 var collaboration = appInit.collaboration; // This is of type m.Collaboration.Collaboration
                 var team = appInit.team; // This is of type m.Collaboration.SyncUserEvent[]
                 var peers = appInit.peers; // This is of type m.Peers.PeerState[]
 
-                var mode = isSyncMode ? "In Sync Panel" : "In App Panel"
+                var mode = c.isSyncMode ? "In Sync Panel" : "In App Panel"
                 console.log('restoreState', restoreState)
-                alert('init... ' + mode)
+
+                if(c.isSyncMode){
+                    $.each(restoreState,function(i, state){
+                        var src = state.resource.uri;
+                        $('#container').append('<img src="'+src+'" />');   // sync the view for all users
+                    });
+                }else{
+                    var spaceCats = [
+                            'https://pbs.twimg.com/media/ByZOMh8IUAE7cxj.jpg',
+                            'http://i.imgur.com/GaAI9uH.jpg',
+                            'http://i.imgur.com/PyKPjMh.jpg',
+                            'http://i.imgur.com/qqDXC4c.jpg',
+                            'http://i.imgur.com/2z39gDe.jpg',
+                            'http://i.imgur.com/AizmOYh.jpg',
+                    ];
+                    $('#container').append('<h2>click to inject image</h2>');
+                    $.each(spaceCats,function(i,src){
+                        $('#container').append('<img src="'+src+'" />');
+                    });
+                    $('#container img').click(function(){
+                        var src = $(this).attr('src');
+                        var viewState = new m.Collaboration.ViewerState(app,new m.Resource.Resource( src,"image/jpg",src),0,{},m.Geom.Transform3d.identity());
+                        console.log(viewState)
+                        c.syncView(viewState);
+                    });
+
+                }
             });
+	    console.log('win name:', window.name);
         </script>
     </body>
 </html>
