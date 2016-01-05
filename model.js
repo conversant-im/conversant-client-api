@@ -496,17 +496,29 @@ Apps.App = class extends Model{
      * @param name {String}
      * @param icon {String}
      * @param origin {String} The origin fo the iframe that the app will be hosted in
+     * @param entry {String} The entry point for the application
      * @param args {String}
      */
-    constructor(id, name, icon, origin, args){
+    constructor(id, name, icon, origin, entry, args){
         super(Apps.App.type())
         this.id = new String(id)
         this.name = new String(name)
         this.icon = new String(icon)
         this.origin = new String(origin)
+        this.entry = new String(entry)
         this.args = args
     }
+
+    static info(){ new Apps.App("info","Chat Info", "fa fa-info ", "apps.conversant.im", "https://apps.conversant.im/app/info", {}) }
+    static invite(){ new Apps.App("invite","Add People", "fa fa-user-plus ", "apps.conversant.im", "https://apps.conversant.im/app/invite", {}) }
+    static drive(){ new Apps.App("drive","Drive", "fa fa-folder ", "apps.conversant.im", "https://apps.conversant.im/app/drive", {}) }
+    static webCall(){ new Apps.App("call","Web Call", "fa fa-phone ", "*.conversant.im", "https://apps.conversant.im/app/call", {}) }
+    static youtube(){ new Apps.App("youtube","YouTube", "fa fa-youtube ", "apps.conversant.im", "https://apps.conversant.im/app/youtube", {}) }
+    static map(){ new Apps.App("map","Maps", "fa fa-map-marker", "apps.conversant.im", "https://apps.conversant.im/app/map", {}) }
+    static image(){ new Apps.App("image","Image Viewer", "fa fa-picture-o", "apps.conversant.im", "https://apps.conversant.im/app/image", {}) }
+    static giffy(){ new Apps.App("giffy","Giffy", "fa fa-file-o", "apps.conversant.im", "https://apps.conversant.im/app/giffy", {}) }
 }
+
 
 /**
  * @class Init

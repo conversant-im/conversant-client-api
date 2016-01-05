@@ -1139,12 +1139,13 @@ Apps.App = (function (_Model13) {
      * @param name {String}
      * @param icon {String}
      * @param origin {String} The origin fo the iframe that the app will be hosted in
+     * @param entry {String} The entry point for the application
      * @param args {String}
      */
 
   }]);
 
-  function _class13(id, name, icon, origin, args) {
+  function _class13(id, name, icon, origin, entry, args) {
     _classCallCheck(this, _class13);
 
     var _this13 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class13).call(this, Apps.App.type()));
@@ -1153,9 +1154,52 @@ Apps.App = (function (_Model13) {
     _this13.name = new String(name);
     _this13.icon = new String(icon);
     _this13.origin = new String(origin);
+    _this13.entry = new String(entry);
     _this13.args = args;
     return _this13;
   }
+
+  _createClass(_class13, null, [{
+    key: "info",
+    value: function info() {
+      new Apps.App("info", "Chat Info", "fa fa-info ", "apps.conversant.im", "https://apps.conversant.im/app/info", {});
+    }
+  }, {
+    key: "invite",
+    value: function invite() {
+      new Apps.App("invite", "Add People", "fa fa-user-plus ", "apps.conversant.im", "https://apps.conversant.im/app/invite", {});
+    }
+  }, {
+    key: "drive",
+    value: function drive() {
+      new Apps.App("drive", "Drive", "fa fa-folder ", "apps.conversant.im", "https://apps.conversant.im/app/drive", {});
+    }
+  }, {
+    key: "webCall",
+    value: function webCall() {
+      new Apps.App("call", "Web Call", "fa fa-phone ", "*.conversant.im", "https://apps.conversant.im/app/call", {});
+    }
+  }, {
+    key: "youtube",
+    value: function youtube() {
+      new Apps.App("youtube", "YouTube", "fa fa-youtube ", "apps.conversant.im", "https://apps.conversant.im/app/youtube", {});
+    }
+  }, {
+    key: "map",
+    value: function map() {
+      new Apps.App("map", "Maps", "fa fa-map-marker", "apps.conversant.im", "https://apps.conversant.im/app/map", {});
+    }
+  }, {
+    key: "image",
+    value: function image() {
+      new Apps.App("image", "Image Viewer", "fa fa-picture-o", "apps.conversant.im", "https://apps.conversant.im/app/image", {});
+    }
+  }, {
+    key: "giffy",
+    value: function giffy() {
+      new Apps.App("giffy", "Giffy", "fa fa-file-o", "apps.conversant.im", "https://apps.conversant.im/app/giffy", {});
+    }
+  }]);
 
   return _class13;
 })(Model);
