@@ -100,8 +100,15 @@ class API {
      */
 	syncView(sync){
 		m.Type.check(sync, m.Collaboration.ViewerState)
-		let syncEvent = new m.Collaboration.SyncViewEvent(this.appParams.collaboration.id,this.appParams.collaboration.orgId,this.appParams.profile,sync);
+		let syncEvent = new m.Collaboration.SyncViewEvent(this.appParams.collaboration.id,this.appParams.collaboration.orgId,this.appParams.provider,sync);
 		this._send(this.mapper.write(syncEvent))
+	}
+
+
+
+	sendHack(resource){
+		m.Type.check(resource, m.Resource.Resource)
+		this._send(this.mapper.write(resource))
 	}
 
 	// def sendChatMessage(author:Auth.ProfileInfo, cId: String, v:Collaboration.ViewerState, content:Option[String], contentClass:Collaboration.ContentClass):Unit
@@ -133,11 +140,11 @@ class AppParameters{
 	 * @param team {Collaboration.SyncUserEvent[]}
      * @param peers {Peers.PeerState[]}
      */
-	constructor(app, restoreState, collaboration, profile, team, peers){
+	constructor(app, restoreState, collaboration, provider, team, peers){
 		this.app =  m.Type.check(app, m.Apps.App)
-		this.restoreState = restoreState.map( (r) => m.Type.check(r, m.Collaboration.ViewerState) )
+		this.restoreState = typeof restoreState === "undefined" ?  null : m.Type.check(restoreState, m.Collaboration.ViewerState)
 		this.collaboration = m.Type.check(collaboration, m.Collaboration.Collaboration)
-		this.profile = m.Type.check(profile, m.Auth.ProfileInfo)
+		this.provider = m.Type.check(provider, m.Auth.Provider)
 		this.team = team.map( (t) => m.Type.check(t, m.Collaboration.SyncUserEvent) )
 		this.peers = peers.map( (p) => m.Type.check(p, m.Peers.PeerState) )
 	}
@@ -154,29 +161,40 @@ class ConversantAPI extends API{
 	 * Construct {Rx.Observer} and {Rx.Observable} for communication with the parent frame.
 	 */
 	constructor(id){
+		var observerList = []
+
 		let observer = Rx.Observer.create((data) => {
 			console.log('postMessage', data)
 			window.top.postMessage(data, '*')
-		})
+		});
+		window.addEventListener('message', (event) => {
+			console.log('message',event)
+			if(event.data && event.data != ''){
+				try {
+					let x = this.mapper.read(event.data)
+					//console.log('sending to ('+observerList.length+') observers',x)
+					observerList.forEach( (obs) => obs.onNext(x) )
+				} catch (e) {
+					alert('error')
+					console.log('ERROR',e)
+				}
+			}
+		}, false);
 		console.log('Observable create')
 		let observable = Rx.Observable.create( (obs) => {
 			console.log('Observable')
-			window.addEventListener('message', (event) => {
-				console.log('message',event)
-				if(event.data && event.data != ''){
-					try {
-						obs.onNext(JSON.parse(event.data))
-					} catch (e) { }
-				}
-			}, false)
+
+			observerList.push(obs)
 			//worker.onerror = function (err) {
 			//	obs.onError(err);
 			//};
 
 			return () => {
+				observerList = observerList.filter( (x) => {x != obs} )
+				console.log('disposed')
 				// onComplete
 			}
-		})
+		});
 		super(observer, observable)
 		this.id = id
 		this.isSyncMode = window.name == 'sync'
@@ -191,12 +209,13 @@ class ConversantAPI extends API{
 	init(fun){
 		let pApp = this._futurePromise(m.Apps.InitApp.type())
 		let pCollaboration = this._futurePromise(m.Apps.InitCollaboration.type())
-		let pPofile = this._futurePromise(m.Apps.InitProfile.type())
+		let pPofile = this._futurePromise(m.Apps.InitProvider.type())
 		let pTeam = this._futurePromise(m.Apps.InitTeam.type())
 		let pPeers = this._futurePromise(m.Apps.InitPeers.type())
 
 		Promise.all([pApp, pCollaboration, pPofile, pTeam, pPeers]).then( (vals) => {
-			let appParams = new AppParameters( vals[0].app, vals[0].restoreState,  vals[1].collaboration, vals[2].profile, vals[3].team, vals[4].peers  )
+			console.log('-- APP INIT --')
+			let appParams = new AppParameters( vals[0].app, vals[0].restoreState,  vals[1].collaboration, vals[2].provider, vals[3].team, vals[4].peers  )
 			this.appParams = appParams
 			fun(appParams)
 		})
