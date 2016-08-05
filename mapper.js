@@ -72,11 +72,11 @@ class Mapper{
                 return buildList(obj)
             },
             'Array' : (obj) => {
-                return buildList(obj)
-                /*return {
-                    't':'scala.collection.immutable.Vector',
+                //return buildList(obj)
+                return {
+                    't':'[D',
                     'v': obj
-                }*/
+                }
             },
             'Map' : (obj) => {
                 var t = 'scala.collection.immutable.HashMap$HashTrieMap'

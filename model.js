@@ -388,10 +388,16 @@ Collaboration.SyncViewEvent = class extends Model{
      */
     constructor(collaborationId, orgId, provider, viewerState){
         super(Collaboration.SyncViewEvent.type())
-        this.collaborationId = new UUID(collaborationId)
-        this.orgId = new UUID(orgId)
-        this.provider = Type.check(provider, Auth.Provider)
-        this.viewerState = Type.check(viewerState, Collaboration.ViewerState)
+        this.collaborationId = null
+        this.orgId = null
+        this.provider = null
+        this.viewerState = null
+        if(arguments.length) {
+            this.collaborationId = new UUID(collaborationId)
+            this.orgId = new UUID(orgId)
+            this.provider = Type.check(provider, Auth.Provider)
+            this.viewerState = Type.check(viewerState, Collaboration.ViewerState)
+        }
     }
 }
 

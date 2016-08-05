@@ -383,11 +383,11 @@ var Mapper = (function () {
                 return buildList(obj);
             },
             'Array': function Array(obj) {
-                return buildList(obj);
-                /*return {
-                    't':'scala.collection.immutable.Vector',
+                //return buildList(obj)
+                return {
+                    't': '[D',
                     'v': obj
-                }*/
+                };
             },
             'Map': function Map(obj) {
                 var t = 'scala.collection.immutable.HashMap$HashTrieMap';
@@ -1190,10 +1190,16 @@ Collaboration.SyncViewEvent = (function (_Model8) {
 
         var _this13 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class8).call(this, Collaboration.SyncViewEvent.type()));
 
-        _this13.collaborationId = new UUID(collaborationId);
-        _this13.orgId = new UUID(orgId);
-        _this13.provider = Type.check(provider, Auth.Provider);
-        _this13.viewerState = Type.check(viewerState, Collaboration.ViewerState);
+        _this13.collaborationId = null;
+        _this13.orgId = null;
+        _this13.provider = null;
+        _this13.viewerState = null;
+        if (arguments.length) {
+            _this13.collaborationId = new UUID(collaborationId);
+            _this13.orgId = new UUID(orgId);
+            _this13.provider = Type.check(provider, Auth.Provider);
+            _this13.viewerState = Type.check(viewerState, Collaboration.ViewerState);
+        }
         return _this13;
     }
 
