@@ -1,13 +1,56 @@
 "use strict"
 
+// TOOD: would like to extend String
 class UUID {
     constructor(uuid){
         this.$type = "m.UUID";
-        this.uuid = uuid
+        if(uuid.$type && uuid.$type == this.$type){
+            this.uuid = uuid.uuid
+        }else {
+            this.uuid = uuid
+        }
     }
 
     valueOf(){
         return this.uuid
+    }
+}
+
+class Integer extends Number{
+    constructor(x){
+        super(x)
+        this.$type = "m.Integer";
+    }
+}
+
+class Float extends Number{
+    constructor(x){
+        super(x)
+        this.$type = "m.Float";
+    }
+    valueOf(){
+        return super.valueOf()
+    }
+}
+
+class Double extends Number{
+    constructor(x){
+        super(x)
+        this.$type = "m.Double";
+    }
+}
+
+class Long extends Number{
+    constructor(x){
+        super(x)
+        this.$type = "m.Long";
+    }
+}
+
+class List extends Array{
+    constructor(){
+        super()
+        this.$type = "m.List";
     }
 }
 
@@ -318,7 +361,7 @@ Collaboration.ViewerState = class extends Model{
         if(arguments.length) {
             this.app = Type.check(app, Apps.App)
             this.resource = Type.check(resource, Resource.Resource)
-            this.sampleTimeMs = new Number(sampleTimeMs)
+            this.sampleTimeMs = new m.Double(sampleTimeMs)
             this.settings = settings
             this.transform = Type.check(transform, Geom.Transform3d)
         }
@@ -769,7 +812,7 @@ Apps.App = class extends Model{
      * Return the full class name of this type.
      * @returns {string}
      */
-    static type(){ return 'm.Apps.App'}
+    static type(){ return 'm.Apps$App'}
 
     /**
      *
@@ -798,6 +841,67 @@ Apps.App = class extends Model{
     static map(){ new Apps.App("map","Maps", "fa fa-map-marker", "apps.conversant.im", "https://apps.conversant.im/app/map", {}) }
     static image(){ new Apps.App("image","Image Viewer", "fa fa-picture-o", "apps.conversant.im", "https://apps.conversant.im/app/image", {}) }
     static giffy(){ new Apps.App("giffy","Giffy", "fa fa-file-o", "apps.conversant.im", "https://apps.conversant.im/app/giffy", {}) }
+}
+
+
+/**
+ * @class Launch
+ *
+ */
+Apps.AppMode = class extends Model{
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    static type(){ return 'm.Apps$AppMode'}
+
+    /**
+     *
+     * @param mode {String} mode the app is to run in
+     */
+    constructor(mode){
+        super(Apps.AppMode.type())
+        this.mode = null
+        if(arguments.length){
+            this.mode = new String(mode)
+        }
+    }
+
+    static syncApp(){ new Apps.AppMode("syncApp") }
+    static collaborationApp(){ new Apps.AppMode("collaborationApp") }
+    static standAloneApp(){ new Apps.AppMode("standAloneApp") }
+}
+
+
+/**
+ * @class Launch
+ *
+ */
+Apps.Launch = class extends Model{
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    static type(){ return 'm.Apps$Launch'}
+
+    /**
+     *
+     * @param app {Apps.App} App to load
+     * @param url {String} url to send to app
+     * @param mode {Apps.Mode} The mode the app is expected to handle
+     */
+    constructor(load, url, mode){
+        super(Apps.Launch.type())
+        this.load = null
+        this.url = null
+        this.mode = null
+        if(arguments.length){
+            this.app = Type.check(app, Apps.App)
+            this.url = new String(url)
+            this.mode = Type.check(mode, Apps.AppMode)
+        }
+
+    }
 }
 
 
@@ -1016,10 +1120,10 @@ Geom.Transform3d = class extends Model{
      */
     constructor(matrix){
         super(Geom.Transform3d.type())
-        this.matrix = [1, 0, 0, 0,
-            0, 1, 0, 0,
-            0, 0, 1, 0,
-            0, 0, 0, 1]
+        this.matrix = [1.0, 0.0, 0.0, 0.0,
+            0.0, 1.0, 0.0, 0.0,
+            0.0, 0.0, 1.0, 0.0,
+            0.0, 0.0, 0.0, 1.0]
         if( arguments.length ) {
             this.matrix = matrix
             if (this.matrix.length != (4 * 4)) {
@@ -1033,10 +1137,10 @@ Geom.Transform3d = class extends Model{
      * @returns {number[]}
      */
     static identity(){
-        return new Geom.Transform3d([1, 0, 0, 0,
-                0, 1, 0, 0,
-                0, 0, 1, 0,
-                0, 0, 0, 1]);
+        return new Geom.Transform3d([1.0, 0.0, 0.0, 0.0,
+            0.0, 1.0, 0.0, 0.0,
+            0.0, 0.0, 1.0, 0.0,
+            0.0, 0.0, 0.0, 1.0]);
     }
 }
 
@@ -1120,6 +1224,11 @@ ETL.EntityMeta = class extends Model{
 module.exports = {
     Type: Type,
     UUID: UUID,
+    List: List,
+    Integer: Integer,
+    Float: Float,
+    Double: Double,
+    Long: Long,
     Auth:Auth,
     Collaboration:Collaboration,
     Apps:Apps,

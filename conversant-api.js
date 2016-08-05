@@ -104,11 +104,8 @@ class API {
 		this._send(this.mapper.write(syncEvent))
 	}
 
-
-
-	sendHack(resource){
-		m.Type.check(resource, m.Resource.Resource)
-		this._send(this.mapper.write(resource))
+	sendHack(x){
+		this._send(this.mapper.write(x))
 	}
 
 	// def sendChatMessage(author:Auth.ProfileInfo, cId: String, v:Collaboration.ViewerState, content:Option[String], contentClass:Collaboration.ContentClass):Unit
