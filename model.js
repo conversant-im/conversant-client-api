@@ -1188,6 +1188,105 @@ Apps.InitPeers = class extends Model{
 }
 
 /**
+ * @namespace Peers
+ */
+let Peers = {};
+
+/**
+ * @class PeerState
+ */
+Peers.PeerState = class extends Model{
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    static type(){ return 'm.Peers$PeerState'}
+
+    /**
+     * @param provider {Auth.Provider}
+     * @param collaborationId {String}
+     * @param userAgent {String}
+     * @param iceConnectionState {Peers.IceConnectionState}
+     * @param signalingState {Peers.SignalingState}
+     */
+    constructor( provider, collaborationId, userAgent, iceConnectionState, signalingState ){
+        super(Peers.PeerState.type())
+        this.provider = null
+        this.collaborationId = null
+        this.userAgent = null
+        this.iceConnectionState = null
+        this.signalingState = null
+        if(arguments.length) {
+            this.provider = null
+            this.collaborationId = new String(collaborationId)
+            this.userAgent = new String(userAgent)
+            this.iceConnectionState = Type.check(iceConnectionState, Peers.IceConnectionState)
+            this.signalingState = Type.check(signalingState, Peers.SignalingState)
+        }
+    }
+}
+
+/**
+ * @class IceConnectionState
+ */
+Peers.IceConnectionState = class extends Model{
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    static type(){ return 'm.Peers$IceConnectionState'}
+
+    /**
+     * @param state {String}
+     */
+    constructor( state ){
+        super(Peers.IceConnectionState.type())
+        this.state = null
+        if(arguments.length) {
+            this.state = new String(state)
+        }
+    }
+
+    static new() { new IceConnectionState("new") }
+    static checking() { new IceConnectionState("checking") }
+    static connected(){ new IceConnectionState("connected")}
+    static completed(){ new IceConnectionState("completed")}
+    static failed(){ new IceConnectionState("failed")}
+    static disconnected(){ new IceConnectionState("disconnected")}
+    static closed(){ new IceConnectionState("closed")}
+}
+
+
+/**
+ * @class SignalingState
+ */
+Peers.SignalingState = class extends Model{
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    static type(){ return 'm.Peers$SignalingState'}
+
+    /**
+     * @param state {String}
+     */
+    constructor( state ){
+        super(Peers.SignalingState.type())
+        this.state = null
+        if(arguments.length) {
+            this.state = new String(state)
+        }
+    }
+
+    static stable() { new SignalingState("stable") }
+    static haveLocalOffer() { new SignalingState("have-local-offer") }
+    static haveLocalPranswer(){ new SignalingState("have-local-pranswer")}
+    static haveRemotePranswer(){ new SignalingState("have-remote-pranswer")}
+    static closed(){ new SignalingState("closed")}
+}
+
+
+/**
  * @namespace Resource
  */
 let Resource = {};
@@ -1351,6 +1450,7 @@ module.exports = {
     Apps:Apps,
     Entities: Entities,
     Geom:Geom,
+    Peers: Peers,
     Resource: Resource,
     ETL:ETL
 }

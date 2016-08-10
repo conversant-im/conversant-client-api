@@ -2433,6 +2433,201 @@ Apps.InitPeers = (function (_Model24) {
 })(Model);
 
 /**
+ * @namespace Peers
+ */
+var Peers = {};
+
+/**
+ * @class PeerState
+ */
+Peers.PeerState = (function (_Model25) {
+    _inherits(_class35, _Model25);
+
+    _createClass(_class35, null, [{
+        key: "type",
+
+        /**
+         * Return the full class name of this type.
+         * @returns {string}
+         */
+        value: function type() {
+            return 'm.Peers$PeerState';
+        }
+
+        /**
+         * @param provider {Auth.Provider}
+         * @param collaborationId {String}
+         * @param userAgent {String}
+         * @param iceConnectionState {Peers.IceConnectionState}
+         * @param signalingState {Peers.SignalingState}
+         */
+
+    }]);
+
+    function _class35(provider, collaborationId, userAgent, iceConnectionState, signalingState) {
+        _classCallCheck(this, _class35);
+
+        var _this40 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class35).call(this, Peers.PeerState.type()));
+
+        _this40.provider = null;
+        _this40.collaborationId = null;
+        _this40.userAgent = null;
+        _this40.iceConnectionState = null;
+        _this40.signalingState = null;
+        if (arguments.length) {
+            _this40.provider = null;
+            _this40.collaborationId = new String(collaborationId);
+            _this40.userAgent = new String(userAgent);
+            _this40.iceConnectionState = Type.check(iceConnectionState, Peers.IceConnectionState);
+            _this40.signalingState = Type.check(signalingState, Peers.SignalingState);
+        }
+        return _this40;
+    }
+
+    return _class35;
+})(Model);
+
+/**
+ * @class IceConnectionState
+ */
+Peers.IceConnectionState = (function (_Model26) {
+    _inherits(_class36, _Model26);
+
+    _createClass(_class36, null, [{
+        key: "type",
+
+        /**
+         * Return the full class name of this type.
+         * @returns {string}
+         */
+        value: function type() {
+            return 'm.Peers$IceConnectionState';
+        }
+
+        /**
+         * @param state {String}
+         */
+
+    }]);
+
+    function _class36(state) {
+        _classCallCheck(this, _class36);
+
+        var _this41 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class36).call(this, Peers.IceConnectionState.type()));
+
+        _this41.state = null;
+        if (arguments.length) {
+            _this41.state = new String(state);
+        }
+        return _this41;
+    }
+
+    _createClass(_class36, null, [{
+        key: "new",
+        value: function _new() {
+            new IceConnectionState("new");
+        }
+    }, {
+        key: "checking",
+        value: function checking() {
+            new IceConnectionState("checking");
+        }
+    }, {
+        key: "connected",
+        value: function connected() {
+            new IceConnectionState("connected");
+        }
+    }, {
+        key: "completed",
+        value: function completed() {
+            new IceConnectionState("completed");
+        }
+    }, {
+        key: "failed",
+        value: function failed() {
+            new IceConnectionState("failed");
+        }
+    }, {
+        key: "disconnected",
+        value: function disconnected() {
+            new IceConnectionState("disconnected");
+        }
+    }, {
+        key: "closed",
+        value: function closed() {
+            new IceConnectionState("closed");
+        }
+    }]);
+
+    return _class36;
+})(Model);
+
+/**
+ * @class SignalingState
+ */
+Peers.SignalingState = (function (_Model27) {
+    _inherits(_class37, _Model27);
+
+    _createClass(_class37, null, [{
+        key: "type",
+
+        /**
+         * Return the full class name of this type.
+         * @returns {string}
+         */
+        value: function type() {
+            return 'm.Peers$SignalingState';
+        }
+
+        /**
+         * @param state {String}
+         */
+
+    }]);
+
+    function _class37(state) {
+        _classCallCheck(this, _class37);
+
+        var _this42 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class37).call(this, Peers.SignalingState.type()));
+
+        _this42.state = null;
+        if (arguments.length) {
+            _this42.state = new String(state);
+        }
+        return _this42;
+    }
+
+    _createClass(_class37, null, [{
+        key: "stable",
+        value: function stable() {
+            new SignalingState("stable");
+        }
+    }, {
+        key: "haveLocalOffer",
+        value: function haveLocalOffer() {
+            new SignalingState("have-local-offer");
+        }
+    }, {
+        key: "haveLocalPranswer",
+        value: function haveLocalPranswer() {
+            new SignalingState("have-local-pranswer");
+        }
+    }, {
+        key: "haveRemotePranswer",
+        value: function haveRemotePranswer() {
+            new SignalingState("have-remote-pranswer");
+        }
+    }, {
+        key: "closed",
+        value: function closed() {
+            new SignalingState("closed");
+        }
+    }]);
+
+    return _class37;
+})(Model);
+
+/**
  * @namespace Resource
  */
 var Resource = {};
@@ -2440,10 +2635,10 @@ var Resource = {};
 /**
  * @class Resource
  */
-Resource.Resource = (function (_Model25) {
-    _inherits(_class35, _Model25);
+Resource.Resource = (function (_Model28) {
+    _inherits(_class38, _Model28);
 
-    _createClass(_class35, null, [{
+    _createClass(_class38, null, [{
         key: "type",
 
         /**
@@ -2462,18 +2657,18 @@ Resource.Resource = (function (_Model25) {
 
     }]);
 
-    function _class35(uri, contentType, thumbnail) {
-        _classCallCheck(this, _class35);
+    function _class38(uri, contentType, thumbnail) {
+        _classCallCheck(this, _class38);
 
-        var _this40 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class35).call(this, Resource.Resource.type()));
+        var _this43 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class38).call(this, Resource.Resource.type()));
 
-        _this40.uri = new String(uri);
-        _this40.contentType = new String(contentType);
-        _this40.thumbnail = new String(thumbnail);
-        return _this40;
+        _this43.uri = new String(uri);
+        _this43.contentType = new String(contentType);
+        _this43.thumbnail = new String(thumbnail);
+        return _this43;
     }
 
-    return _class35;
+    return _class38;
 })(Model);
 
 /**
@@ -2485,10 +2680,10 @@ var Geom = {};
  * @class Transform3d
  * A 3D transformation
  */
-Geom.Transform3d = (function (_Model26) {
-    _inherits(_class36, _Model26);
+Geom.Transform3d = (function (_Model29) {
+    _inherits(_class39, _Model29);
 
-    _createClass(_class36, null, [{
+    _createClass(_class39, null, [{
         key: "type",
 
         /**
@@ -2506,19 +2701,19 @@ Geom.Transform3d = (function (_Model26) {
 
     }]);
 
-    function _class36(matrix) {
-        _classCallCheck(this, _class36);
+    function _class39(matrix) {
+        _classCallCheck(this, _class39);
 
-        var _this41 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class36).call(this, Geom.Transform3d.type()));
+        var _this44 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class39).call(this, Geom.Transform3d.type()));
 
-        _this41.matrix = [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0];
+        _this44.matrix = [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0];
         if (arguments.length) {
-            _this41.matrix = matrix;
-            if (_this41.matrix.length != 4 * 4) {
+            _this44.matrix = matrix;
+            if (_this44.matrix.length != 4 * 4) {
                 throw new Error('Matrix is not 4x4');
             }
         }
-        return _this41;
+        return _this44;
     }
 
     /**
@@ -2526,14 +2721,14 @@ Geom.Transform3d = (function (_Model26) {
      * @returns {number[]}
      */
 
-    _createClass(_class36, null, [{
+    _createClass(_class39, null, [{
         key: "identity",
         value: function identity() {
             return new Geom.Transform3d([1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0]);
         }
     }]);
 
-    return _class36;
+    return _class39;
 })(Model);
 
 /**
@@ -2544,10 +2739,10 @@ var ETL = {};
 /**
  * @class Resource
  */
-ETL.EntityMeta = (function (_Model27) {
-    _inherits(_class37, _Model27);
+ETL.EntityMeta = (function (_Model30) {
+    _inherits(_class40, _Model30);
 
-    _createClass(_class37, null, [{
+    _createClass(_class40, null, [{
         key: "type",
 
         /**
@@ -2580,51 +2775,51 @@ ETL.EntityMeta = (function (_Model27) {
 
     }]);
 
-    function _class37(uri, timestamp, version, icon, thumb, domain, publishDate, contentType, title, description, authors, keywords, coverUrl, imgs, meta, content, raw) {
-        _classCallCheck(this, _class37);
+    function _class40(uri, timestamp, version, icon, thumb, domain, publishDate, contentType, title, description, authors, keywords, coverUrl, imgs, meta, content, raw) {
+        _classCallCheck(this, _class40);
 
-        var _this42 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class37).call(this, ETL.EntityMeta.type()));
+        var _this45 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class40).call(this, ETL.EntityMeta.type()));
 
-        _this42.uri = null;
-        _this42.timestamp = null;
-        _this42.version = null;
-        _this42.icon = null;
-        _this42.thumb = null;
-        _this42.domain = null;
-        _this42.publishDate = null;
-        _this42.contentType = null;
-        _this42.title = null;
-        _this42.description = null;
-        _this42.authors = null;
-        _this42.keywords = null;
-        _this42.coverUrl = null;
-        _this42.imgs = null;
-        _this42.meta = null;
-        _this42.content = null;
-        _this42.raw = null;
+        _this45.uri = null;
+        _this45.timestamp = null;
+        _this45.version = null;
+        _this45.icon = null;
+        _this45.thumb = null;
+        _this45.domain = null;
+        _this45.publishDate = null;
+        _this45.contentType = null;
+        _this45.title = null;
+        _this45.description = null;
+        _this45.authors = null;
+        _this45.keywords = null;
+        _this45.coverUrl = null;
+        _this45.imgs = null;
+        _this45.meta = null;
+        _this45.content = null;
+        _this45.raw = null;
         if (arguments.length) {
-            _this42.uri = new String(uri);
-            _this42.timestamp = new String(timestamp);
-            _this42.version = new String(version);
-            _this42.icon = new String(icon);
-            _this42.thumb = new String(thumb);
-            _this42.domain = new String(domain);
-            _this42.publishDate = typeof publishDate === "undefined" ? null : new String(publishDate);
-            _this42.contentType = new String(contentType);
-            _this42.title = new String(title);
-            _this42.description = new String(description);
-            _this42.authors = authors;
-            _this42.keywords = keywords;
-            _this42.coverUrl = new String(coverUrl);
-            _this42.imgs = imgs;
-            _this42.meta = meta;
-            _this42.content = typeof content === "undefined" ? null : new String(content);
-            _this42.raw = typeof raw === "undefined" ? null : new String(raw);
+            _this45.uri = new String(uri);
+            _this45.timestamp = new String(timestamp);
+            _this45.version = new String(version);
+            _this45.icon = new String(icon);
+            _this45.thumb = new String(thumb);
+            _this45.domain = new String(domain);
+            _this45.publishDate = typeof publishDate === "undefined" ? null : new String(publishDate);
+            _this45.contentType = new String(contentType);
+            _this45.title = new String(title);
+            _this45.description = new String(description);
+            _this45.authors = authors;
+            _this45.keywords = keywords;
+            _this45.coverUrl = new String(coverUrl);
+            _this45.imgs = imgs;
+            _this45.meta = meta;
+            _this45.content = typeof content === "undefined" ? null : new String(content);
+            _this45.raw = typeof raw === "undefined" ? null : new String(raw);
         }
-        return _this42;
+        return _this45;
     }
 
-    return _class37;
+    return _class40;
 })(Model);
 
 module.exports = {
