@@ -1456,8 +1456,6 @@ module.exports = {
 }
 
 
-// Expose to None NODE.js clients
-// TODO make this an option so we do not pollute the namespace
 window.m = module.exports
 
 
