@@ -1219,7 +1219,7 @@ Peers.PeerState = class extends Model{
         if(arguments.length) {
             this.provider = null
             this.collaborationId = new String(collaborationId)
-            this.userAgent = new String(userAgent)
+            this.userAgent = typeof userAgent === "undefined" ? null : new String(userAgent)
             this.iceConnectionState = Type.check(iceConnectionState, Peers.IceConnectionState)
             this.signalingState = Type.check(signalingState, Peers.SignalingState)
         }
