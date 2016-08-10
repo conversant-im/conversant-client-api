@@ -328,6 +328,114 @@ Auth.UserAction = class extends Model{
 }
 
 /**
+ * @namespace Entities
+ */
+let Entities = {};
+
+/**
+ * @class NamedEntity
+ */
+Entities.NamedEntity = class extends Model{
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+
+    /**
+     *
+     * @param uri {String}
+     * @param token {String}
+     */
+    constructor(type, uri, token){
+        super(type)
+
+        this.uri = null
+        this.token = null
+        if( arguments.length > 1) {
+            this.uri = new String(uri)
+            this.token = new String(token)
+        }
+    }
+}
+
+
+/**
+ * @class LocationEntity
+ */
+Entities.LocationEntity = class extends Entities.NamedEntity{
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    static type(){ return 'm.Entities$LocationEntity'}
+
+    /**
+     *
+     * @param uri {String}
+     * @param token {String}
+     */
+    constructor(uri, token){
+        if(arguments.length) {
+            super(Entities.LocationEntity.type(), uri, token)
+        }else{
+            super(Entities.LocationEntity.type())
+        }
+    }
+}
+
+
+/**
+ * @class OrganizationEntity
+ */
+Entities.OrganizationEntity = class extends Entities.NamedEntity{
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    static type(){ return 'm.Entities$OrganizationEntity'}
+
+    /**
+     *
+     * @param uri {String}
+     * @param token {String}
+     */
+    constructor(uri, token){
+        if(arguments.length) {
+            super(Entities.OrganizationEntity.type(), uri, token)
+        }else{
+            super(Entities.OrganizationEntity.type())
+        }
+    }
+}
+
+
+/**
+ * @class PersonEntity
+ */
+Entities.PersonEntity = class extends Entities.NamedEntity{
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    static type(){ return 'm.Entities$PersonEntity'}
+
+    /**
+     *
+     * @param uri {String}
+     * @param token {String}
+     */
+    constructor(uri, token){
+        if(arguments.length) {
+            super(Entities.PersonEntity.type(), uri, token)
+        }else{
+            super(Entities.PersonEntity.type())
+        }
+    }
+}
+
+
+
+/**
  * @namespace Collaboration
  */
 let Collaboration = {};
@@ -706,7 +814,7 @@ Collaboration.ContentLinkCard = class extends Collaboration.Content{
      * @param message {Collaboration.Message}
      * @param entityUri {String}
      * @param view {Collaboration.ViewerState}
-     * @param meta {Entities.Meta}
+     * @param meta {ETL.Meta}
      */
     constructor(id, collaborationId, orgId, timestamp, authors, seen, message, entityUri, view, meta){
         if(arguments.length) {
@@ -947,14 +1055,17 @@ Apps.InitApp = class extends Model{
      *
      * @param app {Apps.App}
      * @param restoreState {Collaboration.ViewerState} OPTIONAL The view state that is to be restored
+     * @param mode {Apps.AppMode}
      */
-    constructor(app, restoreState){
+    constructor(app, restoreState, mode){
         super(Apps.InitApp.type())
         this.app = null
         this.restoreState = null
+        this.mode = null
         if(arguments.length) {
             this.app = Type.check(app, Apps.App)
             this.restoreState = typeof restoreState === "undefined" ? null : [Type.check(restoreState, Collaboration.ViewerState)]
+            this.mode = Type.check(mode, Apps.AppMode)
         }
     }
 }
@@ -1238,6 +1349,7 @@ module.exports = {
     Auth:Auth,
     Collaboration:Collaboration,
     Apps:Apps,
+    Entities: Entities,
     Geom:Geom,
     Resource: Resource,
     ETL:ETL

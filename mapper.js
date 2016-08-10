@@ -107,7 +107,7 @@ class Mapper{
         let jsType = typeof obj
         //console.log('jsType: '+jsType)
         let className = obj.constructor.name
-        //console.log('className: '+className)
+        console.log('className: '+className)
         if(obj.$type && this.objMap[obj.$type]){
             return this.objMap[obj.$type](obj)
         }else if(this.objMap[className]){
@@ -121,7 +121,7 @@ class Mapper{
             var props = {}
             for(let x in obj ){
                 if(x != '$type') {
-                    console.log('x ' + x)
+                    //console.log('x ' + x)
                     props[x] = this.pickleType(obj[x])
                 }
             }
@@ -141,6 +141,10 @@ class Mapper{
 
 
     unpickleType(rep){
+        if(!rep){
+            console.log("ERROR: rep is undefined")
+            return null;
+        }
         //console.log('rep: ',rep);
         if(rep.s && !rep.t)rep.t = rep.s
         //console.log('type: '+rep.t);
@@ -157,8 +161,13 @@ class Mapper{
             for(let x in inst ){
                 if(x != '$type') {
                     //console.log('x ' + x)
-                    let prop = this.unpickleType(rep.v[x])
-                    inst[x] = prop
+                    try {
+                        let prop = this.unpickleType(rep.v[x])
+                        inst[x] = prop
+                    }catch(e){
+                        console.error('[ERROR] - unpickleType failed for '+namespace+'.'+x+'  with error: ',e);
+                        throw e;
+                    }
                 }
             }
             return inst

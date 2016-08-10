@@ -137,7 +137,8 @@ class AppParameters{
 	 * @param team {Collaboration.SyncUserEvent[]}
      * @param peers {Peers.PeerState[]}
      */
-	constructor(app, restoreState, collaboration, provider, team, peers){
+	constructor(mode, app, restoreState, collaboration, provider, team, peers){
+		this.mode = m.Type.check(mode, m.Apps.AppMode)
 		this.app =  m.Type.check(app, m.Apps.App)
 		this.restoreState = typeof restoreState === "undefined" ?  null : m.Type.check(restoreState, m.Collaboration.ViewerState)
 		this.collaboration = m.Type.check(collaboration, m.Collaboration.Collaboration)
@@ -160,12 +161,14 @@ class ConversantAPI extends API{
 	constructor(id){
 		var observerList = []
 
+
 		let observer = Rx.Observer.create((data) => {
 			console.log('postMessage', data)
-			window.top.postMessage(data, '*')
+			top.window.postMessage(data, '*')
 		});
 		window.addEventListener('message', (event) => {
-			console.log('message',event)
+			console.log('clientAPI:: message',event)
+			console.log('clientAPI:: message data',event.data)
 			if(event.data && event.data != ''){
 				try {
 					let x = this.mapper.read(event.data)
@@ -194,7 +197,7 @@ class ConversantAPI extends API{
 		});
 		super(observer, observable)
 		this.id = id
-		this.isSyncMode = window.name == 'sync'
+		this.isSyncMode = window.name == "syncApp"
 	}
 
 	/**
@@ -212,7 +215,7 @@ class ConversantAPI extends API{
 
 		Promise.all([pApp, pCollaboration, pPofile, pTeam, pPeers]).then( (vals) => {
 			console.log('-- APP INIT --')
-			let appParams = new AppParameters( vals[0].app, vals[0].restoreState,  vals[1].collaboration, vals[2].provider, vals[3].team, vals[4].peers  )
+			let appParams = new AppParameters( vals[0].mode, vals[0].app, vals[0].restoreState,  vals[1].collaboration, vals[2].provider, vals[3].team, vals[4].peers  )
 			this.appParams = appParams
 			fun(appParams)
 		})
