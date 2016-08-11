@@ -35,7 +35,7 @@ var API = (function () {
 	_createClass(API, [{
 		key: '_send',
 		value: function _send(data) {
-			console.log('channelSubject.onNext', data);
+			//console.log('channelSubject.onNext', data)
 			this.channelSubject.onNext(data);
 		}
 
@@ -186,10 +186,9 @@ var AppParameters =
  * @param team {Collaboration.SyncUserEvent[]}
     * @param peers {Peers.PeerState[]}
     */
-function AppParameters(mode, app, restoreState, collaboration, provider, team, peers) {
+function AppParameters(app, restoreState, collaboration, provider, team, peers) {
 	_classCallCheck(this, AppParameters);
 
-	this.mode = m.Type.check(mode, m.Apps.AppMode);
 	this.app = m.Type.check(app, m.Apps.App);
 	this.restoreState = typeof restoreState === "undefined" ? null : m.Type.check(restoreState, m.Collaboration.ViewerState);
 	this.collaboration = m.Type.check(collaboration, m.Collaboration.Collaboration);
@@ -225,8 +224,6 @@ var ConversantAPI = (function (_API) {
 			top.window.postMessage(data, '*');
 		});
 		window.addEventListener('message', function (event) {
-			console.log('clientAPI:: message', event);
-			console.log('clientAPI:: message data', event.data);
 			if (event.data && event.data != '') {
 				try {
 					(function () {
@@ -237,6 +234,7 @@ var ConversantAPI = (function (_API) {
 						});
 					})();
 				} catch (e) {
+					console.error('[ERROR] clientAPI:: handling message data', event.data);
 					alert('error');
 					console.log('ERROR', e);
 				}
@@ -264,6 +262,7 @@ var ConversantAPI = (function (_API) {
 
 		_this3.id = id;
 		_this3.isSyncMode = window.name == "syncApp";
+		_this3.mode = new m.Apps.AppMode(window.name);
 		return _this3;
 	}
 
@@ -287,11 +286,11 @@ var ConversantAPI = (function (_API) {
 
 			Promise.all([pApp, pCollaboration, pPofile, pTeam, pPeers]).then(function (vals) {
 				console.log('-- APP INIT --');
-				var appParams = new AppParameters(vals[0].mode, vals[0].app, vals[0].restoreState, vals[1].collaboration, vals[2].provider, vals[3].team, vals[4].peers);
+				var appParams = new AppParameters(vals[0].app, vals[0].restoreState, vals[1].collaboration, vals[2].provider, vals[3].team, vals[4].peers);
 				_this4.appParams = appParams;
 				fun(appParams);
 			});
-			this._send(this.mapper.write(new m.Apps.Init(this.id)));
+			this._send(this.mapper.write(new m.Apps.Init(this.id, this.mode)));
 		}
 	}]);
 
@@ -318,7 +317,7 @@ var Mapper = (function () {
         _classCallCheck(this, Mapper);
 
         this.$type = type;
-        console.log('created type: ' + type);
+        //console.log('created type: '+ type);
         var that = this;
         function buildList(items) {
             if (!items.length) {
@@ -539,9 +538,9 @@ var Mapper = (function () {
         key: "read",
         value: function read(json) {
             var rep = JSON.parse(json);
-            console.log('Mapper::read: ' + rep.t);
+            //console.log('Mapper::read: '+rep.t);
             var obj = this.unpickleType(rep);
-            console.log('*** Ret: ', obj);
+            //console.log('*** Ret: ',obj)
             return obj;
             //return JSON.parse(json)
         }
@@ -1827,12 +1826,65 @@ Collaboration.ContentLinkCard = (function (_Collaboration$Conten2) {
 })(Collaboration.Content);
 
 /**
- * @class ContentAppEvent
+ * @class ContentNotification
  */
-Collaboration.ContentAppEvent = (function (_Collaboration$Conten3) {
+Collaboration.ContentNotification = (function (_Collaboration$Conten3) {
     _inherits(_class22, _Collaboration$Conten3);
 
     _createClass(_class22, null, [{
+        key: "type",
+
+        /**
+         * Return the full class name of this type.
+         * @returns {string}
+         */
+        value: function type() {
+            return 'm.Collaboration$ContentNotification';
+        }
+
+        /**
+         *
+         * @param id {String}
+         * @param collaborationId {String}
+         * @param orgId {String}
+         * @param timestamp {String}
+         * @param authors {Auth.Provider[]}
+         * @param seen {Auth.Provider[]}
+         * @param message {Collaboration.Message}
+         * @param view {Collaboration.ViewerState}
+         * @param severity {Collaboration.NotificationLevel}
+         * @param icon {String}
+         */
+
+    }]);
+
+    function _class22(id, collaborationId, orgId, timestamp, authors, seen, message, view, severity, icon) {
+        _classCallCheck(this, _class22);
+
+        if (arguments.length) {
+            var _this27 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class22).call(this, Collaboration.ContentNotification.type(), id, collaborationId, orgId, timestamp, authors, seen, message, view));
+
+            _this27.severity = Type.check(severity, Collaboration.NotificationLevel);
+            _this27.icon = new String(icon);
+        } else {
+            var _this27 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class22).call(this, Collaboration.ContentAppEvent.type()));
+
+            _this27.severity = null;
+            _this27.icon = null;
+        }
+        return _possibleConstructorReturn(_this27);
+    }
+
+    return _class22;
+})(Collaboration.Content);
+
+/**
+ * @class ContentAppEvent
+ */
+Collaboration.ContentAppEvent = (function (_Collaboration$Conten4) {
+    _inherits(_class23, _Collaboration$Conten4);
+
+    _createClass(_class23, null, [{
         key: "type",
 
         /**
@@ -1859,33 +1911,88 @@ Collaboration.ContentAppEvent = (function (_Collaboration$Conten3) {
 
     }]);
 
-    function _class22(id, collaborationId, orgId, timestamp, authors, seen, message, view, coverImg, actions) {
-        _classCallCheck(this, _class22);
+    function _class23(id, collaborationId, orgId, timestamp, authors, seen, message, view, coverImg, actions) {
+        _classCallCheck(this, _class23);
 
         if (arguments.length) {
-            var _this27 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class22).call(this, Collaboration.ContentAppEvent.type(), id, collaborationId, orgId, timestamp, authors, seen, message, view));
+            var _this28 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class23).call(this, Collaboration.ContentAppEvent.type(), id, collaborationId, orgId, timestamp, authors, seen, message, view));
 
-            _this27.coverImg = new String(coverImg);
-            _this27.actions = actions.map(function (s) {
+            _this28.coverImg = new String(coverImg);
+            _this28.actions = actions.map(function (s) {
                 return Type.check(s, Apps.App);
             });
         } else {
-            var _this27 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class22).call(this, Collaboration.ContentAppEvent.type()));
+            var _this28 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class23).call(this, Collaboration.ContentAppEvent.type()));
 
-            _this27.coverImg = null;
-            _this27.actions = null;
+            _this28.coverImg = null;
+            _this28.actions = null;
         }
-        return _possibleConstructorReturn(_this27);
+        return _possibleConstructorReturn(_this28);
     }
 
-    return _class22;
+    return _class23;
 })(Collaboration.Content);
+
+/**
+ * @class NotificationLevel
+ */
+Collaboration.NotificationLevel = (function (_Model14) {
+    _inherits(_class24, _Model14);
+
+    _createClass(_class24, null, [{
+        key: "type",
+
+        /**
+         * Return the full class name of this type.
+         * @returns {string}
+         */
+        value: function type() {
+            return 'm.Collaboration$NotificationLevel';
+        }
+
+        /**
+         * @param severity {String}
+         */
+
+    }]);
+
+    function _class24(severity) {
+        _classCallCheck(this, _class24);
+
+        var _this29 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class24).call(this, Collaboration.NotificationLevel.type()));
+
+        _this29.severity = null;
+        if (arguments.length) {
+            _this29.severity = new String(severity);
+        }
+        return _this29;
+    }
+
+    _createClass(_class24, null, [{
+        key: "info",
+        value: function info() {
+            new NotificationLevel("info");
+        }
+    }, {
+        key: "warning",
+        value: function warning() {
+            new NotificationLevel("warning");
+        }
+    }, {
+        key: "error",
+        value: function error() {
+            new NotificationLevel("error");
+        }
+    }]);
+
+    return _class24;
+})(Model);
 
 /**
  * @class Message
  */
-Collaboration.Message = (function (_Model14) {
-    _inherits(_class23, _Model14);
+Collaboration.Message = (function (_Model15) {
+    _inherits(_class25, _Model15);
 
     /**
      *
@@ -1893,32 +2000,32 @@ Collaboration.Message = (function (_Model14) {
      * @param mentions {Auth.Provider[]}
      */
 
-    function _class23(type, text, mentions) {
-        _classCallCheck(this, _class23);
+    function _class25(type, text, mentions) {
+        _classCallCheck(this, _class25);
 
-        var _this28 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class23).call(this, type));
+        var _this30 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class25).call(this, type));
 
-        _this28.text = null;
-        _this28.mentions = null;
+        _this30.text = null;
+        _this30.mentions = null;
         if (arguments.length > 1) {
-            _this28.text = new String(text);
-            _this28.mentions = mentions.map(function (a) {
+            _this30.text = new String(text);
+            _this30.mentions = mentions.map(function (a) {
                 return Type.check(a, Auth.Provider);
             });
         }
-        return _this28;
+        return _this30;
     }
 
-    return _class23;
+    return _class25;
 })(Model);
 
 /**
  * @class MessageBasic
  */
 Collaboration.MessageBasic = (function (_Collaboration$Messag) {
-    _inherits(_class24, _Collaboration$Messag);
+    _inherits(_class26, _Collaboration$Messag);
 
-    _createClass(_class24, null, [{
+    _createClass(_class26, null, [{
         key: "type",
 
         /**
@@ -1937,18 +2044,18 @@ Collaboration.MessageBasic = (function (_Collaboration$Messag) {
 
     }]);
 
-    function _class24(text, mentions) {
-        _classCallCheck(this, _class24);
+    function _class26(text, mentions) {
+        _classCallCheck(this, _class26);
 
         if (arguments.length) {
-            var _this29 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class24).call(this, Collaboration.MessageBasic.type(), text, mentions));
+            var _this31 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class26).call(this, Collaboration.MessageBasic.type(), text, mentions));
         } else {
-            var _this29 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class24).call(this, Collaboration.MessageBasic.type()));
+            var _this31 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class26).call(this, Collaboration.MessageBasic.type()));
         }
-        return _possibleConstructorReturn(_this29);
+        return _possibleConstructorReturn(_this31);
     }
 
-    return _class24;
+    return _class26;
 })(Collaboration.Message);
 
 /**
@@ -1960,10 +2067,10 @@ var Apps = {};
  * @class App
  * Identifies an application of the system.
  */
-Apps.App = (function (_Model15) {
-    _inherits(_class25, _Model15);
+Apps.App = (function (_Model16) {
+    _inherits(_class27, _Model16);
 
-    _createClass(_class25, null, [{
+    _createClass(_class27, null, [{
         key: "type",
 
         /**
@@ -1986,21 +2093,21 @@ Apps.App = (function (_Model15) {
 
     }]);
 
-    function _class25(id, name, icon, origin, entry, args) {
-        _classCallCheck(this, _class25);
+    function _class27(id, name, icon, origin, entry, args) {
+        _classCallCheck(this, _class27);
 
-        var _this30 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class25).call(this, Apps.App.type()));
+        var _this32 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class27).call(this, Apps.App.type()));
 
-        _this30.id = new String(id);
-        _this30.name = new String(name);
-        _this30.icon = new String(icon);
-        _this30.origin = new String(origin);
-        _this30.entry = new String(entry);
-        _this30.args = args;
-        return _this30;
+        _this32.id = new String(id);
+        _this32.name = new String(name);
+        _this32.icon = new String(icon);
+        _this32.origin = new String(origin);
+        _this32.entry = new String(entry);
+        _this32.args = args;
+        return _this32;
     }
 
-    _createClass(_class25, null, [{
+    _createClass(_class27, null, [{
         key: "info",
         value: function info() {
             new Apps.App("info", "Chat Info", "fa fa-info ", "apps.conversant.im", "https://apps.conversant.im/app/info", {});
@@ -2042,17 +2149,17 @@ Apps.App = (function (_Model15) {
         }
     }]);
 
-    return _class25;
+    return _class27;
 })(Model);
 
 /**
  * @class Launch
  *
  */
-Apps.AppMode = (function (_Model16) {
-    _inherits(_class26, _Model16);
+Apps.AppMode = (function (_Model17) {
+    _inherits(_class28, _Model17);
 
-    _createClass(_class26, null, [{
+    _createClass(_class28, null, [{
         key: "type",
 
         /**
@@ -2070,19 +2177,19 @@ Apps.AppMode = (function (_Model16) {
 
     }]);
 
-    function _class26(mode) {
-        _classCallCheck(this, _class26);
+    function _class28(mode) {
+        _classCallCheck(this, _class28);
 
-        var _this31 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class26).call(this, Apps.AppMode.type()));
+        var _this33 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class28).call(this, Apps.AppMode.type()));
 
-        _this31.mode = null;
+        _this33.mode = null;
         if (arguments.length) {
-            _this31.mode = new String(mode);
+            _this33.mode = new String(mode);
         }
-        return _this31;
+        return _this33;
     }
 
-    _createClass(_class26, null, [{
+    _createClass(_class28, null, [{
         key: "syncApp",
         value: function syncApp() {
             new Apps.AppMode("syncApp");
@@ -2099,17 +2206,17 @@ Apps.AppMode = (function (_Model16) {
         }
     }]);
 
-    return _class26;
+    return _class28;
 })(Model);
 
 /**
  * @class Launch
  *
  */
-Apps.Launch = (function (_Model17) {
-    _inherits(_class27, _Model17);
+Apps.Launch = (function (_Model18) {
+    _inherits(_class29, _Model18);
 
-    _createClass(_class27, null, [{
+    _createClass(_class29, null, [{
         key: "type",
 
         /**
@@ -2129,34 +2236,34 @@ Apps.Launch = (function (_Model17) {
 
     }]);
 
-    function _class27(load, url, mode) {
-        _classCallCheck(this, _class27);
+    function _class29(load, url, mode) {
+        _classCallCheck(this, _class29);
 
-        var _this32 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class27).call(this, Apps.Launch.type()));
+        var _this34 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class29).call(this, Apps.Launch.type()));
 
-        _this32.load = null;
-        _this32.url = null;
-        _this32.mode = null;
+        _this34.load = null;
+        _this34.url = null;
+        _this34.mode = null;
         if (arguments.length) {
-            _this32.app = Type.check(app, Apps.App);
-            _this32.url = new String(url);
-            _this32.mode = Type.check(mode, Apps.AppMode);
+            _this34.app = Type.check(app, Apps.App);
+            _this34.url = new String(url);
+            _this34.mode = Type.check(mode, Apps.AppMode);
         }
 
-        return _this32;
+        return _this34;
     }
 
-    return _class27;
+    return _class29;
 })(Model);
 
 /**
  * @class Init
  * Signal the host that the app is ready for initialization.
  */
-Apps.Init = (function (_Model18) {
-    _inherits(_class28, _Model18);
+Apps.Init = (function (_Model19) {
+    _inherits(_class30, _Model19);
 
-    _createClass(_class28, null, [{
+    _createClass(_class30, null, [{
         key: "type",
 
         /**
@@ -2170,29 +2277,31 @@ Apps.Init = (function (_Model18) {
         /**
          *
          * @param appId {String} Your app id to initialize
+         * @param mode {Apps.AppMode} mode you app is running in.
          */
 
     }]);
 
-    function _class28(appId) {
-        _classCallCheck(this, _class28);
+    function _class30(appId, mode) {
+        _classCallCheck(this, _class30);
 
-        var _this33 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class28).call(this, Apps.Init.type()));
+        var _this35 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class30).call(this, Apps.Init.type()));
 
-        _this33.appId = new String(appId);
-        return _this33;
+        _this35.appId = new String(appId);
+        _this35.mode = Type.check(mode, Apps.AppMode);
+        return _this35;
     }
 
-    return _class28;
+    return _class30;
 })(Model);
 
 /**
  * @class InitApp
  */
-Apps.InitApp = (function (_Model19) {
-    _inherits(_class29, _Model19);
+Apps.InitApp = (function (_Model20) {
+    _inherits(_class31, _Model20);
 
-    _createClass(_class29, null, [{
+    _createClass(_class31, null, [{
         key: "type",
 
         /**
@@ -2212,32 +2321,30 @@ Apps.InitApp = (function (_Model19) {
 
     }]);
 
-    function _class29(app, restoreState, mode) {
-        _classCallCheck(this, _class29);
+    function _class31(app, restoreState, mode) {
+        _classCallCheck(this, _class31);
 
-        var _this34 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class29).call(this, Apps.InitApp.type()));
+        var _this36 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class31).call(this, Apps.InitApp.type()));
 
-        _this34.app = null;
-        _this34.restoreState = null;
-        _this34.mode = null;
+        _this36.app = null;
+        _this36.restoreState = null;
         if (arguments.length) {
-            _this34.app = Type.check(app, Apps.App);
-            _this34.restoreState = typeof restoreState === "undefined" ? null : [Type.check(restoreState, Collaboration.ViewerState)];
-            _this34.mode = Type.check(mode, Apps.AppMode);
+            _this36.app = Type.check(app, Apps.App);
+            _this36.restoreState = typeof restoreState === "undefined" ? null : [Type.check(restoreState, Collaboration.ViewerState)];
         }
-        return _this34;
+        return _this36;
     }
 
-    return _class29;
+    return _class31;
 })(Model);
 
 /**
  * @class InitProfile
  */
-Apps.InitProvider = (function (_Model20) {
-    _inherits(_class30, _Model20);
+Apps.InitProvider = (function (_Model21) {
+    _inherits(_class32, _Model21);
 
-    _createClass(_class30, null, [{
+    _createClass(_class32, null, [{
         key: "type",
 
         /**
@@ -2255,28 +2362,28 @@ Apps.InitProvider = (function (_Model20) {
 
     }]);
 
-    function _class30(provider) {
-        _classCallCheck(this, _class30);
+    function _class32(provider) {
+        _classCallCheck(this, _class32);
 
-        var _this35 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class30).call(this, Apps.InitProvider.type()));
+        var _this37 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class32).call(this, Apps.InitProvider.type()));
 
-        _this35.provider = null;
+        _this37.provider = null;
         if (arguments.length) {
-            _this35.provider = Type.check(provider, Auth.Provider);
+            _this37.provider = Type.check(provider, Auth.Provider);
         }
-        return _this35;
+        return _this37;
     }
 
-    return _class30;
+    return _class32;
 })(Model);
 
 /**
  * @class InitOrganization
  */
-Apps.InitOrganization = (function (_Model21) {
-    _inherits(_class31, _Model21);
+Apps.InitOrganization = (function (_Model22) {
+    _inherits(_class33, _Model22);
 
-    _createClass(_class31, null, [{
+    _createClass(_class33, null, [{
         key: "type",
 
         /**
@@ -2294,28 +2401,28 @@ Apps.InitOrganization = (function (_Model21) {
 
     }]);
 
-    function _class31(organization) {
-        _classCallCheck(this, _class31);
+    function _class33(organization) {
+        _classCallCheck(this, _class33);
 
-        var _this36 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class31).call(this, Apps.InitOrganization.type()));
+        var _this38 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class33).call(this, Apps.InitOrganization.type()));
 
-        _this36.organization = null;
+        _this38.organization = null;
         if (arguments.length) {
-            _this36.organization = Type.check(organization, Auth.Organization);
+            _this38.organization = Type.check(organization, Auth.Organization);
         }
-        return _this36;
+        return _this38;
     }
 
-    return _class31;
+    return _class33;
 })(Model);
 
 /**
  * @class InitCollaboration
  */
-Apps.InitCollaboration = (function (_Model22) {
-    _inherits(_class32, _Model22);
+Apps.InitCollaboration = (function (_Model23) {
+    _inherits(_class34, _Model23);
 
-    _createClass(_class32, null, [{
+    _createClass(_class34, null, [{
         key: "type",
 
         /**
@@ -2333,28 +2440,28 @@ Apps.InitCollaboration = (function (_Model22) {
 
     }]);
 
-    function _class32(collaboration) {
-        _classCallCheck(this, _class32);
+    function _class34(collaboration) {
+        _classCallCheck(this, _class34);
 
-        var _this37 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class32).call(this, Apps.InitCollaboration.type()));
+        var _this39 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class34).call(this, Apps.InitCollaboration.type()));
 
-        _this37.collaboration = null;
+        _this39.collaboration = null;
         if (arguments.length) {
-            _this37.collaboration = Type.check(collaboration, Collaboration.Collaboration);
+            _this39.collaboration = Type.check(collaboration, Collaboration.Collaboration);
         }
-        return _this37;
+        return _this39;
     }
 
-    return _class32;
+    return _class34;
 })(Model);
 
 /**
  * @class InitTeam
  */
-Apps.InitTeam = (function (_Model23) {
-    _inherits(_class33, _Model23);
+Apps.InitTeam = (function (_Model24) {
+    _inherits(_class35, _Model24);
 
-    _createClass(_class33, null, [{
+    _createClass(_class35, null, [{
         key: "type",
 
         /**
@@ -2372,30 +2479,30 @@ Apps.InitTeam = (function (_Model23) {
 
     }]);
 
-    function _class33(team) {
-        _classCallCheck(this, _class33);
+    function _class35(team) {
+        _classCallCheck(this, _class35);
 
-        var _this38 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class33).call(this, Apps.InitTeam.type()));
+        var _this40 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class35).call(this, Apps.InitTeam.type()));
 
-        _this38.team = null;
+        _this40.team = null;
         if (arguments.length) {
-            _this38.team = team.map(function (t) {
+            _this40.team = team.map(function (t) {
                 return Type.check(t, Collaboration.SyncUserEvent);
             });
         }
-        return _this38;
+        return _this40;
     }
 
-    return _class33;
+    return _class35;
 })(Model);
 
 /**
  * @class InitPeers
  */
-Apps.InitPeers = (function (_Model24) {
-    _inherits(_class34, _Model24);
+Apps.InitPeers = (function (_Model25) {
+    _inherits(_class36, _Model25);
 
-    _createClass(_class34, null, [{
+    _createClass(_class36, null, [{
         key: "type",
 
         /**
@@ -2413,23 +2520,23 @@ Apps.InitPeers = (function (_Model24) {
 
     }]);
 
-    function _class34(peers, room) {
-        _classCallCheck(this, _class34);
+    function _class36(peers, room) {
+        _classCallCheck(this, _class36);
 
-        var _this39 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class34).call(this, Apps.InitPeers.type()));
+        var _this41 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class36).call(this, Apps.InitPeers.type()));
 
-        _this39.peers = null;
-        _this39.room = null;
+        _this41.peers = null;
+        _this41.room = null;
         if (arguments.length) {
-            _this39.peers = peers.map(function (p) {
+            _this41.peers = peers.map(function (p) {
                 return Type.check(t, Peers.PeerState);
             });
-            _this39.room = new String(room);
+            _this41.room = new String(room);
         }
-        return _this39;
+        return _this41;
     }
 
-    return _class34;
+    return _class36;
 })(Model);
 
 /**
@@ -2440,10 +2547,10 @@ var Peers = {};
 /**
  * @class PeerState
  */
-Peers.PeerState = (function (_Model25) {
-    _inherits(_class35, _Model25);
+Peers.PeerState = (function (_Model26) {
+    _inherits(_class37, _Model26);
 
-    _createClass(_class35, null, [{
+    _createClass(_class37, null, [{
         key: "type",
 
         /**
@@ -2464,36 +2571,36 @@ Peers.PeerState = (function (_Model25) {
 
     }]);
 
-    function _class35(provider, collaborationId, userAgent, iceConnectionState, signalingState) {
-        _classCallCheck(this, _class35);
+    function _class37(provider, collaborationId, userAgent, iceConnectionState, signalingState) {
+        _classCallCheck(this, _class37);
 
-        var _this40 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class35).call(this, Peers.PeerState.type()));
+        var _this42 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class37).call(this, Peers.PeerState.type()));
 
-        _this40.provider = null;
-        _this40.collaborationId = null;
-        _this40.userAgent = null;
-        _this40.iceConnectionState = null;
-        _this40.signalingState = null;
+        _this42.provider = null;
+        _this42.collaborationId = null;
+        _this42.userAgent = null;
+        _this42.iceConnectionState = null;
+        _this42.signalingState = null;
         if (arguments.length) {
-            _this40.provider = null;
-            _this40.collaborationId = new String(collaborationId);
-            _this40.userAgent = new String(userAgent);
-            _this40.iceConnectionState = Type.check(iceConnectionState, Peers.IceConnectionState);
-            _this40.signalingState = Type.check(signalingState, Peers.SignalingState);
+            _this42.provider = null;
+            _this42.collaborationId = new String(collaborationId);
+            _this42.userAgent = typeof userAgent === "undefined" ? null : new String(userAgent);
+            _this42.iceConnectionState = Type.check(iceConnectionState, Peers.IceConnectionState);
+            _this42.signalingState = Type.check(signalingState, Peers.SignalingState);
         }
-        return _this40;
+        return _this42;
     }
 
-    return _class35;
+    return _class37;
 })(Model);
 
 /**
  * @class IceConnectionState
  */
-Peers.IceConnectionState = (function (_Model26) {
-    _inherits(_class36, _Model26);
+Peers.IceConnectionState = (function (_Model27) {
+    _inherits(_class38, _Model27);
 
-    _createClass(_class36, null, [{
+    _createClass(_class38, null, [{
         key: "type",
 
         /**
@@ -2510,19 +2617,19 @@ Peers.IceConnectionState = (function (_Model26) {
 
     }]);
 
-    function _class36(state) {
-        _classCallCheck(this, _class36);
+    function _class38(state) {
+        _classCallCheck(this, _class38);
 
-        var _this41 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class36).call(this, Peers.IceConnectionState.type()));
+        var _this43 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class38).call(this, Peers.IceConnectionState.type()));
 
-        _this41.state = null;
+        _this43.state = null;
         if (arguments.length) {
-            _this41.state = new String(state);
+            _this43.state = new String(state);
         }
-        return _this41;
+        return _this43;
     }
 
-    _createClass(_class36, null, [{
+    _createClass(_class38, null, [{
         key: "new",
         value: function _new() {
             new IceConnectionState("new");
@@ -2559,16 +2666,16 @@ Peers.IceConnectionState = (function (_Model26) {
         }
     }]);
 
-    return _class36;
+    return _class38;
 })(Model);
 
 /**
  * @class SignalingState
  */
-Peers.SignalingState = (function (_Model27) {
-    _inherits(_class37, _Model27);
+Peers.SignalingState = (function (_Model28) {
+    _inherits(_class39, _Model28);
 
-    _createClass(_class37, null, [{
+    _createClass(_class39, null, [{
         key: "type",
 
         /**
@@ -2585,19 +2692,19 @@ Peers.SignalingState = (function (_Model27) {
 
     }]);
 
-    function _class37(state) {
-        _classCallCheck(this, _class37);
+    function _class39(state) {
+        _classCallCheck(this, _class39);
 
-        var _this42 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class37).call(this, Peers.SignalingState.type()));
+        var _this44 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class39).call(this, Peers.SignalingState.type()));
 
-        _this42.state = null;
+        _this44.state = null;
         if (arguments.length) {
-            _this42.state = new String(state);
+            _this44.state = new String(state);
         }
-        return _this42;
+        return _this44;
     }
 
-    _createClass(_class37, null, [{
+    _createClass(_class39, null, [{
         key: "stable",
         value: function stable() {
             new SignalingState("stable");
@@ -2624,7 +2731,7 @@ Peers.SignalingState = (function (_Model27) {
         }
     }]);
 
-    return _class37;
+    return _class39;
 })(Model);
 
 /**
@@ -2635,10 +2742,10 @@ var Resource = {};
 /**
  * @class Resource
  */
-Resource.Resource = (function (_Model28) {
-    _inherits(_class38, _Model28);
+Resource.Resource = (function (_Model29) {
+    _inherits(_class40, _Model29);
 
-    _createClass(_class38, null, [{
+    _createClass(_class40, null, [{
         key: "type",
 
         /**
@@ -2657,18 +2764,18 @@ Resource.Resource = (function (_Model28) {
 
     }]);
 
-    function _class38(uri, contentType, thumbnail) {
-        _classCallCheck(this, _class38);
+    function _class40(uri, contentType, thumbnail) {
+        _classCallCheck(this, _class40);
 
-        var _this43 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class38).call(this, Resource.Resource.type()));
+        var _this45 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class40).call(this, Resource.Resource.type()));
 
-        _this43.uri = new String(uri);
-        _this43.contentType = new String(contentType);
-        _this43.thumbnail = new String(thumbnail);
-        return _this43;
+        _this45.uri = new String(uri);
+        _this45.contentType = new String(contentType);
+        _this45.thumbnail = new String(thumbnail);
+        return _this45;
     }
 
-    return _class38;
+    return _class40;
 })(Model);
 
 /**
@@ -2680,10 +2787,10 @@ var Geom = {};
  * @class Transform3d
  * A 3D transformation
  */
-Geom.Transform3d = (function (_Model29) {
-    _inherits(_class39, _Model29);
+Geom.Transform3d = (function (_Model30) {
+    _inherits(_class41, _Model30);
 
-    _createClass(_class39, null, [{
+    _createClass(_class41, null, [{
         key: "type",
 
         /**
@@ -2701,19 +2808,19 @@ Geom.Transform3d = (function (_Model29) {
 
     }]);
 
-    function _class39(matrix) {
-        _classCallCheck(this, _class39);
+    function _class41(matrix) {
+        _classCallCheck(this, _class41);
 
-        var _this44 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class39).call(this, Geom.Transform3d.type()));
+        var _this46 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class41).call(this, Geom.Transform3d.type()));
 
-        _this44.matrix = [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0];
+        _this46.matrix = [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0];
         if (arguments.length) {
-            _this44.matrix = matrix;
-            if (_this44.matrix.length != 4 * 4) {
+            _this46.matrix = matrix;
+            if (_this46.matrix.length != 4 * 4) {
                 throw new Error('Matrix is not 4x4');
             }
         }
-        return _this44;
+        return _this46;
     }
 
     /**
@@ -2721,14 +2828,14 @@ Geom.Transform3d = (function (_Model29) {
      * @returns {number[]}
      */
 
-    _createClass(_class39, null, [{
+    _createClass(_class41, null, [{
         key: "identity",
         value: function identity() {
             return new Geom.Transform3d([1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0]);
         }
     }]);
 
-    return _class39;
+    return _class41;
 })(Model);
 
 /**
@@ -2739,10 +2846,10 @@ var ETL = {};
 /**
  * @class Resource
  */
-ETL.EntityMeta = (function (_Model30) {
-    _inherits(_class40, _Model30);
+ETL.EntityMeta = (function (_Model31) {
+    _inherits(_class42, _Model31);
 
-    _createClass(_class40, null, [{
+    _createClass(_class42, null, [{
         key: "type",
 
         /**
@@ -2775,51 +2882,51 @@ ETL.EntityMeta = (function (_Model30) {
 
     }]);
 
-    function _class40(uri, timestamp, version, icon, thumb, domain, publishDate, contentType, title, description, authors, keywords, coverUrl, imgs, meta, content, raw) {
-        _classCallCheck(this, _class40);
+    function _class42(uri, timestamp, version, icon, thumb, domain, publishDate, contentType, title, description, authors, keywords, coverUrl, imgs, meta, content, raw) {
+        _classCallCheck(this, _class42);
 
-        var _this45 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class40).call(this, ETL.EntityMeta.type()));
+        var _this47 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class42).call(this, ETL.EntityMeta.type()));
 
-        _this45.uri = null;
-        _this45.timestamp = null;
-        _this45.version = null;
-        _this45.icon = null;
-        _this45.thumb = null;
-        _this45.domain = null;
-        _this45.publishDate = null;
-        _this45.contentType = null;
-        _this45.title = null;
-        _this45.description = null;
-        _this45.authors = null;
-        _this45.keywords = null;
-        _this45.coverUrl = null;
-        _this45.imgs = null;
-        _this45.meta = null;
-        _this45.content = null;
-        _this45.raw = null;
+        _this47.uri = null;
+        _this47.timestamp = null;
+        _this47.version = null;
+        _this47.icon = null;
+        _this47.thumb = null;
+        _this47.domain = null;
+        _this47.publishDate = null;
+        _this47.contentType = null;
+        _this47.title = null;
+        _this47.description = null;
+        _this47.authors = null;
+        _this47.keywords = null;
+        _this47.coverUrl = null;
+        _this47.imgs = null;
+        _this47.meta = null;
+        _this47.content = null;
+        _this47.raw = null;
         if (arguments.length) {
-            _this45.uri = new String(uri);
-            _this45.timestamp = new String(timestamp);
-            _this45.version = new String(version);
-            _this45.icon = new String(icon);
-            _this45.thumb = new String(thumb);
-            _this45.domain = new String(domain);
-            _this45.publishDate = typeof publishDate === "undefined" ? null : new String(publishDate);
-            _this45.contentType = new String(contentType);
-            _this45.title = new String(title);
-            _this45.description = new String(description);
-            _this45.authors = authors;
-            _this45.keywords = keywords;
-            _this45.coverUrl = new String(coverUrl);
-            _this45.imgs = imgs;
-            _this45.meta = meta;
-            _this45.content = typeof content === "undefined" ? null : new String(content);
-            _this45.raw = typeof raw === "undefined" ? null : new String(raw);
+            _this47.uri = new String(uri);
+            _this47.timestamp = new String(timestamp);
+            _this47.version = new String(version);
+            _this47.icon = new String(icon);
+            _this47.thumb = new String(thumb);
+            _this47.domain = new String(domain);
+            _this47.publishDate = typeof publishDate === "undefined" ? null : new String(publishDate);
+            _this47.contentType = new String(contentType);
+            _this47.title = new String(title);
+            _this47.description = new String(description);
+            _this47.authors = authors;
+            _this47.keywords = keywords;
+            _this47.coverUrl = new String(coverUrl);
+            _this47.imgs = imgs;
+            _this47.meta = meta;
+            _this47.content = typeof content === "undefined" ? null : new String(content);
+            _this47.raw = typeof raw === "undefined" ? null : new String(raw);
         }
-        return _this45;
+        return _this47;
     }
 
-    return _class40;
+    return _class42;
 })(Model);
 
 module.exports = {
@@ -2835,12 +2942,11 @@ module.exports = {
     Apps: Apps,
     Entities: Entities,
     Geom: Geom,
+    Peers: Peers,
     Resource: Resource,
     ETL: ETL
 };
 
-// Expose to None NODE.js clients
-// TODO make this an option so we do not pollute the namespace
 window.m = module.exports;
 
 },{}],4:[function(require,module,exports){

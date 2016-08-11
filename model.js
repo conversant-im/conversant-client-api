@@ -830,6 +830,44 @@ Collaboration.ContentLinkCard = class extends Collaboration.Content{
 }
 
 /**
+ * @class ContentNotification
+ */
+Collaboration.ContentNotification = class extends Collaboration.Content{
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    static type(){ return 'm.Collaboration$ContentNotification'}
+
+    /**
+     *
+     * @param id {String}
+     * @param collaborationId {String}
+     * @param orgId {String}
+     * @param timestamp {String}
+     * @param authors {Auth.Provider[]}
+     * @param seen {Auth.Provider[]}
+     * @param message {Collaboration.Message}
+     * @param view {Collaboration.ViewerState}
+     * @param severity {Collaboration.NotificationLevel}
+     * @param icon {String}
+     */
+    constructor(id, collaborationId, orgId, timestamp, authors, seen, message, view, severity, icon){
+        if(arguments.length) {
+            super(Collaboration.ContentNotification.type(),id, collaborationId, orgId, timestamp, authors, seen, message, view)
+            this.severity = Type.check(severity, Collaboration.NotificationLevel)
+            this.icon = new String(icon)
+
+        }else{
+            super(Collaboration.ContentAppEvent.type())
+            this.severity = null
+            this.icon = null
+        }
+    }
+}
+
+
+/**
  * @class ContentAppEvent
  */
 Collaboration.ContentAppEvent = class extends Collaboration.Content{
@@ -863,6 +901,33 @@ Collaboration.ContentAppEvent = class extends Collaboration.Content{
             this.actions = null
         }
     }
+}
+
+
+/**
+ * @class NotificationLevel
+ */
+Collaboration.NotificationLevel = class extends Model{
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    static type(){ return 'm.Collaboration$NotificationLevel'}
+
+    /**
+     * @param severity {String}
+     */
+    constructor( severity ){
+        super(Collaboration.NotificationLevel.type())
+        this.severity = null
+        if(arguments.length) {
+            this.severity = new String(severity)
+        }
+    }
+
+    static info() { new NotificationLevel("info") }
+    static warning() { new NotificationLevel("warning") }
+    static error(){ new NotificationLevel("error")}
 }
 
 
@@ -1033,10 +1098,12 @@ Apps.Init = class extends Model{
     /**
      *
      * @param appId {String} Your app id to initialize
+     * @param mode {Apps.AppMode} mode you app is running in.
      */
-    constructor(appId){
+    constructor(appId, mode){
         super(Apps.Init.type())
         this.appId = new String(appId)
+        this.mode = Type.check(mode, Apps.AppMode)
     }
 }
 
@@ -1061,11 +1128,9 @@ Apps.InitApp = class extends Model{
         super(Apps.InitApp.type())
         this.app = null
         this.restoreState = null
-        this.mode = null
         if(arguments.length) {
             this.app = Type.check(app, Apps.App)
             this.restoreState = typeof restoreState === "undefined" ? null : [Type.check(restoreState, Collaboration.ViewerState)]
-            this.mode = Type.check(mode, Apps.AppMode)
         }
     }
 }

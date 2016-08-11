@@ -5,7 +5,7 @@ class Mapper{
 
     constructor(type){
         this.$type = type;
-        console.log('created type: '+ type);
+        //console.log('created type: '+ type);
         let that = this
         function buildList(items){
             if(!items.length){
@@ -215,9 +215,9 @@ class Mapper{
 
     read(json){
         let rep = JSON.parse(json)
-        console.log('Mapper::read: '+rep.t);
+        //console.log('Mapper::read: '+rep.t);
         let obj = this.unpickleType(rep)
-        console.log('*** Ret: ',obj)
+        //console.log('*** Ret: ',obj)
         return obj
         //return JSON.parse(json)
     }

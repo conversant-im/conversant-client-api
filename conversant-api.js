@@ -16,7 +16,7 @@ class API {
 	}
 
 	_send(data){
-		console.log('channelSubject.onNext', data)
+		//console.log('channelSubject.onNext', data)
 		this.channelSubject.onNext(data)
 	}
 
@@ -137,8 +137,7 @@ class AppParameters{
 	 * @param team {Collaboration.SyncUserEvent[]}
      * @param peers {Peers.PeerState[]}
      */
-	constructor(mode, app, restoreState, collaboration, provider, team, peers){
-		this.mode = m.Type.check(mode, m.Apps.AppMode)
+	constructor(app, restoreState, collaboration, provider, team, peers){
 		this.app =  m.Type.check(app, m.Apps.App)
 		this.restoreState = typeof restoreState === "undefined" ?  null : m.Type.check(restoreState, m.Collaboration.ViewerState)
 		this.collaboration = m.Type.check(collaboration, m.Collaboration.Collaboration)
@@ -167,14 +166,13 @@ class ConversantAPI extends API{
 			top.window.postMessage(data, '*')
 		});
 		window.addEventListener('message', (event) => {
-			console.log('clientAPI:: message',event)
-			console.log('clientAPI:: message data',event.data)
 			if(event.data && event.data != ''){
 				try {
 					let x = this.mapper.read(event.data)
 					//console.log('sending to ('+observerList.length+') observers',x)
 					observerList.forEach( (obs) => obs.onNext(x) )
 				} catch (e) {
+					console.error('[ERROR] clientAPI:: handling message data',event.data)
 					alert('error')
 					console.log('ERROR',e)
 				}
@@ -198,6 +196,7 @@ class ConversantAPI extends API{
 		super(observer, observable)
 		this.id = id
 		this.isSyncMode = window.name == "syncApp"
+		this.mode = new m.Apps.AppMode(window.name)
 	}
 
 	/**
@@ -215,11 +214,11 @@ class ConversantAPI extends API{
 
 		Promise.all([pApp, pCollaboration, pPofile, pTeam, pPeers]).then( (vals) => {
 			console.log('-- APP INIT --')
-			let appParams = new AppParameters( vals[0].mode, vals[0].app, vals[0].restoreState,  vals[1].collaboration, vals[2].provider, vals[3].team, vals[4].peers  )
+			let appParams = new AppParameters( vals[0].app, vals[0].restoreState,  vals[1].collaboration, vals[2].provider, vals[3].team, vals[4].peers  )
 			this.appParams = appParams
 			fun(appParams)
 		})
-		this._send(this.mapper.write(new m.Apps.Init(this.id)))
+		this._send(this.mapper.write(new m.Apps.Init(this.id, this.mode)))
 	}
 
 }
