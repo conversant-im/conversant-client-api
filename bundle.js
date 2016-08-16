@@ -147,8 +147,8 @@ var API = (function () {
 			this._send(this.mapper.write(syncEvent));
 		}
 	}, {
-		key: 'sendHack',
-		value: function sendHack(x) {
+		key: 'send',
+		value: function send(x) {
 			this._send(this.mapper.write(x));
 		}
 

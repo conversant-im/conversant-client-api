@@ -104,7 +104,7 @@ class API {
 		this._send(this.mapper.write(syncEvent))
 	}
 
-	sendHack(x){
+	send(x){
 		this._send(this.mapper.write(x))
 	}
 
