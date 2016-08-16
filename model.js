@@ -21,6 +21,9 @@ class Integer extends Number{
         super(x)
         this.$type = "m.Integer";
     }
+    valueOf(){
+        return super.valueOf()
+    }
 }
 
 class Float extends Number{
@@ -38,12 +41,18 @@ class Double extends Number{
         super(x)
         this.$type = "m.Double";
     }
+    valueOf(){
+        return super.valueOf()
+    }
 }
 
 class Long extends Number{
     constructor(x){
         super(x)
         this.$type = "m.Long";
+    }
+    valueOf(){
+        return super.valueOf()
     }
 }
 
