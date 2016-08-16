@@ -93,6 +93,10 @@ class Model{
  */
 let Auth = {};
 
+
+Auth.zeroId = new UUID('00000000-0000-0000-0000-000000000000')
+
+
 /**
  * @class OrganizationRoles
  * Construct an organization role.

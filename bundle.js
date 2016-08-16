@@ -147,6 +147,13 @@ var API = (function () {
 			this._send(this.mapper.write(syncEvent));
 		}
 	}, {
+		key: 'sendMessage',
+		value: function sendMessage(msg) {
+			var content = new m.Collaboration.ContentMsg(m.Auth.zeroId, this.appParams.collaboration.id, this.appParams.collaboration.orgId, "", [this.appParams.provider], [this.appParams.provider], null, null, null, new m.Collaboration.MessageBasic(msg, []), view);
+
+			this._send(this.mapper.write(content));
+		}
+	}, {
 		key: 'send',
 		value: function send(x) {
 			this._send(this.mapper.write(x));
@@ -727,6 +734,8 @@ function Model(type) {
  */
 
 var Auth = {};
+
+Auth.zeroId = new UUID('00000000-0000-0000-0000-000000000000');
 
 /**
  * @class OrganizationRoles
