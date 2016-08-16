@@ -104,7 +104,7 @@ class API {
 		this._send(this.mapper.write(syncEvent))
 	}
 
-	sendMessage(msg){
+	sendMessage(msg, view){
 		let content = new m.Collaboration.ContentMsg(
 			m.Auth.zeroId,
 			this.appParams.collaboration.id,
