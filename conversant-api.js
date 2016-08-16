@@ -132,14 +132,17 @@ class AppParameters{
 
 	/**
 	 * @param app {Apps.App}
+	 * @param restoreState {Collaboration.ViewerState}
+	 * @param organization {Auth.Organization}
 	 * @param collaboration {Collaboration.Collaboration}
 	 * @param profile {Auth.ProfileInfo}
 	 * @param team {Collaboration.SyncUserEvent[]}
      * @param peers {Peers.PeerState[]}
      */
-	constructor(app, restoreState, collaboration, provider, team, peers){
+	constructor(app, restoreState, organization, collaboration, provider, team, peers){
 		this.app =  m.Type.check(app, m.Apps.App)
 		this.restoreState = typeof restoreState === "undefined" ?  null : m.Type.check(restoreState, m.Collaboration.ViewerState)
+		this.organization = m.Type.check(organization, m.Auth.Organization)
 		this.collaboration = m.Type.check(collaboration, m.Collaboration.Collaboration)
 		this.provider = m.Type.check(provider, m.Auth.Provider)
 		this.team = team.map( (t) => m.Type.check(t, m.Collaboration.SyncUserEvent) )
@@ -207,14 +210,15 @@ class ConversantAPI extends API{
      */
 	init(fun){
 		let pApp = this._futurePromise(m.Apps.InitApp.type())
+		let pOrganization = this._futurePromise(m.Apps.InitOrganization.type())
 		let pCollaboration = this._futurePromise(m.Apps.InitCollaboration.type())
 		let pPofile = this._futurePromise(m.Apps.InitProvider.type())
 		let pTeam = this._futurePromise(m.Apps.InitTeam.type())
 		let pPeers = this._futurePromise(m.Apps.InitPeers.type())
 
-		Promise.all([pApp, pCollaboration, pPofile, pTeam, pPeers]).then( (vals) => {
+		Promise.all([pApp, pCollaboration, pPofile, pTeam, pPeers, pOrganization]).then( (vals) => {
 			console.log('-- APP INIT --')
-			let appParams = new AppParameters( vals[0].app, vals[0].restoreState,  vals[1].collaboration, vals[2].provider, vals[3].team, vals[4].peers  )
+			let appParams = new AppParameters( vals[0].app, vals[0].restoreState,  vals[5].organization, vals[1].collaboration, vals[2].provider, vals[3].team, vals[4].peers  )
 			this.appParams = appParams
 			fun(appParams)
 		})

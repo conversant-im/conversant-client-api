@@ -181,16 +181,19 @@ var AppParameters =
 
 /**
  * @param app {Apps.App}
+ * @param restoreState {Collaboration.ViewerState}
+ * @param organization {Auth.Organization}
  * @param collaboration {Collaboration.Collaboration}
  * @param profile {Auth.ProfileInfo}
  * @param team {Collaboration.SyncUserEvent[]}
     * @param peers {Peers.PeerState[]}
     */
-function AppParameters(app, restoreState, collaboration, provider, team, peers) {
+function AppParameters(app, restoreState, organization, collaboration, provider, team, peers) {
 	_classCallCheck(this, AppParameters);
 
 	this.app = m.Type.check(app, m.Apps.App);
 	this.restoreState = typeof restoreState === "undefined" ? null : m.Type.check(restoreState, m.Collaboration.ViewerState);
+	this.organization = m.Type.check(organization, m.Auth.Organization);
 	this.collaboration = m.Type.check(collaboration, m.Collaboration.Collaboration);
 	this.provider = m.Type.check(provider, m.Auth.Provider);
 	this.team = team.map(function (t) {
@@ -279,14 +282,15 @@ var ConversantAPI = (function (_API) {
 			var _this4 = this;
 
 			var pApp = this._futurePromise(m.Apps.InitApp.type());
+			var pOrganization = this._futurePromise(m.Apps.InitOrganization.type());
 			var pCollaboration = this._futurePromise(m.Apps.InitCollaboration.type());
 			var pPofile = this._futurePromise(m.Apps.InitProvider.type());
 			var pTeam = this._futurePromise(m.Apps.InitTeam.type());
 			var pPeers = this._futurePromise(m.Apps.InitPeers.type());
 
-			Promise.all([pApp, pCollaboration, pPofile, pTeam, pPeers]).then(function (vals) {
+			Promise.all([pApp, pCollaboration, pPofile, pTeam, pPeers, pOrganization]).then(function (vals) {
 				console.log('-- APP INIT --');
-				var appParams = new AppParameters(vals[0].app, vals[0].restoreState, vals[1].collaboration, vals[2].provider, vals[3].team, vals[4].peers);
+				var appParams = new AppParameters(vals[0].app, vals[0].restoreState, vals[5].organization, vals[1].collaboration, vals[2].provider, vals[3].team, vals[4].peers);
 				_this4.appParams = appParams;
 				fun(appParams);
 			});
