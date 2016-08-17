@@ -47,7 +47,7 @@ class Mapper{
             'm.Double' : (obj) => {
                 return {
                     't': 'java.lang.Double',
-                    'v': '1.0'
+                    'v': obj.valueOf()
                 }
             },
             'm.Long' : (obj) => {

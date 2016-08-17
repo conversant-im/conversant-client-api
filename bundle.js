@@ -615,6 +615,13 @@ var Integer = (function (_Number) {
         return _this;
     }
 
+    _createClass(Integer, [{
+        key: "valueOf",
+        value: function valueOf() {
+            return _get(Object.getPrototypeOf(Integer.prototype), "valueOf", this).call(this);
+        }
+    }]);
+
     return Integer;
 })(Number);
 
@@ -652,6 +659,13 @@ var Double = (function (_Number3) {
         return _this3;
     }
 
+    _createClass(Double, [{
+        key: "valueOf",
+        value: function valueOf() {
+            return _get(Object.getPrototypeOf(Double.prototype), "valueOf", this).call(this);
+        }
+    }]);
+
     return Double;
 })(Number);
 
@@ -666,6 +680,13 @@ var Long = (function (_Number4) {
         _this4.$type = "m.Long";
         return _this4;
     }
+
+    _createClass(Long, [{
+        key: "valueOf",
+        value: function valueOf() {
+            return _get(Object.getPrototypeOf(Long.prototype), "valueOf", this).call(this);
+        }
+    }]);
 
     return Long;
 })(Number);
