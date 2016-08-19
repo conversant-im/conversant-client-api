@@ -149,7 +149,7 @@ var API = (function () {
 	}, {
 		key: 'sendMessage',
 		value: function sendMessage(msg, view) {
-			var content = new m.Collaboration.ContentMsg(m.Auth.zeroId, this.appParams.collaboration.id, this.appParams.collaboration.orgId, "", new Set([this.appParams.provider]), new Set([this.appParams.provider]), "", "", new Set(), new m.Collaboration.MessageBasic(msg, []), view);
+			var content = new m.Collaboration.ContentMsg(m.Auth.zeroId, this.appParams.collaboration.id, this.appParams.collaboration.orgId, "", new Set([this.appParams.provider]), new Set([this.appParams.provider]), "", "", new Set(), new m.Collaboration.MessageBasic(msg, new Set()), view);
 
 			this._send(this.mapper.write(content));
 		}
@@ -2043,9 +2043,9 @@ Collaboration.Message = (function (_Model15) {
         _this30.mentions = null;
         if (arguments.length > 1) {
             _this30.text = new String(text);
-            _this30.mentions = mentions.map(function (a) {
-                return Type.check(a, Auth.Provider);
-            });
+            // FIXME: no "map" on Set
+            //this.mentions = mentions.map((a) => Type.check(a, Auth.Provider))
+            _this30.mentions = mentions;
         }
         return _this30;
     }

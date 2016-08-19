@@ -115,7 +115,7 @@ class API {
 			"",
 			"",
 			new Set(),
-			new m.Collaboration.MessageBasic(msg, []),
+			new m.Collaboration.MessageBasic(msg, new Set()),
 			view);
 
 		this._send(this.mapper.write(content))

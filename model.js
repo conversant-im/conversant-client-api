@@ -968,7 +968,9 @@ Collaboration.Message = class extends Model{
         this.mentions = null
         if(arguments.length > 1) {
             this.text = new String(text)
-            this.mentions = mentions.map((a) => Type.check(a, Auth.Provider))
+            // FIXME: no "map" on Set
+            //this.mentions = mentions.map((a) => Type.check(a, Auth.Provider))
+            this.mentions = mentions
         }
     }
 }
