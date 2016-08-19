@@ -114,7 +114,7 @@ class API {
 			[this.appParams.provider],
 			null,
 			null,
-			null,
+			[],
 			new m.Collaboration.MessageBasic(msg, []),
 			view);
 
