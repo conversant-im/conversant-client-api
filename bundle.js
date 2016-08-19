@@ -149,7 +149,7 @@ var API = (function () {
 	}, {
 		key: 'sendMessage',
 		value: function sendMessage(msg, view) {
-			var content = new m.Collaboration.ContentMsg(m.Auth.zeroId, this.appParams.collaboration.id, this.appParams.collaboration.orgId, "", [this.appParams.provider], [this.appParams.provider], "", "", new Set(), new m.Collaboration.MessageBasic(msg, []), view);
+			var content = new m.Collaboration.ContentMsg(m.Auth.zeroId, this.appParams.collaboration.id, this.appParams.collaboration.orgId, "", new Set([this.appParams.provider]), new Set([this.appParams.provider]), "", "", new Set(), new m.Collaboration.MessageBasic(msg, []), view);
 
 			this._send(this.mapper.write(content));
 		}
@@ -1734,12 +1734,11 @@ Collaboration.Content = (function (_Model13) {
             _this24.collaborationId = new UUID(collaborationId);
             _this24.orgId = new UUID(orgId);
             _this24.timestamp = new String(timestamp);
-            _this24.authors = authors.map(function (a) {
-                return Type.check(a, Auth.Provider);
-            });
-            _this24.seen = seen.map(function (s) {
-                return Type.check(s, Auth.Provider);
-            });
+            // FIXME: Set does not define "map"
+            //this.authors = authors.map((a) => Type.check(a, Auth.Provider))
+            _this24.authors = authors;
+            //this.seen = seen.map((s) => Type.check(s, Auth.Provider))
+            _this24.seen = seen;
             _this24.message = Type.check(message, Collaboration.Message);
             _this24.view = Type.check(view, Collaboration.ViewerState);
         }

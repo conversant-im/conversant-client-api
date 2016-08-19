@@ -761,8 +761,11 @@ Collaboration.Content = class extends Model{
             this.collaborationId = new UUID(collaborationId)
             this.orgId = new UUID(orgId)
             this.timestamp = new String(timestamp)
-            this.authors = authors.map((a) => Type.check(a, Auth.Provider))
-            this.seen = seen.map((s) => Type.check(s, Auth.Provider))
+            // FIXME: Set does not define "map"
+            //this.authors = authors.map((a) => Type.check(a, Auth.Provider))
+            this.authors = authors
+            //this.seen = seen.map((s) => Type.check(s, Auth.Provider))
+            this.seen = seen
             this.message = Type.check(message, Collaboration.Message)
             this.view = Type.check(view, Collaboration.ViewerState)
         }
