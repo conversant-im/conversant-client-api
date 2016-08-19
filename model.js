@@ -761,8 +761,10 @@ Collaboration.Content = class extends Model{
             this.collaborationId = new UUID(collaborationId)
             this.orgId = new UUID(orgId)
             this.timestamp = new String(timestamp)
-            this.authors = authors.entries().map((a) => Type.check(a, Auth.Provider))
-            this.seen = seen.entries().map((s) => Type.check(s, Auth.Provider))
+            // FIXME: Set does not define "map"
+            //this.authors = authors.map((a) => Type.check(a, Auth.Provider))
+            this.authors = authors
+            //this.seen = seen.map((s) => Type.check(s, Auth.Provider))
             this.seen = seen
             this.message = Type.check(message, Collaboration.Message)
             this.view = Type.check(view, Collaboration.ViewerState)
@@ -800,7 +802,8 @@ Collaboration.ContentMsg = class extends Collaboration.Content{
             super(Collaboration.ContentMsg.type(),id, collaborationId, orgId, timestamp, authors, seen, message, view)
             this.sentiment = typeof sentiment === "undefined" ? null : new String(sentiment)
             this.nlp = typeof nlp === "undefined" ? null : new String(nlp)
-            this.ner = ner.entries().map((s) => Type.check(s, Entities.NamedEntity))
+            //this.ner = ner.map((s) => Type.check(s, Entities.NamedEntity))  // FIXME: Set does not have "map" defined on it..
+            this.ner = ner
         }else{
             super(Collaboration.ContentMsg.type())
             this.sentiment = null
@@ -965,7 +968,8 @@ Collaboration.Message = class extends Model{
         this.mentions = null
         if(arguments.length > 1) {
             this.text = new String(text)
-            this.mentions = mentions.entries().map((a) => Type.check(a, Auth.Provider))
+            // FIXME: no "map" on Set
+            //this.mentions = mentions.map((a) => Type.check(a, Auth.Provider))
             this.mentions = mentions
         }
     }
