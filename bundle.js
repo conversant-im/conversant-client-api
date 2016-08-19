@@ -401,6 +401,25 @@ var Mapper = (function () {
                     'v': obj
                 };
             },
+            'Set': function Set(obj) {
+                var t = 'scala.collection.immutable.HashSet$HashTrieSet';
+                if (!obj.size) {
+                    return {
+                        "t": "scala.collection.immutable.Set$EmptySet$",
+                        "v": []
+                    };
+                } else if (obj.size < 4) {
+                    t = "scala.collection.immutable.Set$Set" + (obj.size + 1);
+                }
+                return {
+                    "t": t,
+                    "v": obj.entries().map(function (x) {
+                        return {
+                            'v': that.pickleType(x[1])
+                        };
+                    })
+                };
+            },
             'Map': function Map(obj) {
                 var t = 'scala.collection.immutable.HashMap$HashTrieMap';
                 if (!obj.size) {
@@ -1734,10 +1753,12 @@ Collaboration.Content = (function (_Model13) {
             _this24.collaborationId = new UUID(collaborationId);
             _this24.orgId = new UUID(orgId);
             _this24.timestamp = new String(timestamp);
-            // FIXME: Set does not define "map"
-            //this.authors = authors.map((a) => Type.check(a, Auth.Provider))
-            _this24.authors = authors;
-            //this.seen = seen.map((s) => Type.check(s, Auth.Provider))
+            _this24.authors = authors.entries().map(function (a) {
+                return Type.check(a, Auth.Provider);
+            });
+            _this24.seen = seen.entries().map(function (s) {
+                return Type.check(s, Auth.Provider);
+            });
             _this24.seen = seen;
             _this24.message = Type.check(message, Collaboration.Message);
             _this24.view = Type.check(view, Collaboration.ViewerState);
@@ -1790,8 +1811,9 @@ Collaboration.ContentMsg = (function (_Collaboration$Conten) {
 
             _this25.sentiment = typeof sentiment === "undefined" ? null : new String(sentiment);
             _this25.nlp = typeof nlp === "undefined" ? null : new String(nlp);
-            //this.ner = ner.map((s) => Type.check(s, Entities.NamedEntity))  // FIXME: Set does not have "map" defined on it..
-            _this25.ner = ner;
+            _this25.ner = ner.entries().map(function (s) {
+                return Type.check(s, Entities.NamedEntity);
+            });
         } else {
             var _this25 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class20).call(this, Collaboration.ContentMsg.type()));
 
@@ -2043,8 +2065,9 @@ Collaboration.Message = (function (_Model15) {
         _this30.mentions = null;
         if (arguments.length > 1) {
             _this30.text = new String(text);
-            // FIXME: no "map" on Set
-            //this.mentions = mentions.map((a) => Type.check(a, Auth.Provider))
+            _this30.mentions = mentions.entries().map(function (a) {
+                return Type.check(a, Auth.Provider);
+            });
             _this30.mentions = mentions;
         }
         return _this30;

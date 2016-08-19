@@ -78,6 +78,25 @@ class Mapper{
                     'v': obj
                 }
             },
+            'Set' : (obj) => {
+                var t = 'scala.collection.immutable.HashSet$HashTrieSet'
+                if(! obj.size ){
+                    return  {
+                        "t": "scala.collection.immutable.Set$EmptySet$",
+                        "v": []
+                    }
+                }else if(obj.size < 4){
+                    t = "scala.collection.immutable.Set$Set"+(obj.size+1)
+                }
+                return  {
+                    "t": t,
+                    "v": obj.entries().map( (x) => {
+                        return {
+                            'v':that.pickleType(x[1])
+                        }
+                    })
+                }
+            },
             'Map' : (obj) => {
                 var t = 'scala.collection.immutable.HashMap$HashTrieMap'
                 if(! obj.size ){
