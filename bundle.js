@@ -149,7 +149,7 @@ var API = (function () {
 	}, {
 		key: 'sendMessage',
 		value: function sendMessage(msg, view) {
-			var content = new m.Collaboration.ContentMsg(m.Auth.zeroId, this.appParams.collaboration.id, this.appParams.collaboration.orgId, "", [this.appParams.provider], [this.appParams.provider], null, null, [], new m.Collaboration.MessageBasic(msg, []), view);
+			var content = new m.Collaboration.ContentMsg(m.Auth.zeroId, this.appParams.collaboration.id, this.appParams.collaboration.orgId, "", [this.appParams.provider], [this.appParams.provider], "", "", new Set(), new m.Collaboration.MessageBasic(msg, []), view);
 
 			this._send(this.mapper.write(content));
 		}
