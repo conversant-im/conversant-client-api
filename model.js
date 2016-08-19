@@ -19,40 +19,44 @@ class UUID {
 class Integer extends Number{
     constructor(x){
         super(x)
+        this.val = x
         this.$type = "m.Integer";
     }
     valueOf(){
-        return super.valueOf()
+        return this.val
     }
 }
 
 class Float extends Number{
     constructor(x){
         super(x)
+        this.val = x
         this.$type = "m.Float";
     }
     valueOf(){
-        return super.valueOf()
+        return this.val
     }
 }
 
 class Double extends Number{
     constructor(x){
         super(x)
+        this.val = x
         this.$type = "m.Double";
     }
     valueOf(){
-        return super.valueOf()
+        return this.val
     }
 }
 
 class Long extends Number{
     constructor(x){
         super(x)
+        this.val = x
         this.$type = "m.Long";
     }
     valueOf(){
-        return super.valueOf()
+        return this.val
     }
 }
 

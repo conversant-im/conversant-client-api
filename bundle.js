@@ -370,7 +370,7 @@ var Mapper = (function () {
             'm.Double': function mDouble(obj) {
                 return {
                     't': 'java.lang.Double',
-                    'v': '1.0'
+                    'v': obj.valueOf()
                 };
             },
             'm.Long': function mLong(obj) {
@@ -569,8 +569,6 @@ module.exports = {
 
 // TOOD: would like to extend String
 
-var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
-
 var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
 function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.constructor === Symbol ? "symbol" : typeof obj; }
@@ -611,6 +609,7 @@ var Integer = (function (_Number) {
 
         var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(Integer).call(this, x));
 
+        _this.val = x;
         _this.$type = "m.Integer";
         return _this;
     }
@@ -618,7 +617,7 @@ var Integer = (function (_Number) {
     _createClass(Integer, [{
         key: "valueOf",
         value: function valueOf() {
-            return _get(Object.getPrototypeOf(Integer.prototype), "valueOf", this).call(this);
+            return this.val;
         }
     }]);
 
@@ -633,6 +632,7 @@ var Float = (function (_Number2) {
 
         var _this2 = _possibleConstructorReturn(this, Object.getPrototypeOf(Float).call(this, x));
 
+        _this2.val = x;
         _this2.$type = "m.Float";
         return _this2;
     }
@@ -640,7 +640,7 @@ var Float = (function (_Number2) {
     _createClass(Float, [{
         key: "valueOf",
         value: function valueOf() {
-            return _get(Object.getPrototypeOf(Float.prototype), "valueOf", this).call(this);
+            return this.val;
         }
     }]);
 
@@ -655,6 +655,7 @@ var Double = (function (_Number3) {
 
         var _this3 = _possibleConstructorReturn(this, Object.getPrototypeOf(Double).call(this, x));
 
+        _this3.val = x;
         _this3.$type = "m.Double";
         return _this3;
     }
@@ -662,7 +663,7 @@ var Double = (function (_Number3) {
     _createClass(Double, [{
         key: "valueOf",
         value: function valueOf() {
-            return _get(Object.getPrototypeOf(Double.prototype), "valueOf", this).call(this);
+            return this.val;
         }
     }]);
 
@@ -677,6 +678,7 @@ var Long = (function (_Number4) {
 
         var _this4 = _possibleConstructorReturn(this, Object.getPrototypeOf(Long).call(this, x));
 
+        _this4.val = x;
         _this4.$type = "m.Long";
         return _this4;
     }
@@ -684,7 +686,7 @@ var Long = (function (_Number4) {
     _createClass(Long, [{
         key: "valueOf",
         value: function valueOf() {
-            return _get(Object.getPrototypeOf(Long.prototype), "valueOf", this).call(this);
+            return this.val;
         }
     }]);
 
