@@ -799,7 +799,8 @@ Collaboration.ContentMsg = class extends Collaboration.Content{
             super(Collaboration.ContentMsg.type(),id, collaborationId, orgId, timestamp, authors, seen, message, view)
             this.sentiment = typeof sentiment === "undefined" ? null : new String(sentiment)
             this.nlp = typeof nlp === "undefined" ? null : new String(nlp)
-            this.ner = ner.map((s) => Type.check(s, Entities.NamedEntity))
+            //this.ner = ner.map((s) => Type.check(s, Entities.NamedEntity))  // FIXME: Set does not have "map" defined on it..
+            this.ner = ner
         }else{
             super(Collaboration.ContentMsg.type())
             this.sentiment = null

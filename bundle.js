@@ -1791,9 +1791,8 @@ Collaboration.ContentMsg = (function (_Collaboration$Conten) {
 
             _this25.sentiment = typeof sentiment === "undefined" ? null : new String(sentiment);
             _this25.nlp = typeof nlp === "undefined" ? null : new String(nlp);
-            _this25.ner = ner.map(function (s) {
-                return Type.check(s, Entities.NamedEntity);
-            });
+            //this.ner = ner.map((s) => Type.check(s, Entities.NamedEntity))  // FIXME: Set does not have "map" defined on it..
+            _this25.ner = ner;
         } else {
             var _this25 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class20).call(this, Collaboration.ContentMsg.type()));
 
