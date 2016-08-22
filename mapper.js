@@ -104,9 +104,7 @@ class Mapper{
                 return  {
                     "t": t,
                     "v": hack.map( (x) => {
-                        return {
-                            'v':that.pickleType(x)
-                        }
+                        return that.pickleType(x)
                     })
                 }
             },
