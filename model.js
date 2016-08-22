@@ -744,9 +744,9 @@ Collaboration.Content = class extends Model{
      * @param authors {Auth.Provider[]}
      * @param seen {Auth.Provider[]}
      * @param message {Collaboration.Message}
-     * @param view {Collaboration.ViewerState}
+     * @param viewId {UUID}
      */
-    constructor(type, id, collaborationId, orgId, timestamp, authors, seen, message, view){
+    constructor(type, id, collaborationId, orgId, timestamp, authors, seen, message, viewId){
         super(type)
         this.id = null
         this.collaborationId = null
@@ -755,7 +755,7 @@ Collaboration.Content = class extends Model{
         this.authors = null
         this.seen = null
         this.message = null
-        this.view = null
+        this.viewId = null
         if(arguments.length > 1) {
             this.id = new UUID(id)
             this.collaborationId = new UUID(collaborationId)
@@ -767,7 +767,7 @@ Collaboration.Content = class extends Model{
             //this.seen = seen.map((s) => Type.check(s, Auth.Provider))
             this.seen = seen
             this.message = Type.check(message, Collaboration.Message)
-            this.view = Type.check(view, Collaboration.ViewerState)
+            this.viewId = new UUID(viewId)
         }
     }
 }
@@ -794,12 +794,12 @@ Collaboration.ContentMsg = class extends Collaboration.Content{
      * @param nlp {String}
      * @param ner {Entities.NamedEntity[]}
      * @param message {Collaboration.Message}
-     * @param view {Collaboration.ViewerState}
+     * @param viewId {UUID}
      */
-    constructor(id, collaborationId, orgId, timestamp, authors, seen, sentiment, nlp, ner, message, view){
+    constructor(id, collaborationId, orgId, timestamp, authors, seen, sentiment, nlp, ner, message, viewId){
 
         if(arguments.length) {
-            super(Collaboration.ContentMsg.type(),id, collaborationId, orgId, timestamp, authors, seen, message, view)
+            super(Collaboration.ContentMsg.type(),id, collaborationId, orgId, timestamp, authors, seen, message, viewId)
             this.sentiment = typeof sentiment === "undefined" ? null : new String(sentiment)
             this.nlp = typeof nlp === "undefined" ? null : new String(nlp)
             //this.ner = ner.map((s) => Type.check(s, Entities.NamedEntity))  // FIXME: Set does not have "map" defined on it..
@@ -834,12 +834,12 @@ Collaboration.ContentLinkCard = class extends Collaboration.Content{
      * @param seen {Auth.Provider[]}
      * @param message {Collaboration.Message}
      * @param entityUri {String}
-     * @param view {Collaboration.ViewerState}
+     * @param viewId {UUID}
      * @param meta {ETL.Meta}
      */
-    constructor(id, collaborationId, orgId, timestamp, authors, seen, message, entityUri, view, meta){
+    constructor(id, collaborationId, orgId, timestamp, authors, seen, message, entityUri, viewId, meta){
         if(arguments.length) {
-            super(Collaboration.ContentLinkCard.type(),id, collaborationId, orgId, timestamp, authors, seen, message, view)
+            super(Collaboration.ContentLinkCard.type(),id, collaborationId, orgId, timestamp, authors, seen, message, viewId)
             this.entityUri = new String(entityUri)
             this.meta = Type.check(s, ETL.EntityMeta)
         }else{
@@ -869,13 +869,13 @@ Collaboration.ContentNotification = class extends Collaboration.Content{
      * @param authors {Auth.Provider[]}
      * @param seen {Auth.Provider[]}
      * @param message {Collaboration.Message}
-     * @param view {Collaboration.ViewerState}
+     * @param viewId {UUID}
      * @param severity {Collaboration.NotificationLevel}
      * @param icon {String}
      */
-    constructor(id, collaborationId, orgId, timestamp, authors, seen, message, view, severity, icon){
+    constructor(id, collaborationId, orgId, timestamp, authors, seen, message, viewId, severity, icon){
         if(arguments.length) {
-            super(Collaboration.ContentNotification.type(),id, collaborationId, orgId, timestamp, authors, seen, message, view)
+            super(Collaboration.ContentNotification.type(),id, collaborationId, orgId, timestamp, authors, seen, message, viewId)
             this.severity = Type.check(severity, Collaboration.NotificationLevel)
             this.icon = new String(icon)
 
@@ -907,13 +907,13 @@ Collaboration.ContentAppEvent = class extends Collaboration.Content{
      * @param authors {Auth.Provider[]}
      * @param seen {Auth.Provider[]}
      * @param message {Collaboration.Message}
-     * @param view {Collaboration.ViewerState}
+     * @param viewId {UUID}
      * @param coverImg {String}
      * @param actions {Apps.App[]}
      */
-    constructor(id, collaborationId, orgId, timestamp, authors, seen, message, view, coverImg, actions){
+    constructor(id, collaborationId, orgId, timestamp, authors, seen, message, viewId, coverImg, actions){
         if(arguments.length) {
-            super(Collaboration.ContentAppEvent.type(),id, collaborationId, orgId, timestamp, authors, seen, message, view)
+            super(Collaboration.ContentAppEvent.type(),id, collaborationId, orgId, timestamp, authors, seen, message, viewId)
             this.coverImg = new String(coverImg)
             this.actions = actions.map((s) => Type.check(s, Apps.App))
         }else{

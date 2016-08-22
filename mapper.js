@@ -88,9 +88,11 @@ class Mapper{
                 }else if(obj.size < 4){
                     t = "scala.collection.immutable.Set$Set"+(obj.size+1)
                 }
+                var hack = [];
+                obj.entries().forEach( (y) => hack.push(y) );
                 return  {
                     "t": t,
-                    "v": obj.entries().map( (x) => {
+                    "v": hack.map( (x) => {
                         return {
                             'v':that.pickleType(x[1])
                         }

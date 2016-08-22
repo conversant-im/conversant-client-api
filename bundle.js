@@ -411,9 +411,13 @@ var Mapper = (function () {
                 } else if (obj.size < 4) {
                     t = "scala.collection.immutable.Set$Set" + (obj.size + 1);
                 }
+                var hack = [];
+                obj.entries().forEach(function (y) {
+                    return hack.push(y);
+                });
                 return {
                     "t": t,
-                    "v": obj.entries().map(function (x) {
+                    "v": hack.map(function (x) {
                         return {
                             'v': that.pickleType(x[1])
                         };
@@ -1732,10 +1736,10 @@ Collaboration.Content = (function (_Model13) {
      * @param authors {Auth.Provider[]}
      * @param seen {Auth.Provider[]}
      * @param message {Collaboration.Message}
-     * @param view {Collaboration.ViewerState}
+     * @param viewId {UUID}
      */
 
-    function _class19(type, id, collaborationId, orgId, timestamp, authors, seen, message, view) {
+    function _class19(type, id, collaborationId, orgId, timestamp, authors, seen, message, viewId) {
         _classCallCheck(this, _class19);
 
         var _this24 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class19).call(this, type));
@@ -1747,7 +1751,7 @@ Collaboration.Content = (function (_Model13) {
         _this24.authors = null;
         _this24.seen = null;
         _this24.message = null;
-        _this24.view = null;
+        _this24.viewId = null;
         if (arguments.length > 1) {
             _this24.id = new UUID(id);
             _this24.collaborationId = new UUID(collaborationId);
@@ -1759,7 +1763,7 @@ Collaboration.Content = (function (_Model13) {
             //this.seen = seen.map((s) => Type.check(s, Auth.Provider))
             _this24.seen = seen;
             _this24.message = Type.check(message, Collaboration.Message);
-            _this24.view = Type.check(view, Collaboration.ViewerState);
+            _this24.viewId = new UUID(viewId);
         }
         return _this24;
     }
@@ -1796,16 +1800,16 @@ Collaboration.ContentMsg = (function (_Collaboration$Conten) {
          * @param nlp {String}
          * @param ner {Entities.NamedEntity[]}
          * @param message {Collaboration.Message}
-         * @param view {Collaboration.ViewerState}
+         * @param viewId {UUID}
          */
 
     }]);
 
-    function _class20(id, collaborationId, orgId, timestamp, authors, seen, sentiment, nlp, ner, message, view) {
+    function _class20(id, collaborationId, orgId, timestamp, authors, seen, sentiment, nlp, ner, message, viewId) {
         _classCallCheck(this, _class20);
 
         if (arguments.length) {
-            var _this25 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class20).call(this, Collaboration.ContentMsg.type(), id, collaborationId, orgId, timestamp, authors, seen, message, view));
+            var _this25 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class20).call(this, Collaboration.ContentMsg.type(), id, collaborationId, orgId, timestamp, authors, seen, message, viewId));
 
             _this25.sentiment = typeof sentiment === "undefined" ? null : new String(sentiment);
             _this25.nlp = typeof nlp === "undefined" ? null : new String(nlp);
@@ -1852,17 +1856,17 @@ Collaboration.ContentLinkCard = (function (_Collaboration$Conten2) {
          * @param seen {Auth.Provider[]}
          * @param message {Collaboration.Message}
          * @param entityUri {String}
-         * @param view {Collaboration.ViewerState}
+         * @param viewId {UUID}
          * @param meta {ETL.Meta}
          */
 
     }]);
 
-    function _class21(id, collaborationId, orgId, timestamp, authors, seen, message, entityUri, view, meta) {
+    function _class21(id, collaborationId, orgId, timestamp, authors, seen, message, entityUri, viewId, meta) {
         _classCallCheck(this, _class21);
 
         if (arguments.length) {
-            var _this26 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class21).call(this, Collaboration.ContentLinkCard.type(), id, collaborationId, orgId, timestamp, authors, seen, message, view));
+            var _this26 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class21).call(this, Collaboration.ContentLinkCard.type(), id, collaborationId, orgId, timestamp, authors, seen, message, viewId));
 
             _this26.entityUri = new String(entityUri);
             _this26.meta = Type.check(s, ETL.EntityMeta);
@@ -1904,18 +1908,18 @@ Collaboration.ContentNotification = (function (_Collaboration$Conten3) {
          * @param authors {Auth.Provider[]}
          * @param seen {Auth.Provider[]}
          * @param message {Collaboration.Message}
-         * @param view {Collaboration.ViewerState}
+         * @param viewId {UUID}
          * @param severity {Collaboration.NotificationLevel}
          * @param icon {String}
          */
 
     }]);
 
-    function _class22(id, collaborationId, orgId, timestamp, authors, seen, message, view, severity, icon) {
+    function _class22(id, collaborationId, orgId, timestamp, authors, seen, message, viewId, severity, icon) {
         _classCallCheck(this, _class22);
 
         if (arguments.length) {
-            var _this27 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class22).call(this, Collaboration.ContentNotification.type(), id, collaborationId, orgId, timestamp, authors, seen, message, view));
+            var _this27 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class22).call(this, Collaboration.ContentNotification.type(), id, collaborationId, orgId, timestamp, authors, seen, message, viewId));
 
             _this27.severity = Type.check(severity, Collaboration.NotificationLevel);
             _this27.icon = new String(icon);
@@ -1957,18 +1961,18 @@ Collaboration.ContentAppEvent = (function (_Collaboration$Conten4) {
          * @param authors {Auth.Provider[]}
          * @param seen {Auth.Provider[]}
          * @param message {Collaboration.Message}
-         * @param view {Collaboration.ViewerState}
+         * @param viewId {UUID}
          * @param coverImg {String}
          * @param actions {Apps.App[]}
          */
 
     }]);
 
-    function _class23(id, collaborationId, orgId, timestamp, authors, seen, message, view, coverImg, actions) {
+    function _class23(id, collaborationId, orgId, timestamp, authors, seen, message, viewId, coverImg, actions) {
         _classCallCheck(this, _class23);
 
         if (arguments.length) {
-            var _this28 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class23).call(this, Collaboration.ContentAppEvent.type(), id, collaborationId, orgId, timestamp, authors, seen, message, view));
+            var _this28 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class23).call(this, Collaboration.ContentAppEvent.type(), id, collaborationId, orgId, timestamp, authors, seen, message, viewId));
 
             _this28.coverImg = new String(coverImg);
             _this28.actions = actions.map(function (s) {
