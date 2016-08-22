@@ -142,7 +142,7 @@ var API = (function () {
 	}, {
 		key: 'syncView',
 		value: function syncView(sync) {
-			m.Type.check(sync, m.Collaboration.ViewerState);
+			m.Type.check(sync, m.Collaboration.View);
 			var syncEvent = new m.Collaboration.SyncViewEvent(this.appParams.collaboration.id, this.appParams.collaboration.orgId, this.appParams.provider, sync);
 			this._send(this.mapper.write(syncEvent));
 		}
@@ -618,6 +618,11 @@ var UUID = (function () {
         key: "valueOf",
         value: function valueOf() {
             return this.uuid;
+        }
+    }], [{
+        key: "zero",
+        value: function zero() {
+            new UUID('00000000-0000-0000-0000-000000000000');
         }
     }]);
 
@@ -1356,7 +1361,7 @@ Collaboration.View = (function (_Model8) {
         _this16.app = null;
         _this16.resource = null;
         _this16.key = null;
-        _this16.entities = null;
+        _this16.entities = new Set();
         if (arguments.length > 1) {
             _this16.id = new UUID(id);
             _this16.collaborationId = new UUID(collaborationId);
@@ -1391,7 +1396,6 @@ Collaboration.ImageView = (function (_Collaboration$View) {
 
         /**
          *
-         * @param id {UUID}
          * @param collaborationId {UUID}
          * @param app {Apps.App}
          * @param resource {Resource.Resource}
@@ -1402,11 +1406,11 @@ Collaboration.ImageView = (function (_Collaboration$View) {
 
     }]);
 
-    function _class12(id, collaborationId, app, resource, key, entities, transform) {
+    function _class12(collaborationId, app, resource, key, entities, transform) {
         _classCallCheck(this, _class12);
 
         if (arguments.length) {
-            var _this17 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class12).call(this, Collaboration.ImageView.type(), id, collaborationId, app, resource, key, entities, transform));
+            var _this17 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class12).call(this, Collaboration.ImageView.type(), '00000000-0000-0000-0000-000000000000', collaborationId, app, resource, key, entities, transform));
 
             _this17.transform = Type.check(transform, Geom.Transform3d);
         } else {

@@ -99,7 +99,7 @@ class API {
 	 * of type 'm.Collaboration.ViewerState'
      */
 	syncView(sync){
-		m.Type.check(sync, m.Collaboration.ViewerState)
+		m.Type.check(sync, m.Collaboration.View)
 		let syncEvent = new m.Collaboration.SyncViewEvent(this.appParams.collaboration.id,this.appParams.collaboration.orgId,this.appParams.provider,sync);
 		this._send(this.mapper.write(syncEvent))
 	}

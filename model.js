@@ -11,6 +11,8 @@ class UUID {
         }
     }
 
+    static zero(){ new UUID('00000000-0000-0000-0000-000000000000') }
+
     valueOf(){
         return this.uuid
     }
@@ -478,7 +480,7 @@ Collaboration.View = class extends Model{
         this.app = null
         this.resource = null
         this.key = null
-        this.entities = null
+        this.entities = new Set()
         if(arguments.length > 1) {
             this.id = new UUID(id)
             this.collaborationId = new UUID(collaborationId)
@@ -503,7 +505,6 @@ Collaboration.ImageView = class extends Collaboration.View{
 
     /**
      *
-     * @param id {UUID}
      * @param collaborationId {UUID}
      * @param app {Apps.App}
      * @param resource {Resource.Resource}
@@ -511,9 +512,9 @@ Collaboration.ImageView = class extends Collaboration.View{
      * @param entities {Entities.Entity[]}
      * @param transform {Geom.Transform3d}
      */
-    constructor(id, collaborationId, app, resource, key, entities, transform){
+    constructor(collaborationId, app, resource, key, entities, transform){
         if(arguments.length) {
-            super(Collaboration.ImageView.type(),id, collaborationId, app, resource, key, entities, transform)
+            super(Collaboration.ImageView.type(), '00000000-0000-0000-0000-000000000000', collaborationId, app, resource, key, entities, transform)
             this.transform = Type.check(transform, Geom.Transform3d)
         }else{
             super(Collaboration.ImageView.type())
