@@ -457,38 +457,67 @@ Entities.PersonEntity = class extends Entities.NamedEntity{
  */
 let Collaboration = {};
 
+
 /**
- * @class ViewerState
- * Used by applications to sync the view state of a sync panel.
+ * @class View
  */
-Collaboration.ViewerState = class extends Model{
+Collaboration.View = class extends Model{
+    /**
+     *
+     * @param id {UUID}
+     * @param collaborationId {UUID}
+     * @param app {Apps.App}
+     * @param resource {Resource.Resource}
+     * @param key {String}
+     * @param entities {Entities.Entity[]}
+     */
+    constructor(type, id, collaborationId, app, resource, key, entities){
+        super(type)
+        this.id = null
+        this.collaborationId = null
+        this.app = null
+        this.resource = null
+        this.key = null
+        this.entities = null
+        if(arguments.length > 1) {
+            this.id = new UUID(id)
+            this.collaborationId = new UUID(collaborationId)
+            this.app = Type.check(app, Apps.App)
+            this.resource = Type.check(resource, Resource.Resource)
+            this.key = new String(key)
+            // FIXME: Set does not define "map"
+            this.entities = entities
+        }
+    }
+}
+
+/**
+ * @class ImageView
+ */
+Collaboration.ImageView = class extends Collaboration.View{
     /**
      * Return the full class name of this type.
      * @returns {string}
      */
-    static type(){ return 'm.Collaboration$ViewerState'}
+    static type(){ return 'm.Collaboration$ImageView'}
 
     /**
      *
+     * @param id {UUID}
+     * @param collaborationId {UUID}
      * @param app {Apps.App}
      * @param resource {Resource.Resource}
-     * @param sampleTimeMs {Number}
-     * @param settings {Map}
+     * @param key {String}
+     * @param entities {Entities.Entity[]}
      * @param transform {Geom.Transform3d}
      */
-    constructor(app, resource, sampleTimeMs, settings, transform){
-        super(Collaboration.ViewerState.type())
-        this.app = null
-        this.resource = null
-        this.sampleTimeMs = null
-        this.settings = null
-        this.transform = null
+    constructor(id, collaborationId, app, resource, key, entities, transform){
         if(arguments.length) {
-            this.app = Type.check(app, Apps.App)
-            this.resource = Type.check(resource, Resource.Resource)
-            this.sampleTimeMs = new m.Double(sampleTimeMs)
-            this.settings = settings
+            super(Collaboration.ImageView.type(),id, collaborationId, app, resource, key, entities, transform)
             this.transform = Type.check(transform, Geom.Transform3d)
+        }else{
+            super(Collaboration.ImageView.type())
+            this.transform =  null
         }
     }
 }
@@ -509,7 +538,7 @@ Collaboration.SyncViewEvent = class extends Model{
      * @param collaborationId {String}
      * @param orgId {String}
      * @param provider {Auth.Provider}
-     * @param viewerState {Collaboration.ViewerState}
+     * @param viewerState {Collaboration.View}
      */
     constructor(collaborationId, orgId, provider, viewerState){
         super(Collaboration.SyncViewEvent.type())
@@ -521,7 +550,7 @@ Collaboration.SyncViewEvent = class extends Model{
             this.collaborationId = new UUID(collaborationId)
             this.orgId = new UUID(orgId)
             this.provider = Type.check(provider, Auth.Provider)
-            this.viewerState = Type.check(viewerState, Collaboration.ViewerState)
+            this.viewerState = viewerState
         }
     }
 }
@@ -1144,7 +1173,7 @@ Apps.InitApp = class extends Model{
     /**
      *
      * @param app {Apps.App}
-     * @param restoreState {Collaboration.ViewerState} OPTIONAL The view state that is to be restored
+     * @param restoreState {Collaboration.View} OPTIONAL The view state that is to be restored
      * @param mode {Apps.AppMode}
      */
     constructor(app, restoreState, mode){
@@ -1153,7 +1182,7 @@ Apps.InitApp = class extends Model{
         this.restoreState = null
         if(arguments.length) {
             this.app = Type.check(app, Apps.App)
-            this.restoreState = typeof restoreState === "undefined" ? null : [Type.check(restoreState, Collaboration.ViewerState)]
+            this.restoreState = typeof restoreState === "undefined" ? null : restoreState
         }
     }
 }

@@ -159,7 +159,7 @@ class AppParameters{
      */
 	constructor(app, restoreState, organization, collaboration, provider, team, peers){
 		this.app =  m.Type.check(app, m.Apps.App)
-		this.restoreState = typeof restoreState === "undefined" ?  null : m.Type.check(restoreState, m.Collaboration.ViewerState)
+		this.restoreState = typeof restoreState === "undefined" ?  null : restoreState
 		this.organization = m.Type.check(organization, m.Auth.Organization)
 		this.collaboration = m.Type.check(collaboration, m.Collaboration.Collaboration)
 		this.provider = m.Type.check(provider, m.Auth.Provider)
