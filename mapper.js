@@ -35,12 +35,12 @@ class Mapper{
             'm.Some' : (obj) => {
                 return {
                     't': 'scala.Some',
-                    'v': {'x':obj.valueOf() }
+                    'v': {'x':that.pickleType(obj.valueOf()) }
                 }
             },
             'm.None' : (obj) => {
                 return {
-                    't': 'scala.None$'
+                    's': 'scala.None$'
                 }
             },
             'm.Integer' : (obj) => {
@@ -97,7 +97,7 @@ class Mapper{
                         "v": []
                     }
                 }else if(obj.size < 4){
-                    t = "scala.collection.immutable.Set$Set"+(obj.size+1)
+                    t = "scala.collection.immutable.Set$Set"+(obj.size)
                 }
                 var hack = [];
                 obj.forEach( (y) => hack.push(y) );

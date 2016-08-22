@@ -77,7 +77,7 @@ class Some extends Option{
     constructor(val){
         super()
         this.val = val
-        this.$type = "scala.Some";
+        this.$type = "m.Some";
     }
     get(){
         return this.val
@@ -89,7 +89,7 @@ class Some extends Option{
 class None extends Option{
     constructor(){
         super()
-        this.$type = "scala.None$";
+        this.$type = "m.None";
     }
 }
 
@@ -844,8 +844,8 @@ Collaboration.ContentMsg = class extends Collaboration.Content{
      * @param timestamp {String}
      * @param authors {Auth.Provider[]}
      * @param seen {Auth.Provider[]}
-     * @param sentiment {String}
-     * @param nlp {String}
+     * @param sentiment Option{String}
+     * @param nlp Option{String}
      * @param ner {Entities.NamedEntity[]}
      * @param message {Collaboration.Message}
      * @param viewId {UUID}
@@ -854,8 +854,8 @@ Collaboration.ContentMsg = class extends Collaboration.Content{
 
         if(arguments.length) {
             super(Collaboration.ContentMsg.type(),id, collaborationId, orgId, timestamp, authors, seen, message, viewId)
-            this.sentiment = typeof sentiment === "undefined" ? null : new String(sentiment)
-            this.nlp = typeof nlp === "undefined" ? null : new String(nlp)
+            this.sentiment = sentiment
+            this.nlp = nlp
             //this.ner = ner.map((s) => Type.check(s, Entities.NamedEntity))  // FIXME: Set does not have "map" defined on it..
             this.ner = ner
         }else{
@@ -1046,12 +1046,39 @@ Collaboration.MessageBasic = class extends Collaboration.Message{
      */
     constructor(text, mentions){
         if(arguments.length) {
-            super(Collaboration.MessageBasic.type(),text, mentions)
+            super(Collaboration.MessageBasic.type(), text, mentions)
         }else{
             super(Collaboration.MessageBasic.type())
         }
     }
 }
+
+/**
+ * @class BroadcastContent
+ */
+Collaboration.BroadcastContent = class extends Model{
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    static type(){ return 'm.Collaboration$BroadcastContent'}
+
+    /**
+     *
+     * @param content {Collaboration.Content}
+     * @param view Option{Collaboration.View}
+     */
+    constructor(content, view){
+        super(Collaboration.BroadcastContent.type())
+        this.content = null
+        this.view = null
+        if(arguments.length) {
+            this.content = content
+            this.view = view
+        }
+    }
+}
+
 
 
 /**

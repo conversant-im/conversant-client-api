@@ -115,10 +115,10 @@ class API {
 			m.Option.None(),
 			m.Option.None(),
 			new Set(),
-			new m.Collaboration.MessageBasic(msg, new Set()),
+			m.Option.Some(new m.Collaboration.MessageBasic(msg, new Set())),
 			view.id);
 
-		this._send(this.mapper.write(content))
+		this._send(this.mapper.write(new m.Collaboration.BroadcastContent(content, m.Option.Some(view) ) ))
 
 	}
 
