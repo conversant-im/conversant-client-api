@@ -149,7 +149,8 @@ var API = (function () {
 	}, {
 		key: 'sendMessage',
 		value: function sendMessage(msg, view) {
-			var content = new m.Collaboration.ContentMsg(m.Auth.zeroId, this.appParams.collaboration.id, this.appParams.collaboration.orgId, "", new Set([this.appParams.provider]), new Set([this.appParams.provider]), "", "", new Set(), new m.Collaboration.MessageBasic(msg, new Set()), view);
+			var content = new m.Collaboration.ContentMsg(m.Auth.zeroId, this.appParams.collaboration.get().id, // TODO: fix with better Option type
+			this.appParams.collaboration.get().orgId, "", new Set([this.appParams.provider]), new Set([this.appParams.provider]), m.Option.None(), m.Option.None(), new Set(), new m.Collaboration.MessageBasic(msg, new Set()), view.id);
 
 			this._send(this.mapper.write(content));
 		}
@@ -201,7 +202,7 @@ function AppParameters(app, restoreState, organization, collaboration, provider,
 	this.app = m.Type.check(app, m.Apps.App);
 	this.restoreState = typeof restoreState === "undefined" ? null : restoreState;
 	this.organization = m.Type.check(organization, m.Auth.Organization);
-	this.collaboration = m.Type.check(collaboration, m.Collaboration.Collaboration);
+	this.collaboration = collaboration;
 	this.provider = m.Type.check(provider, m.Auth.Provider);
 	this.team = team.map(function (t) {
 		return m.Type.check(t, m.Collaboration.SyncUserEvent);
@@ -237,6 +238,7 @@ var ConversantAPI = (function (_API) {
 			if (event.data && event.data != '') {
 				try {
 					(function () {
+						console.log('**data', event.data);
 						var x = _this3.mapper.read(event.data);
 						//console.log('sending to ('+observerList.length+') observers',x)
 						observerList.forEach(function (obs) {
@@ -355,6 +357,17 @@ var Mapper = (function () {
                     'v': obj.valueOf()
                 };
             },
+            'm.Some': function mSome(obj) {
+                return {
+                    't': 'scala.Some',
+                    'v': { 'x': obj.valueOf() }
+                };
+            },
+            'm.None': function mNone(obj) {
+                return {
+                    't': 'scala.None$'
+                };
+            },
             'm.Integer': function mInteger(obj) {
                 return {
                     't': 'java.lang.Integer',
@@ -412,14 +425,14 @@ var Mapper = (function () {
                     t = "scala.collection.immutable.Set$Set" + (obj.size + 1);
                 }
                 var hack = [];
-                obj.entries().forEach(function (y) {
+                obj.forEach(function (y) {
                     return hack.push(y);
                 });
                 return {
                     "t": t,
                     "v": hack.map(function (x) {
                         return {
-                            'v': that.pickleType(x[1])
+                            'v': that.pickleType(x)
                         };
                     })
                 };
@@ -497,7 +510,7 @@ var Mapper = (function () {
             }
             //console.log('rep: ',rep);
             if (rep.s && !rep.t) rep.t = rep.s;
-            //console.log('type: '+rep.t);
+            console.log('type: ' + rep.t);
             if (rep.t.indexOf('m.') == 0) {
                 // this SHOULD be one of our types.
                 var s = rep.t.split('$');
@@ -550,6 +563,10 @@ var Mapper = (function () {
                     return new m.Double(rep.v);
                 } else if (rep.t == 'java.lang.Long') {
                     return new m.Long(rep.v);
+                } else if (rep.t == 'scala.Some') {
+                    return m.Option.Some(this.unpickleType(rep.v.x));
+                } else if (rep.t == 'scale.None$') {
+                    return m.Option.None();
                 } else if (rep.t == 'scala.collection.immutable.HashSet$HashTrieSet' || rep.t.indexOf('scala.collection.immutable.Set') == 0) {
                     return rep.v.map(function (x) {
                         return _this.unpickleType(x);
@@ -736,6 +753,69 @@ var List = (function (_Array) {
     return List;
 })(Array);
 
+var Option = (function () {
+    function Option() {
+        _classCallCheck(this, Option);
+    }
+
+    _createClass(Option, null, [{
+        key: "Some",
+        value: function Some(val) {
+            return new _Some(val);
+        }
+    }, {
+        key: "None",
+        value: function None() {
+            return new _None();
+        }
+    }]);
+
+    return Option;
+})();
+
+var _Some = (function (_Option) {
+    _inherits(_Some, _Option);
+
+    function _Some(val) {
+        _classCallCheck(this, _Some);
+
+        var _this6 = _possibleConstructorReturn(this, Object.getPrototypeOf(_Some).call(this));
+
+        _this6.val = val;
+        _this6.$type = "scala.Some";
+        return _this6;
+    }
+
+    _createClass(_Some, [{
+        key: "get",
+        value: function get() {
+            return this.val;
+        }
+    }, {
+        key: "valueOf",
+        value: function valueOf() {
+            return this.val;
+        }
+    }]);
+
+    return _Some;
+})(Option);
+
+var _None = (function (_Option2) {
+    _inherits(_None, _Option2);
+
+    function _None() {
+        _classCallCheck(this, _None);
+
+        var _this7 = _possibleConstructorReturn(this, Object.getPrototypeOf(_None).call(this));
+
+        _this7.$type = "scala.None$";
+        return _this7;
+    }
+
+    return _None;
+})(Option);
+
 /**
  * @class Type
  * Helper class for doing runtime type checking and error reporting.
@@ -810,13 +890,13 @@ Auth.OrganizationRoles = (function (_Model) {
     function _class(role) {
         _classCallCheck(this, _class);
 
-        var _this6 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class).call(this, Auth.OrganizationRoles.type()));
+        var _this8 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class).call(this, Auth.OrganizationRoles.type()));
 
-        _this6.name = null;
+        _this8.name = null;
         if (arguments.length) {
-            _this6.name = role;
+            _this8.name = role;
         }
-        return _this6;
+        return _this8;
     }
 
     /**
@@ -907,23 +987,23 @@ Auth.Provider = (function (_Model2) {
     function _class2(orgId, source, provider, id, role, fullName) {
         _classCallCheck(this, _class2);
 
-        var _this7 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class2).call(this, Auth.Provider.type()));
+        var _this9 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class2).call(this, Auth.Provider.type()));
 
-        _this7.orgId = null;
-        _this7.source = null;
-        _this7.provider = null;
-        _this7.id = null;
-        _this7.role = null;
-        _this7.fullName = null;
+        _this9.orgId = null;
+        _this9.source = null;
+        _this9.provider = null;
+        _this9.id = null;
+        _this9.role = null;
+        _this9.fullName = null;
         if (arguments.length) {
-            _this7.orgId = new UUID(orgId);
-            _this7.source = new UUID(source);
-            _this7.provider = new String(provider);
-            _this7.id = new String(id);
-            _this7.role = Type.check(role, Auth.OrganizationRoles);
-            _this7.fullName = new String(fullName);
+            _this9.orgId = new UUID(orgId);
+            _this9.source = new UUID(source);
+            _this9.provider = new String(provider);
+            _this9.id = new String(id);
+            _this9.role = Type.check(role, Auth.OrganizationRoles);
+            _this9.fullName = new String(fullName);
         }
-        return _this7;
+        return _this9;
     }
 
     return _class2;
@@ -961,22 +1041,22 @@ Auth.Organization = (function (_Model3) {
     function _class3(url, name, provider, members, settings) {
         _classCallCheck(this, _class3);
 
-        var _this8 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class3).call(this, Auth.Provider.type()));
+        var _this10 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class3).call(this, Auth.Provider.type()));
 
-        _this8.url = null;
-        _this8.name = null;
-        _this8.provider = null;
-        _this8.members = null;
-        _this8.settings = null;
+        _this10.url = null;
+        _this10.name = null;
+        _this10.provider = null;
+        _this10.members = null;
+        _this10.settings = null;
         if (arguments.length) {
-            _this8.url = new String(url);
-            _this8.provider = Type.check(provider, Auth.Provider);
-            _this8.members = members.map(function (p) {
+            _this10.url = new String(url);
+            _this10.provider = Type.check(provider, Auth.Provider);
+            _this10.members = members.map(function (p) {
                 return Type.check(p, Auth.Provider);
             });
-            _this8.settings = settings;
+            _this10.settings = settings;
         }
-        return _this8;
+        return _this10;
     }
 
     return _class3;
@@ -1012,13 +1092,13 @@ Auth.PrimaryProfile = (function (_Model4) {
     function _class4(primary, providers) {
         _classCallCheck(this, _class4);
 
-        var _this9 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class4).call(this, Auth.PrimaryProfile.type()));
+        var _this11 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class4).call(this, Auth.PrimaryProfile.type()));
 
-        _this9.primary = Type.check(primary, Auth.Provider);
-        _this9.providers = providers.map(function (p) {
+        _this11.primary = Type.check(primary, Auth.Provider);
+        _this11.providers = providers.map(function (p) {
             return Type.check(p, Auth.Provider);
         });
-        return _this9;
+        return _this11;
     }
 
     return _class4;
@@ -1056,17 +1136,17 @@ Auth.UserState = (function (_Model5) {
     function _class5(isOnline, action, state) {
         _classCallCheck(this, _class5);
 
-        var _this10 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class5).call(this, Auth.UserState.type()));
+        var _this12 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class5).call(this, Auth.UserState.type()));
 
-        _this10.isOnline = null;
-        _this10.action = null;
-        _this10.state = null;
+        _this12.isOnline = null;
+        _this12.action = null;
+        _this12.state = null;
         if (arguments.length) {
-            _this10.isOnline = isOnline;
-            _this10.action = Type.check(action, Auth.UserAction);
-            _this10.state = state;
+            _this12.isOnline = isOnline;
+            _this12.action = Type.check(action, Auth.UserAction);
+            _this12.state = state;
         }
-        return _this10;
+        return _this12;
     }
 
     return _class5;
@@ -1100,13 +1180,13 @@ Auth.UserAction = (function (_Model6) {
     function _class6(action) {
         _classCallCheck(this, _class6);
 
-        var _this11 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class6).call(this, Auth.UserAction.type()));
+        var _this13 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class6).call(this, Auth.UserAction.type()));
 
-        _this11.action = null;
+        _this13.action = null;
         if (arguments.length) {
-            _this11.action = new String(action);
+            _this13.action = new String(action);
         }
-        return _this11;
+        return _this13;
     }
 
     /**
@@ -1199,15 +1279,15 @@ Entities.NamedEntity = (function (_Model7) {
     function _class7(type, uri, token) {
         _classCallCheck(this, _class7);
 
-        var _this12 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class7).call(this, type));
+        var _this14 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class7).call(this, type));
 
-        _this12.uri = null;
-        _this12.token = null;
+        _this14.uri = null;
+        _this14.token = null;
         if (arguments.length > 1) {
-            _this12.uri = new String(uri);
-            _this12.token = new String(token);
+            _this14.uri = new String(uri);
+            _this14.token = new String(token);
         }
-        return _this12;
+        return _this14;
     }
 
     return _class7;
@@ -1242,11 +1322,11 @@ Entities.LocationEntity = (function (_Entities$NamedEntity) {
         _classCallCheck(this, _class8);
 
         if (arguments.length) {
-            var _this13 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class8).call(this, Entities.LocationEntity.type(), uri, token));
+            var _this15 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class8).call(this, Entities.LocationEntity.type(), uri, token));
         } else {
-            var _this13 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class8).call(this, Entities.LocationEntity.type()));
+            var _this15 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class8).call(this, Entities.LocationEntity.type()));
         }
-        return _possibleConstructorReturn(_this13);
+        return _possibleConstructorReturn(_this15);
     }
 
     return _class8;
@@ -1281,11 +1361,11 @@ Entities.OrganizationEntity = (function (_Entities$NamedEntity2) {
         _classCallCheck(this, _class9);
 
         if (arguments.length) {
-            var _this14 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class9).call(this, Entities.OrganizationEntity.type(), uri, token));
+            var _this16 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class9).call(this, Entities.OrganizationEntity.type(), uri, token));
         } else {
-            var _this14 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class9).call(this, Entities.OrganizationEntity.type()));
+            var _this16 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class9).call(this, Entities.OrganizationEntity.type()));
         }
-        return _possibleConstructorReturn(_this14);
+        return _possibleConstructorReturn(_this16);
     }
 
     return _class9;
@@ -1320,11 +1400,11 @@ Entities.PersonEntity = (function (_Entities$NamedEntity3) {
         _classCallCheck(this, _class10);
 
         if (arguments.length) {
-            var _this15 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class10).call(this, Entities.PersonEntity.type(), uri, token));
+            var _this17 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class10).call(this, Entities.PersonEntity.type(), uri, token));
         } else {
-            var _this15 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class10).call(this, Entities.PersonEntity.type()));
+            var _this17 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class10).call(this, Entities.PersonEntity.type()));
         }
-        return _possibleConstructorReturn(_this15);
+        return _possibleConstructorReturn(_this17);
     }
 
     return _class10;
@@ -1354,24 +1434,24 @@ Collaboration.View = (function (_Model8) {
     function _class11(type, id, collaborationId, app, resource, key, entities) {
         _classCallCheck(this, _class11);
 
-        var _this16 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class11).call(this, type));
+        var _this18 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class11).call(this, type));
 
-        _this16.id = null;
-        _this16.collaborationId = null;
-        _this16.app = null;
-        _this16.resource = null;
-        _this16.key = null;
-        _this16.entities = new Set();
+        _this18.id = null;
+        _this18.collaborationId = null;
+        _this18.app = null;
+        _this18.resource = null;
+        _this18.key = null;
+        _this18.entities = new Set();
         if (arguments.length > 1) {
-            _this16.id = new UUID(id);
-            _this16.collaborationId = new UUID(collaborationId);
-            _this16.app = Type.check(app, Apps.App);
-            _this16.resource = Type.check(resource, Resource.Resource);
-            _this16.key = new String(key);
+            _this18.id = new UUID(id);
+            _this18.collaborationId = new UUID(collaborationId);
+            _this18.app = Type.check(app, Apps.App);
+            _this18.resource = Type.check(resource, Resource.Resource);
+            _this18.key = new String(key);
             // FIXME: Set does not define "map"
-            _this16.entities = entities;
+            _this18.entities = entities;
         }
-        return _this16;
+        return _this18;
     }
 
     return _class11;
@@ -1410,15 +1490,15 @@ Collaboration.ImageView = (function (_Collaboration$View) {
         _classCallCheck(this, _class12);
 
         if (arguments.length) {
-            var _this17 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class12).call(this, Collaboration.ImageView.type(), '00000000-0000-0000-0000-000000000000', collaborationId, app, resource, key, entities, transform));
+            var _this19 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class12).call(this, Collaboration.ImageView.type(), '00000000-0000-0000-0000-000000000000', collaborationId, app, resource, key, entities, transform));
 
-            _this17.transform = Type.check(transform, Geom.Transform3d);
+            _this19.transform = Type.check(transform, Geom.Transform3d);
         } else {
-            var _this17 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class12).call(this, Collaboration.ImageView.type()));
+            var _this19 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class12).call(this, Collaboration.ImageView.type()));
 
-            _this17.transform = null;
+            _this19.transform = null;
         }
-        return _possibleConstructorReturn(_this17);
+        return _possibleConstructorReturn(_this19);
     }
 
     return _class12;
@@ -1455,19 +1535,19 @@ Collaboration.SyncViewEvent = (function (_Model9) {
     function _class13(collaborationId, orgId, provider, viewerState) {
         _classCallCheck(this, _class13);
 
-        var _this18 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class13).call(this, Collaboration.SyncViewEvent.type()));
+        var _this20 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class13).call(this, Collaboration.SyncViewEvent.type()));
 
-        _this18.collaborationId = null;
-        _this18.orgId = null;
-        _this18.provider = null;
-        _this18.viewerState = null;
+        _this20.collaborationId = null;
+        _this20.orgId = null;
+        _this20.provider = null;
+        _this20.viewerState = null;
         if (arguments.length) {
-            _this18.collaborationId = new UUID(collaborationId);
-            _this18.orgId = new UUID(orgId);
-            _this18.provider = Type.check(provider, Auth.Provider);
-            _this18.viewerState = viewerState;
+            _this20.collaborationId = new UUID(collaborationId);
+            _this20.orgId = new UUID(orgId);
+            _this20.provider = Type.check(provider, Auth.Provider);
+            _this20.viewerState = viewerState;
         }
-        return _this18;
+        return _this20;
     }
 
     return _class13;
@@ -1504,19 +1584,19 @@ Collaboration.SyncUserEvent = (function (_Model10) {
     function _class14(collaborationId, orgId, provider, userState) {
         _classCallCheck(this, _class14);
 
-        var _this19 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class14).call(this, Collaboration.SyncUserEvent.type()));
+        var _this21 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class14).call(this, Collaboration.SyncUserEvent.type()));
 
-        _this19.collaborationId = null;
-        _this19.orgId = null;
-        _this19.provider = null;
-        _this19.userState = null;
+        _this21.collaborationId = null;
+        _this21.orgId = null;
+        _this21.provider = null;
+        _this21.userState = null;
         if (arguments.length) {
-            _this19.collaborationId = new UUID(collaborationId);
-            _this19.orgId = new UUID(orgId);
-            _this19.provider = Type.check(provider, Auth.Provider);
-            _this19.userState = Type.check(userState, Auth.UserState);
+            _this21.collaborationId = new UUID(collaborationId);
+            _this21.orgId = new UUID(orgId);
+            _this21.provider = Type.check(provider, Auth.Provider);
+            _this21.userState = Type.check(userState, Auth.UserState);
         }
-        return _this19;
+        return _this21;
     }
 
     return _class14;
@@ -1551,15 +1631,15 @@ Collaboration.Notification = (function (_Model11) {
     function _class15(providerKey, rules) {
         _classCallCheck(this, _class15);
 
-        var _this20 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class15).call(this, Collaboration.Notification.type()));
+        var _this22 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class15).call(this, Collaboration.Notification.type()));
 
-        _this20.providerKey = null;
-        _this20.rules = null;
+        _this22.providerKey = null;
+        _this22.rules = null;
         if (arguments.length) {
-            _this20.providerKey = new String(providerKey);
+            _this22.providerKey = new String(providerKey);
             // TOOD: rules [NotificationRule]
         }
-        return _this20;
+        return _this22;
     }
 
     return _class15;
@@ -1592,34 +1672,34 @@ Collaboration.Collaboration = (function (_Model12) {
     function _class16(type, id, orgId, members, notifications, name, avatarUrl, cover, content, settings) {
         _classCallCheck(this, _class16);
 
-        var _this21 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class16).call(this, type));
+        var _this23 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class16).call(this, type));
 
-        _this21.id = null;
-        _this21.orgId = null;
-        _this21.members = null;
-        _this21.notifications = null;
-        _this21.name = null;
-        _this21.avatarUrl = null;
-        _this21.cover = null;
-        _this21.content = null;
-        _this21.settings = null;
+        _this23.id = null;
+        _this23.orgId = null;
+        _this23.members = null;
+        _this23.notifications = null;
+        _this23.name = null;
+        _this23.avatarUrl = null;
+        _this23.cover = null;
+        _this23.content = null;
+        _this23.settings = null;
         console.log('arguments.length', arguments.length);
         if (arguments.length > 1) {
-            _this21.id = new UUID(id);
-            _this21.orgId = new UUID(orgId);
-            _this21.members = members.map(function (m) {
+            _this23.id = new UUID(id);
+            _this23.orgId = new UUID(orgId);
+            _this23.members = members.map(function (m) {
                 return Type.check(m, Auth.Provider);
             });
-            _this21.notifications = Type.check(notifications, Collaboration.Notification);
-            _this21.name = typeof name === "undefined" ? null : new String(name);
-            _this21.avatarUrl = typeof avatarUrl === "undefined" ? null : new String(avatarUrl);
-            _this21.cover = typeof cover === "undefined" ? null : new String(cover);
-            _this21.content = content.map(function (c) {
+            _this23.notifications = Type.check(notifications, Collaboration.Notification);
+            _this23.name = typeof name === "undefined" ? null : new String(name);
+            _this23.avatarUrl = avatarUrl;
+            _this23.cover = cover;
+            _this23.content = content.map(function (c) {
                 return Type.check(c, Collaboration.Content);
             });
-            _this21.settings = settings;
+            _this23.settings = settings;
         }
-        return _this21;
+        return _this23;
     }
 
     return _class16;
@@ -1661,11 +1741,11 @@ Collaboration.CollaborationAdHoc = (function (_Collaboration$Collab) {
         _classCallCheck(this, _class17);
 
         if (arguments.length) {
-            var _this22 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class17).call(this, Collaboration.CollaborationAdHoc.type(), id, orgId, members, notifications, name, avatarUrl, cover, content, settings));
+            var _this24 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class17).call(this, Collaboration.CollaborationAdHoc.type(), id, orgId, members, notifications, name, avatarUrl, cover, content, settings));
         } else {
-            var _this22 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class17).call(this, Collaboration.CollaborationAdHoc.type()));
+            var _this24 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class17).call(this, Collaboration.CollaborationAdHoc.type()));
         }
-        return _possibleConstructorReturn(_this22);
+        return _possibleConstructorReturn(_this24);
     }
 
     return _class17;
@@ -1707,11 +1787,11 @@ Collaboration.CollaborationGroup = (function (_Collaboration$Collab2) {
         _classCallCheck(this, _class18);
 
         if (arguments.length) {
-            var _this23 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class18).call(this, Collaboration.CollaborationGroup.type(), id, orgId, members, notifications, name, avatarUrl, cover, content, settings));
+            var _this25 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class18).call(this, Collaboration.CollaborationGroup.type(), id, orgId, members, notifications, name, avatarUrl, cover, content, settings));
         } else {
-            var _this23 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class18).call(this, Collaboration.CollaborationGroup.type()));
+            var _this25 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class18).call(this, Collaboration.CollaborationGroup.type()));
         }
-        return _possibleConstructorReturn(_this23);
+        return _possibleConstructorReturn(_this25);
     }
 
     return _class18;
@@ -1740,7 +1820,7 @@ Collaboration.CollaborationChannel = (function (_Collaboration$Collab3) {
          * @param orgId {String}
          * @param members {Auth.Provider[]}
          * @param notifications {Collaboration.Notification[]}
-         * @param name OPTIONAL {String}
+         * @param name Option{String}
          * @param avatarUrl OPTIONAL {String}
          * @param cover OPTIONAL {String}
          * @param content {Collaboration.Content[]}
@@ -1753,11 +1833,11 @@ Collaboration.CollaborationChannel = (function (_Collaboration$Collab3) {
         _classCallCheck(this, _class19);
 
         if (arguments.length) {
-            var _this24 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class19).call(this, Collaboration.CollaborationChannel.type(), id, orgId, members, notifications, name, avatarUrl, cover, content, settings));
+            var _this26 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class19).call(this, Collaboration.CollaborationChannel.type(), id, orgId, members, notifications, name, avatarUrl, cover, content, settings));
         } else {
-            var _this24 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class19).call(this, Collaboration.CollaborationChannel.type()));
+            var _this26 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class19).call(this, Collaboration.CollaborationChannel.type()));
         }
-        return _possibleConstructorReturn(_this24);
+        return _possibleConstructorReturn(_this26);
     }
 
     return _class19;
@@ -1784,30 +1864,30 @@ Collaboration.Content = (function (_Model13) {
     function _class20(type, id, collaborationId, orgId, timestamp, authors, seen, message, viewId) {
         _classCallCheck(this, _class20);
 
-        var _this25 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class20).call(this, type));
+        var _this27 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class20).call(this, type));
 
-        _this25.id = null;
-        _this25.collaborationId = null;
-        _this25.orgId = null;
-        _this25.timestamp = null;
-        _this25.authors = null;
-        _this25.seen = null;
-        _this25.message = null;
-        _this25.viewId = null;
+        _this27.id = null;
+        _this27.collaborationId = null;
+        _this27.orgId = null;
+        _this27.timestamp = null;
+        _this27.authors = null;
+        _this27.seen = null;
+        _this27.message = null;
+        _this27.viewId = null;
         if (arguments.length > 1) {
-            _this25.id = new UUID(id);
-            _this25.collaborationId = new UUID(collaborationId);
-            _this25.orgId = new UUID(orgId);
-            _this25.timestamp = new String(timestamp);
+            _this27.id = new UUID(id);
+            _this27.collaborationId = new UUID(collaborationId);
+            _this27.orgId = new UUID(orgId);
+            _this27.timestamp = new String(timestamp);
             // FIXME: Set does not define "map"
             //this.authors = authors.map((a) => Type.check(a, Auth.Provider))
-            _this25.authors = authors;
+            _this27.authors = authors;
             //this.seen = seen.map((s) => Type.check(s, Auth.Provider))
-            _this25.seen = seen;
-            _this25.message = Type.check(message, Collaboration.Message);
-            _this25.viewId = new UUID(viewId);
+            _this27.seen = seen;
+            _this27.message = message;
+            _this27.viewId = new UUID(viewId);
         }
-        return _this25;
+        return _this27;
     }
 
     return _class20;
@@ -1851,21 +1931,21 @@ Collaboration.ContentMsg = (function (_Collaboration$Conten) {
         _classCallCheck(this, _class21);
 
         if (arguments.length) {
-            var _this26 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class21).call(this, Collaboration.ContentMsg.type(), id, collaborationId, orgId, timestamp, authors, seen, message, viewId));
+            var _this28 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class21).call(this, Collaboration.ContentMsg.type(), id, collaborationId, orgId, timestamp, authors, seen, message, viewId));
 
-            _this26.sentiment = typeof sentiment === "undefined" ? null : new String(sentiment);
-            _this26.nlp = typeof nlp === "undefined" ? null : new String(nlp);
+            _this28.sentiment = typeof sentiment === "undefined" ? null : new String(sentiment);
+            _this28.nlp = typeof nlp === "undefined" ? null : new String(nlp);
             //this.ner = ner.map((s) => Type.check(s, Entities.NamedEntity))  // FIXME: Set does not have "map" defined on it..
-            _this26.ner = ner;
+            _this28.ner = ner;
         } else {
-            var _this26 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class21).call(this, Collaboration.ContentMsg.type()));
+            var _this28 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class21).call(this, Collaboration.ContentMsg.type()));
 
-            _this26.sentiment = null;
-            _this26.nlp = null;
-            _this26.ner = null;
+            _this28.sentiment = null;
+            _this28.nlp = null;
+            _this28.ner = null;
         }
 
-        return _possibleConstructorReturn(_this26);
+        return _possibleConstructorReturn(_this28);
     }
 
     return _class21;
@@ -1908,17 +1988,17 @@ Collaboration.ContentLinkCard = (function (_Collaboration$Conten2) {
         _classCallCheck(this, _class22);
 
         if (arguments.length) {
-            var _this27 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class22).call(this, Collaboration.ContentLinkCard.type(), id, collaborationId, orgId, timestamp, authors, seen, message, viewId));
+            var _this29 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class22).call(this, Collaboration.ContentLinkCard.type(), id, collaborationId, orgId, timestamp, authors, seen, message, viewId));
 
-            _this27.entityUri = new String(entityUri);
-            _this27.meta = Type.check(s, ETL.EntityMeta);
+            _this29.entityUri = new String(entityUri);
+            _this29.meta = Type.check(s, ETL.EntityMeta);
         } else {
-            var _this27 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class22).call(this, Collaboration.ContentLinkCard.type()));
+            var _this29 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class22).call(this, Collaboration.ContentLinkCard.type()));
 
-            _this27.entityUri = null;
-            _this27.meta = null;
+            _this29.entityUri = null;
+            _this29.meta = null;
         }
-        return _possibleConstructorReturn(_this27);
+        return _possibleConstructorReturn(_this29);
     }
 
     return _class22;
@@ -1961,17 +2041,17 @@ Collaboration.ContentNotification = (function (_Collaboration$Conten3) {
         _classCallCheck(this, _class23);
 
         if (arguments.length) {
-            var _this28 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class23).call(this, Collaboration.ContentNotification.type(), id, collaborationId, orgId, timestamp, authors, seen, message, viewId));
+            var _this30 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class23).call(this, Collaboration.ContentNotification.type(), id, collaborationId, orgId, timestamp, authors, seen, message, viewId));
 
-            _this28.severity = Type.check(severity, Collaboration.NotificationLevel);
-            _this28.icon = new String(icon);
+            _this30.severity = Type.check(severity, Collaboration.NotificationLevel);
+            _this30.icon = new String(icon);
         } else {
-            var _this28 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class23).call(this, Collaboration.ContentAppEvent.type()));
+            var _this30 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class23).call(this, Collaboration.ContentAppEvent.type()));
 
-            _this28.severity = null;
-            _this28.icon = null;
+            _this30.severity = null;
+            _this30.icon = null;
         }
-        return _possibleConstructorReturn(_this28);
+        return _possibleConstructorReturn(_this30);
     }
 
     return _class23;
@@ -2014,19 +2094,19 @@ Collaboration.ContentAppEvent = (function (_Collaboration$Conten4) {
         _classCallCheck(this, _class24);
 
         if (arguments.length) {
-            var _this29 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class24).call(this, Collaboration.ContentAppEvent.type(), id, collaborationId, orgId, timestamp, authors, seen, message, viewId));
+            var _this31 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class24).call(this, Collaboration.ContentAppEvent.type(), id, collaborationId, orgId, timestamp, authors, seen, message, viewId));
 
-            _this29.coverImg = new String(coverImg);
-            _this29.actions = actions.map(function (s) {
+            _this31.coverImg = new String(coverImg);
+            _this31.actions = actions.map(function (s) {
                 return Type.check(s, Apps.App);
             });
         } else {
-            var _this29 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class24).call(this, Collaboration.ContentAppEvent.type()));
+            var _this31 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class24).call(this, Collaboration.ContentAppEvent.type()));
 
-            _this29.coverImg = null;
-            _this29.actions = null;
+            _this31.coverImg = null;
+            _this31.actions = null;
         }
-        return _possibleConstructorReturn(_this29);
+        return _possibleConstructorReturn(_this31);
     }
 
     return _class24;
@@ -2058,13 +2138,13 @@ Collaboration.NotificationLevel = (function (_Model14) {
     function _class25(severity) {
         _classCallCheck(this, _class25);
 
-        var _this30 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class25).call(this, Collaboration.NotificationLevel.type()));
+        var _this32 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class25).call(this, Collaboration.NotificationLevel.type()));
 
-        _this30.severity = null;
+        _this32.severity = null;
         if (arguments.length) {
-            _this30.severity = new String(severity);
+            _this32.severity = new String(severity);
         }
-        return _this30;
+        return _this32;
     }
 
     _createClass(_class25, null, [{
@@ -2102,17 +2182,17 @@ Collaboration.Message = (function (_Model15) {
     function _class26(type, text, mentions) {
         _classCallCheck(this, _class26);
 
-        var _this31 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class26).call(this, type));
+        var _this33 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class26).call(this, type));
 
-        _this31.text = null;
-        _this31.mentions = null;
+        _this33.text = null;
+        _this33.mentions = null;
         if (arguments.length > 1) {
-            _this31.text = new String(text);
+            _this33.text = new String(text);
             // FIXME: no "map" on Set
             //this.mentions = mentions.map((a) => Type.check(a, Auth.Provider))
-            _this31.mentions = mentions;
+            _this33.mentions = mentions;
         }
-        return _this31;
+        return _this33;
     }
 
     return _class26;
@@ -2147,11 +2227,11 @@ Collaboration.MessageBasic = (function (_Collaboration$Messag) {
         _classCallCheck(this, _class27);
 
         if (arguments.length) {
-            var _this32 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class27).call(this, Collaboration.MessageBasic.type(), text, mentions));
+            var _this34 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class27).call(this, Collaboration.MessageBasic.type(), text, mentions));
         } else {
-            var _this32 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class27).call(this, Collaboration.MessageBasic.type()));
+            var _this34 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class27).call(this, Collaboration.MessageBasic.type()));
         }
-        return _possibleConstructorReturn(_this32);
+        return _possibleConstructorReturn(_this34);
     }
 
     return _class27;
@@ -2195,15 +2275,15 @@ Apps.App = (function (_Model16) {
     function _class28(id, name, icon, origin, entry, args) {
         _classCallCheck(this, _class28);
 
-        var _this33 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class28).call(this, Apps.App.type()));
+        var _this35 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class28).call(this, Apps.App.type()));
 
-        _this33.id = new String(id);
-        _this33.name = new String(name);
-        _this33.icon = new String(icon);
-        _this33.origin = new String(origin);
-        _this33.entry = new String(entry);
-        _this33.args = args;
-        return _this33;
+        _this35.id = new String(id);
+        _this35.name = new String(name);
+        _this35.icon = new String(icon);
+        _this35.origin = new String(origin);
+        _this35.entry = new String(entry);
+        _this35.args = args;
+        return _this35;
     }
 
     _createClass(_class28, null, [{
@@ -2279,13 +2359,13 @@ Apps.AppMode = (function (_Model17) {
     function _class29(mode) {
         _classCallCheck(this, _class29);
 
-        var _this34 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class29).call(this, Apps.AppMode.type()));
+        var _this36 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class29).call(this, Apps.AppMode.type()));
 
-        _this34.mode = null;
+        _this36.mode = null;
         if (arguments.length) {
-            _this34.mode = new String(mode);
+            _this36.mode = new String(mode);
         }
-        return _this34;
+        return _this36;
     }
 
     _createClass(_class29, null, [{
@@ -2338,18 +2418,18 @@ Apps.Launch = (function (_Model18) {
     function _class30(load, url, mode) {
         _classCallCheck(this, _class30);
 
-        var _this35 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class30).call(this, Apps.Launch.type()));
+        var _this37 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class30).call(this, Apps.Launch.type()));
 
-        _this35.load = null;
-        _this35.url = null;
-        _this35.mode = null;
+        _this37.load = null;
+        _this37.url = null;
+        _this37.mode = null;
         if (arguments.length) {
-            _this35.app = Type.check(app, Apps.App);
-            _this35.url = new String(url);
-            _this35.mode = Type.check(mode, Apps.AppMode);
+            _this37.app = Type.check(app, Apps.App);
+            _this37.url = new String(url);
+            _this37.mode = Type.check(mode, Apps.AppMode);
         }
 
-        return _this35;
+        return _this37;
     }
 
     return _class30;
@@ -2384,11 +2464,11 @@ Apps.Init = (function (_Model19) {
     function _class31(appId, mode) {
         _classCallCheck(this, _class31);
 
-        var _this36 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class31).call(this, Apps.Init.type()));
+        var _this38 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class31).call(this, Apps.Init.type()));
 
-        _this36.appId = new String(appId);
-        _this36.mode = Type.check(mode, Apps.AppMode);
-        return _this36;
+        _this38.appId = new String(appId);
+        _this38.mode = Type.check(mode, Apps.AppMode);
+        return _this38;
     }
 
     return _class31;
@@ -2423,15 +2503,15 @@ Apps.InitApp = (function (_Model20) {
     function _class32(app, restoreState, mode) {
         _classCallCheck(this, _class32);
 
-        var _this37 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class32).call(this, Apps.InitApp.type()));
+        var _this39 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class32).call(this, Apps.InitApp.type()));
 
-        _this37.app = null;
-        _this37.restoreState = null;
+        _this39.app = null;
+        _this39.restoreState = null;
         if (arguments.length) {
-            _this37.app = Type.check(app, Apps.App);
-            _this37.restoreState = typeof restoreState === "undefined" ? null : restoreState;
+            _this39.app = Type.check(app, Apps.App);
+            _this39.restoreState = typeof restoreState === "undefined" ? null : restoreState;
         }
-        return _this37;
+        return _this39;
     }
 
     return _class32;
@@ -2464,13 +2544,13 @@ Apps.InitProvider = (function (_Model21) {
     function _class33(provider) {
         _classCallCheck(this, _class33);
 
-        var _this38 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class33).call(this, Apps.InitProvider.type()));
+        var _this40 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class33).call(this, Apps.InitProvider.type()));
 
-        _this38.provider = null;
+        _this40.provider = null;
         if (arguments.length) {
-            _this38.provider = Type.check(provider, Auth.Provider);
+            _this40.provider = Type.check(provider, Auth.Provider);
         }
-        return _this38;
+        return _this40;
     }
 
     return _class33;
@@ -2503,13 +2583,13 @@ Apps.InitOrganization = (function (_Model22) {
     function _class34(organization) {
         _classCallCheck(this, _class34);
 
-        var _this39 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class34).call(this, Apps.InitOrganization.type()));
+        var _this41 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class34).call(this, Apps.InitOrganization.type()));
 
-        _this39.organization = null;
+        _this41.organization = null;
         if (arguments.length) {
-            _this39.organization = Type.check(organization, Auth.Organization);
+            _this41.organization = Type.check(organization, Auth.Organization);
         }
-        return _this39;
+        return _this41;
     }
 
     return _class34;
@@ -2534,7 +2614,7 @@ Apps.InitCollaboration = (function (_Model23) {
 
         /**
          *
-         * @param collaboration {Collaboration.Collaboration}
+         * @param collaboration Option{Collaboration.Collaboration}
          */
 
     }]);
@@ -2542,13 +2622,13 @@ Apps.InitCollaboration = (function (_Model23) {
     function _class35(collaboration) {
         _classCallCheck(this, _class35);
 
-        var _this40 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class35).call(this, Apps.InitCollaboration.type()));
+        var _this42 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class35).call(this, Apps.InitCollaboration.type()));
 
-        _this40.collaboration = null;
+        _this42.collaboration = null;
         if (arguments.length) {
-            _this40.collaboration = Type.check(collaboration, Collaboration.Collaboration);
+            _this42.collaboration = collaboration;
         }
-        return _this40;
+        return _this42;
     }
 
     return _class35;
@@ -2581,15 +2661,15 @@ Apps.InitTeam = (function (_Model24) {
     function _class36(team) {
         _classCallCheck(this, _class36);
 
-        var _this41 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class36).call(this, Apps.InitTeam.type()));
+        var _this43 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class36).call(this, Apps.InitTeam.type()));
 
-        _this41.team = null;
+        _this43.team = null;
         if (arguments.length) {
-            _this41.team = team.map(function (t) {
+            _this43.team = team.map(function (t) {
                 return Type.check(t, Collaboration.SyncUserEvent);
             });
         }
-        return _this41;
+        return _this43;
     }
 
     return _class36;
@@ -2622,17 +2702,17 @@ Apps.InitPeers = (function (_Model25) {
     function _class37(peers, room) {
         _classCallCheck(this, _class37);
 
-        var _this42 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class37).call(this, Apps.InitPeers.type()));
+        var _this44 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class37).call(this, Apps.InitPeers.type()));
 
-        _this42.peers = null;
-        _this42.room = null;
+        _this44.peers = null;
+        _this44.room = null;
         if (arguments.length) {
-            _this42.peers = peers.map(function (p) {
+            _this44.peers = peers.map(function (p) {
                 return Type.check(t, Peers.PeerState);
             });
-            _this42.room = new String(room);
+            _this44.room = new String(room);
         }
-        return _this42;
+        return _this44;
     }
 
     return _class37;
@@ -2673,21 +2753,21 @@ Peers.PeerState = (function (_Model26) {
     function _class38(provider, collaborationId, userAgent, iceConnectionState, signalingState) {
         _classCallCheck(this, _class38);
 
-        var _this43 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class38).call(this, Peers.PeerState.type()));
+        var _this45 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class38).call(this, Peers.PeerState.type()));
 
-        _this43.provider = null;
-        _this43.collaborationId = null;
-        _this43.userAgent = null;
-        _this43.iceConnectionState = null;
-        _this43.signalingState = null;
+        _this45.provider = null;
+        _this45.collaborationId = null;
+        _this45.userAgent = null;
+        _this45.iceConnectionState = null;
+        _this45.signalingState = null;
         if (arguments.length) {
-            _this43.provider = null;
-            _this43.collaborationId = new String(collaborationId);
-            _this43.userAgent = typeof userAgent === "undefined" ? null : new String(userAgent);
-            _this43.iceConnectionState = Type.check(iceConnectionState, Peers.IceConnectionState);
-            _this43.signalingState = Type.check(signalingState, Peers.SignalingState);
+            _this45.provider = null;
+            _this45.collaborationId = new String(collaborationId);
+            _this45.userAgent = typeof userAgent === "undefined" ? null : new String(userAgent);
+            _this45.iceConnectionState = Type.check(iceConnectionState, Peers.IceConnectionState);
+            _this45.signalingState = Type.check(signalingState, Peers.SignalingState);
         }
-        return _this43;
+        return _this45;
     }
 
     return _class38;
@@ -2719,13 +2799,13 @@ Peers.IceConnectionState = (function (_Model27) {
     function _class39(state) {
         _classCallCheck(this, _class39);
 
-        var _this44 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class39).call(this, Peers.IceConnectionState.type()));
+        var _this46 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class39).call(this, Peers.IceConnectionState.type()));
 
-        _this44.state = null;
+        _this46.state = null;
         if (arguments.length) {
-            _this44.state = new String(state);
+            _this46.state = new String(state);
         }
-        return _this44;
+        return _this46;
     }
 
     _createClass(_class39, null, [{
@@ -2794,13 +2874,13 @@ Peers.SignalingState = (function (_Model28) {
     function _class40(state) {
         _classCallCheck(this, _class40);
 
-        var _this45 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class40).call(this, Peers.SignalingState.type()));
+        var _this47 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class40).call(this, Peers.SignalingState.type()));
 
-        _this45.state = null;
+        _this47.state = null;
         if (arguments.length) {
-            _this45.state = new String(state);
+            _this47.state = new String(state);
         }
-        return _this45;
+        return _this47;
     }
 
     _createClass(_class40, null, [{
@@ -2866,12 +2946,12 @@ Resource.Resource = (function (_Model29) {
     function _class41(uri, contentType, thumbnail) {
         _classCallCheck(this, _class41);
 
-        var _this46 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class41).call(this, Resource.Resource.type()));
+        var _this48 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class41).call(this, Resource.Resource.type()));
 
-        _this46.uri = new String(uri);
-        _this46.contentType = new String(contentType);
-        _this46.thumbnail = new String(thumbnail);
-        return _this46;
+        _this48.uri = new String(uri);
+        _this48.contentType = new String(contentType);
+        _this48.thumbnail = new String(thumbnail);
+        return _this48;
     }
 
     return _class41;
@@ -2910,16 +2990,16 @@ Geom.Transform3d = (function (_Model30) {
     function _class42(matrix) {
         _classCallCheck(this, _class42);
 
-        var _this47 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class42).call(this, Geom.Transform3d.type()));
+        var _this49 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class42).call(this, Geom.Transform3d.type()));
 
-        _this47.matrix = [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0];
+        _this49.matrix = [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0];
         if (arguments.length) {
-            _this47.matrix = matrix;
-            if (_this47.matrix.length != 4 * 4) {
+            _this49.matrix = matrix;
+            if (_this49.matrix.length != 4 * 4) {
                 throw new Error('Matrix is not 4x4');
             }
         }
-        return _this47;
+        return _this49;
     }
 
     /**
@@ -2984,45 +3064,45 @@ ETL.EntityMeta = (function (_Model31) {
     function _class43(uri, timestamp, version, icon, thumb, domain, publishDate, contentType, title, description, authors, keywords, coverUrl, imgs, meta, content, raw) {
         _classCallCheck(this, _class43);
 
-        var _this48 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class43).call(this, ETL.EntityMeta.type()));
+        var _this50 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class43).call(this, ETL.EntityMeta.type()));
 
-        _this48.uri = null;
-        _this48.timestamp = null;
-        _this48.version = null;
-        _this48.icon = null;
-        _this48.thumb = null;
-        _this48.domain = null;
-        _this48.publishDate = null;
-        _this48.contentType = null;
-        _this48.title = null;
-        _this48.description = null;
-        _this48.authors = null;
-        _this48.keywords = null;
-        _this48.coverUrl = null;
-        _this48.imgs = null;
-        _this48.meta = null;
-        _this48.content = null;
-        _this48.raw = null;
+        _this50.uri = null;
+        _this50.timestamp = null;
+        _this50.version = null;
+        _this50.icon = null;
+        _this50.thumb = null;
+        _this50.domain = null;
+        _this50.publishDate = null;
+        _this50.contentType = null;
+        _this50.title = null;
+        _this50.description = null;
+        _this50.authors = null;
+        _this50.keywords = null;
+        _this50.coverUrl = null;
+        _this50.imgs = null;
+        _this50.meta = null;
+        _this50.content = null;
+        _this50.raw = null;
         if (arguments.length) {
-            _this48.uri = new String(uri);
-            _this48.timestamp = new String(timestamp);
-            _this48.version = new String(version);
-            _this48.icon = new String(icon);
-            _this48.thumb = new String(thumb);
-            _this48.domain = new String(domain);
-            _this48.publishDate = typeof publishDate === "undefined" ? null : new String(publishDate);
-            _this48.contentType = new String(contentType);
-            _this48.title = new String(title);
-            _this48.description = new String(description);
-            _this48.authors = authors;
-            _this48.keywords = keywords;
-            _this48.coverUrl = new String(coverUrl);
-            _this48.imgs = imgs;
-            _this48.meta = meta;
-            _this48.content = typeof content === "undefined" ? null : new String(content);
-            _this48.raw = typeof raw === "undefined" ? null : new String(raw);
+            _this50.uri = new String(uri);
+            _this50.timestamp = new String(timestamp);
+            _this50.version = new String(version);
+            _this50.icon = new String(icon);
+            _this50.thumb = new String(thumb);
+            _this50.domain = new String(domain);
+            _this50.publishDate = typeof publishDate === "undefined" ? null : new String(publishDate);
+            _this50.contentType = new String(contentType);
+            _this50.title = new String(title);
+            _this50.description = new String(description);
+            _this50.authors = authors;
+            _this50.keywords = keywords;
+            _this50.coverUrl = new String(coverUrl);
+            _this50.imgs = imgs;
+            _this50.meta = meta;
+            _this50.content = typeof content === "undefined" ? null : new String(content);
+            _this50.raw = typeof raw === "undefined" ? null : new String(raw);
         }
-        return _this48;
+        return _this50;
     }
 
     return _class43;
@@ -3036,6 +3116,7 @@ module.exports = {
     Float: Float,
     Double: Double,
     Long: Long,
+    Option: Option,
     Auth: Auth,
     Collaboration: Collaboration,
     Apps: Apps,

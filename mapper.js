@@ -32,6 +32,17 @@ class Mapper{
                     'v': obj.valueOf()
                 }
             },
+            'm.Some' : (obj) => {
+                return {
+                    't': 'scala.Some',
+                    'v': {'x':obj.valueOf() }
+                }
+            },
+            'm.None' : (obj) => {
+                return {
+                    't': 'scala.None$'
+                }
+            },
             'm.Integer' : (obj) => {
                 return {
                     't': 'java.lang.Integer',
@@ -89,12 +100,12 @@ class Mapper{
                     t = "scala.collection.immutable.Set$Set"+(obj.size+1)
                 }
                 var hack = [];
-                obj.entries().forEach( (y) => hack.push(y) );
+                obj.forEach( (y) => hack.push(y) );
                 return  {
                     "t": t,
                     "v": hack.map( (x) => {
                         return {
-                            'v':that.pickleType(x[1])
+                            'v':that.pickleType(x)
                         }
                     })
                 }
@@ -168,7 +179,7 @@ class Mapper{
         }
         //console.log('rep: ',rep);
         if(rep.s && !rep.t)rep.t = rep.s
-        //console.log('type: '+rep.t);
+        console.log('type: '+rep.t);
         if(rep.t.indexOf('m.') == 0){ // this SHOULD be one of our types.
             let s = rep.t.split('$')
             var namespace = s[0].split('.')
@@ -217,6 +228,10 @@ class Mapper{
                 return new m.Double(rep.v)
             }else if(rep.t == 'java.lang.Long'){
                 return new m.Long(rep.v)
+            }else if(rep.t == 'scala.Some'){
+                return m.Option.Some(this.unpickleType(rep.v.x))
+            }else if(rep.t == 'scale.None$'){
+                return m.Option.None()
             }else if(rep.t == 'scala.collection.immutable.HashSet$HashTrieSet' || rep.t.indexOf('scala.collection.immutable.Set') == 0){
                 return rep.v.map( x => this.unpickleType(x) )
             }else if(rep.t == 'scala.Some'){

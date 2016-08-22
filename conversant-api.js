@@ -107,16 +107,16 @@ class API {
 	sendMessage(msg, view){
 		let content = new m.Collaboration.ContentMsg(
 			m.Auth.zeroId,
-			this.appParams.collaboration.id,
-			this.appParams.collaboration.orgId,
+			this.appParams.collaboration.get().id,			// TODO: fix with better Option type
+			this.appParams.collaboration.get().orgId,
 			"",
 			new Set([this.appParams.provider]),
 			new Set([this.appParams.provider]),
-			"",
-			"",
+			m.Option.None(),
+			m.Option.None(),
 			new Set(),
 			new m.Collaboration.MessageBasic(msg, new Set()),
-			view);
+			view.id);
 
 		this._send(this.mapper.write(content))
 
@@ -161,7 +161,7 @@ class AppParameters{
 		this.app =  m.Type.check(app, m.Apps.App)
 		this.restoreState = typeof restoreState === "undefined" ?  null : restoreState
 		this.organization = m.Type.check(organization, m.Auth.Organization)
-		this.collaboration = m.Type.check(collaboration, m.Collaboration.Collaboration)
+		this.collaboration = collaboration
 		this.provider = m.Type.check(provider, m.Auth.Provider)
 		this.team = team.map( (t) => m.Type.check(t, m.Collaboration.SyncUserEvent) )
 		this.peers = peers.map( (p) => m.Type.check(p, m.Peers.PeerState) )
@@ -189,6 +189,7 @@ class ConversantAPI extends API{
 		window.addEventListener('message', (event) => {
 			if(event.data && event.data != ''){
 				try {
+					console.log('**data',event.data)
 					let x = this.mapper.read(event.data)
 					//console.log('sending to ('+observerList.length+') observers',x)
 					observerList.forEach( (obs) => obs.onNext(x) )

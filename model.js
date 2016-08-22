@@ -69,6 +69,30 @@ class List extends Array{
     }
 }
 
+class Option{
+    static Some(val){ return new Some(val) }
+    static None() { return new None() }
+}
+class Some extends Option{
+    constructor(val){
+        super()
+        this.val = val
+        this.$type = "scala.Some";
+    }
+    get(){
+        return this.val
+    }
+    valueOf(){
+        return this.val
+    }
+}
+class None extends Option{
+    constructor(){
+        super()
+        this.$type = "scala.None$";
+    }
+}
+
 /**
  * @class Type
  * Helper class for doing runtime type checking and error reporting.
@@ -657,8 +681,8 @@ Collaboration.Collaboration = class extends Model{
             this.members = members.map((m) => Type.check(m, Auth.Provider))
             this.notifications = Type.check(notifications, Collaboration.Notification)
             this.name = typeof name === "undefined" ? null : new String(name)
-            this.avatarUrl = typeof avatarUrl === "undefined" ? null : new String(avatarUrl)
-            this.cover = typeof cover === "undefined" ? null : new String(cover)
+            this.avatarUrl = avatarUrl
+            this.cover = cover
             this.content = content.map((c) => Type.check(c, Collaboration.Content))
             this.settings = settings
         }
@@ -744,7 +768,7 @@ Collaboration.CollaborationChannel = class extends Collaboration.Collaboration{
      * @param orgId {String}
      * @param members {Auth.Provider[]}
      * @param notifications {Collaboration.Notification[]}
-     * @param name OPTIONAL {String}
+     * @param name Option{String}
      * @param avatarUrl OPTIONAL {String}
      * @param cover OPTIONAL {String}
      * @param content {Collaboration.Content[]}
@@ -796,7 +820,7 @@ Collaboration.Content = class extends Model{
             this.authors = authors
             //this.seen = seen.map((s) => Type.check(s, Auth.Provider))
             this.seen = seen
-            this.message = Type.check(message, Collaboration.Message)
+            this.message = message
             this.viewId = new UUID(viewId)
         }
     }
@@ -1246,13 +1270,13 @@ Apps.InitCollaboration = class extends Model{
 
     /**
      *
-     * @param collaboration {Collaboration.Collaboration}
+     * @param collaboration Option{Collaboration.Collaboration}
      */
     constructor(collaboration){
         super(Apps.InitCollaboration.type())
         this.collaboration = null
         if(arguments.length) {
-            this.collaboration = Type.check(collaboration, Collaboration.Collaboration)
+            this.collaboration = collaboration
         }
     }
 }
@@ -1563,6 +1587,7 @@ module.exports = {
     Float: Float,
     Double: Double,
     Long: Long,
+    Option: Option,
     Auth:Auth,
     Collaboration:Collaboration,
     Apps:Apps,
