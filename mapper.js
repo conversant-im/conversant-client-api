@@ -26,7 +26,6 @@ class Mapper{
         }
         this.objMap = {
              'String' : (obj) => {
-                //console.log('dealing with String')
                 return {
                     't': 'java.lang.String',
                     'v': obj.valueOf()
@@ -135,9 +134,8 @@ class Mapper{
 
     pickleType(obj){
         let jsType = typeof obj
-        //console.log('jsType: '+jsType)
         let className = obj.constructor.name
-        console.log('className: '+className)
+        //console.log('className: '+className)
         if(obj.$type && this.objMap[obj.$type]){
             return this.objMap[obj.$type](obj)
         }else if(this.objMap[className]){
@@ -177,7 +175,7 @@ class Mapper{
         }
         //console.log('rep: ',rep);
         if(rep.s && !rep.t)rep.t = rep.s
-        console.log('type: '+rep.t);
+        //console.log('type: '+rep.t);
         if(rep.t.indexOf('m.') == 0){ // this SHOULD be one of our types.
             let s = rep.t.split('$')
             var namespace = s[0].split('.')
