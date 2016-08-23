@@ -195,7 +195,6 @@ class ConversantAPI extends API{
 					observerList.forEach( (obs) => obs.onNext(x) )
 				} catch (e) {
 					console.error('[ERROR] clientAPI:: handling message data',event.data)
-					alert('error')
 					console.log('ERROR',e)
 				}
 			}

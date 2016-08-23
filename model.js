@@ -484,6 +484,65 @@ Entities.PersonEntity = class extends Entities.NamedEntity{
 let Collaboration = {};
 
 
+
+
+/**
+ * @class PlayerState
+ */
+Collaboration.PlayerState = class extends Model{
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    static type(){ return 'm.Auth$PlayerState'}
+
+    /**
+     *
+     * @param action {String}
+     */
+    constructor(state){
+        super(Collaboration.PlayerState.type())
+        this.state = null
+        if(arguments.length) {
+            this.state = new Integer(state)
+        }
+    }
+
+    /**
+     * UNSTARTED PlayerState
+     * @returns {Collaboration.PlayerState}
+     */
+    static UNSTARTED(){ return Collaboration.PlayerState(-1) }
+    /**
+     * ENDED PlayerState
+     * @returns {Collaboration.PlayerState}
+     */
+    static ENDED(){ return Collaboration.PlayerState(0) }
+    /**
+     * PLAYING PlayerState
+     * @returns {Collaboration.PlayerState}
+     */
+    static PLAYING(){ return Collaboration.PlayerState(1) }
+    /**
+     * PAUSED PlayerState
+     * @returns {Collaboration.PlayerState}
+     */
+    static PAUSED(){ return Collaboration.PlayerState(2) }
+    /**
+     * BUFFERING PlayerState
+     * @returns {Collaboration.PlayerState}
+     */
+    static BUFFERING(){ return Collaboration.PlayerState(3) }
+    /**
+     * CUED PlayerState
+     * @returns {Collaboration.PlayerState}
+     */
+    static CUED(){ return Collaboration.PlayerState(5) }
+
+}
+
+
+
 /**
  * @class View
  */
@@ -517,6 +576,99 @@ Collaboration.View = class extends Model{
     }
 }
 
+
+/**
+ * @class UrlView
+ */
+Collaboration.UrlView = class extends Collaboration.View{
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    static type(){ return 'm.Collaboration$UrlView'}
+
+    /**
+     *
+     * @param collaborationId {UUID}
+     * @param app {Apps.App}
+     * @param resource {Resource.Resource}
+     * @param key {String}
+     * @param entities {Entities.Entity[]}
+     */
+    constructor(collaborationId, app, resource, key, entities){
+        if(arguments.length) {
+            super(Collaboration.UrlView.type(), '00000000-0000-0000-0000-000000000000', collaborationId, app, resource, key, entities)
+        }else{
+            super(Collaboration.UrlView.type())
+        }
+    }
+}
+
+
+
+/**
+ * @class DocumentView
+ */
+Collaboration.DocumentView = class extends Collaboration.View{
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    static type(){ return 'm.Collaboration$DocumentView'}
+
+    /**
+     *
+     * @param collaborationId {UUID}
+     * @param app {Apps.App}
+     * @param resource {Resource.Resource}
+     * @param key {String}
+     * @param entities {Entities.Entity[]}
+     * @param page {Int}
+     */
+    constructor(collaborationId, app, resource, key, entities, sampleTimeMs, playerState){
+        if(arguments.length) {
+            super(Collaboration.DocumentView.type(), '00000000-0000-0000-0000-000000000000', collaborationId, app, resource, key, entities, page)
+            this.page = page
+        }else{
+            super(Collaboration.DocumentView.type())
+            this.page = null
+        }
+    }
+}
+
+/**
+ * @class VideoView
+ */
+Collaboration.VideoView = class extends Collaboration.View{
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    static type(){ return 'm.Collaboration$VideoView'}
+
+    /**
+     *
+     * @param collaborationId {UUID}
+     * @param app {Apps.App}
+     * @param resource {Resource.Resource}
+     * @param key {String}
+     * @param entities {Entities.Entity[]}
+     * @param sampleTimeMs {Double}
+     * @param playerState {Conversant.PlayerState}
+     */
+    constructor(collaborationId, app, resource, key, entities, sampleTimeMs, playerState){
+        if(arguments.length) {
+            super(Collaboration.VideoView.type(), '00000000-0000-0000-0000-000000000000', collaborationId, app, resource, key, entities, sampleTimeMs, playerState)
+            this.sampleTimeMs = sampleTimeMs
+            this.playerState = Type.check(playerState, Collaboration.PlayerState)
+        }else{
+            super(Collaboration.VideoView.type())
+            this.sampleTimeMs = null
+            this.playerState = null
+        }
+    }
+}
+
 /**
  * @class ImageView
  */
@@ -543,6 +695,86 @@ Collaboration.ImageView = class extends Collaboration.View{
         }else{
             super(Collaboration.ImageView.type())
             this.transform =  null
+        }
+    }
+}
+
+
+
+/**
+ * @class GLView
+ */
+Collaboration.GLView = class extends Collaboration.View{
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    static type(){ return 'm.Collaboration$GLView'}
+
+    /**
+     *
+     * @param collaborationId {UUID}
+     * @param app {Apps.App}
+     * @param resource {Resource.Resource}
+     * @param key {String}
+     * @param entities {Entities.Entity[]}
+     * @param transform {Geom.Transform3d}
+     */
+    constructor(collaborationId, app, resource, key, entities, transform){
+        if(arguments.length) {
+            super(Collaboration.GLView.type(), '00000000-0000-0000-0000-000000000000', collaborationId, app, resource, key, entities, transform)
+            this.transform = Type.check(transform, Geom.Transform3d)
+        }else{
+            super(Collaboration.GLView.type())
+            this.transform =  null
+        }
+    }
+}
+
+/**
+ * @class MapView
+ */
+Collaboration.MapView = class extends Collaboration.View{
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    static type(){ return 'm.Collaboration$MapView'}
+
+    /**
+     *
+     * @param collaborationId {UUID}
+     * @param app {Apps.App}
+     * @param resource {Resource.Resource}
+     * @param key {String}
+     * @param entities {Entities.Entity[]}
+     * @param lat {Double}
+     * @param lng {Double}
+     * @param zoom {Double}
+     * @param markers {String}
+     * @param update {String}
+     * @param address {String}
+     * @param name {String}
+     */
+    constructor(collaborationId, app, resource, key, entities, lat, lng, zoom, markers, update, address, name){
+        if(arguments.length) {
+            super(Collaboration.MapView.type(), '00000000-0000-0000-0000-000000000000', collaborationId, app, resource, key, entities, transform)
+            this.lat = lat
+            this.lng = lng
+            this.zoom = zoom
+            this.markers = markers
+            this.update = update
+            this.address = address
+            this.name = name
+        }else{
+            super(Collaboration.MapView.type())
+            this.lat = null
+            this.lng = null
+            this.zoom = null
+            this.markers = null
+            this.update = null
+            this.address = null
+            this.name = null
         }
     }
 }
@@ -1234,7 +1466,7 @@ Apps.InitApp = class extends Model{
         this.restoreState = null
         if(arguments.length) {
             this.app = Type.check(app, Apps.App)
-            this.restoreState = typeof restoreState === "undefined" ? null : restoreState
+            this.restoreState = restoreState
         }
     }
 }
