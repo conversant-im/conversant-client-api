@@ -85,12 +85,18 @@ class Some extends Option{
     valueOf(){
         return this.val
     }
+
+    map(f){ return f(this.val); }
+    foreach(f){ f(this.val); }
 }
 class None extends Option{
     constructor(){
         super()
         this.$type = "m.None";
     }
+
+    map(f){}
+    foreach(f){}
 }
 
 /**

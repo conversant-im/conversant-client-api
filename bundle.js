@@ -142,17 +142,24 @@ var API = (function () {
 	}, {
 		key: 'syncView',
 		value: function syncView(sync) {
+			var _this3 = this;
+
 			m.Type.check(sync, m.Collaboration.View);
-			var syncEvent = new m.Collaboration.SyncViewEvent(this.appParams.collaboration.id, this.appParams.collaboration.orgId, this.appParams.provider, sync);
-			this._send(this.mapper.write(syncEvent));
+			this.appParams.collaboration.foreach(function (c) {
+				var syncEvent = new m.Collaboration.SyncViewEvent(c.id, c.orgId, _this3.appParams.provider, sync);
+				_this3._send(_this3.mapper.write(syncEvent));
+			});
 		}
 	}, {
 		key: 'sendMessage',
 		value: function sendMessage(msg, view) {
-			var content = new m.Collaboration.ContentMsg(m.Auth.zeroId, this.appParams.collaboration.get().id, // TODO: fix with better Option type
-			this.appParams.collaboration.get().orgId, "", new Set([this.appParams.provider]), new Set([this.appParams.provider]), m.Option.None(), m.Option.None(), new Set(), m.Option.Some(new m.Collaboration.MessageBasic(msg, new Set())), view.id);
+			var _this4 = this;
 
-			this._send(this.mapper.write(new m.Collaboration.BroadcastContent(content, m.Option.Some(view))));
+			this.appParams.collaboration.foreach(function (c) {
+				var content = new m.Collaboration.ContentMsg(m.Auth.zeroId, c.id, c.orgId, "", new Set([_this4.appParams.provider]), new Set([_this4.appParams.provider]), m.Option.None(), m.Option.None(), new Set(), m.Option.Some(new m.Collaboration.MessageBasic(msg, new Set())), view.id);
+
+				_this4._send(_this4.mapper.write(new m.Collaboration.BroadcastContent(content, m.Option.Some(view))));
+			});
 		}
 	}, {
 		key: 'send',
@@ -239,7 +246,7 @@ var ConversantAPI = (function (_API) {
 				try {
 					(function () {
 						console.log('**data', event.data);
-						var x = _this3.mapper.read(event.data);
+						var x = _this5.mapper.read(event.data);
 						//console.log('sending to ('+observerList.length+') observers',x)
 						observerList.forEach(function (obs) {
 							return obs.onNext(x);
@@ -269,12 +276,12 @@ var ConversantAPI = (function (_API) {
 			};
 		});
 
-		var _this3 = _possibleConstructorReturn(this, Object.getPrototypeOf(ConversantAPI).call(this, observer, observable));
+		var _this5 = _possibleConstructorReturn(this, Object.getPrototypeOf(ConversantAPI).call(this, observer, observable));
 
-		_this3.id = id;
-		_this3.isSyncMode = window.name == "syncApp";
-		_this3.mode = new m.Apps.AppMode(window.name);
-		return _this3;
+		_this5.id = id;
+		_this5.isSyncMode = window.name == "syncApp";
+		_this5.mode = new m.Apps.AppMode(window.name);
+		return _this5;
 	}
 
 	/**
@@ -287,7 +294,7 @@ var ConversantAPI = (function (_API) {
 	_createClass(ConversantAPI, [{
 		key: 'init',
 		value: function init(fun) {
-			var _this4 = this;
+			var _this6 = this;
 
 			var pApp = this._futurePromise(m.Apps.InitApp.type());
 			var pOrganization = this._futurePromise(m.Apps.InitOrganization.type());
@@ -299,7 +306,7 @@ var ConversantAPI = (function (_API) {
 			Promise.all([pApp, pCollaboration, pPofile, pTeam, pPeers, pOrganization]).then(function (vals) {
 				console.log('-- APP INIT --');
 				var appParams = new AppParameters(vals[0].app, vals[0].restoreState, vals[5].organization, vals[1].collaboration, vals[2].provider, vals[3].team, vals[4].peers);
-				_this4.appParams = appParams;
+				_this6.appParams = appParams;
 				fun(appParams);
 			});
 			this._send(this.mapper.write(new m.Apps.Init(this.id, this.mode)));
@@ -791,6 +798,16 @@ var _Some = (function (_Option) {
         value: function valueOf() {
             return this.val;
         }
+    }, {
+        key: "map",
+        value: function map(f) {
+            return f(this.val);
+        }
+    }, {
+        key: "foreach",
+        value: function foreach(f) {
+            f(this.val);
+        }
     }]);
 
     return _Some;
@@ -807,6 +824,14 @@ var _None = (function (_Option2) {
         _this7.$type = "m.None";
         return _this7;
     }
+
+    _createClass(_None, [{
+        key: "map",
+        value: function map(f) {}
+    }, {
+        key: "foreach",
+        value: function foreach(f) {}
+    }]);
 
     return _None;
 })(Option);

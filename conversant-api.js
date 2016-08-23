@@ -100,25 +100,30 @@ class API {
      */
 	syncView(sync){
 		m.Type.check(sync, m.Collaboration.View)
-		let syncEvent = new m.Collaboration.SyncViewEvent(this.appParams.collaboration.id,this.appParams.collaboration.orgId,this.appParams.provider,sync);
-		this._send(this.mapper.write(syncEvent))
+		this.appParams.collaboration.foreach( (c) => {
+			let syncEvent = new m.Collaboration.SyncViewEvent(c.id, c.orgId, this.appParams.provider, sync);
+			this._send(this.mapper.write(syncEvent))
+		});
+
 	}
 
 	sendMessage(msg, view){
-		let content = new m.Collaboration.ContentMsg(
-			m.Auth.zeroId,
-			this.appParams.collaboration.get().id,			// TODO: fix with better Option type
-			this.appParams.collaboration.get().orgId,
-			"",
-			new Set([this.appParams.provider]),
-			new Set([this.appParams.provider]),
-			m.Option.None(),
-			m.Option.None(),
-			new Set(),
-			m.Option.Some(new m.Collaboration.MessageBasic(msg, new Set())),
-			view.id);
+		this.appParams.collaboration.foreach( (c) => {
+			let content = new m.Collaboration.ContentMsg(
+				m.Auth.zeroId,
+				c.id,
+				c.orgId,
+				"",
+				new Set([this.appParams.provider]),
+				new Set([this.appParams.provider]),
+				m.Option.None(),
+				m.Option.None(),
+				new Set(),
+				m.Option.Some(new m.Collaboration.MessageBasic(msg, new Set())),
+				view.id);
 
-		this._send(this.mapper.write(new m.Collaboration.BroadcastContent(content, m.Option.Some(view) ) ))
+			this._send(this.mapper.write(new m.Collaboration.BroadcastContent(content, m.Option.Some(view) ) ))
+		});
 
 	}
 
