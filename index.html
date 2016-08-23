@@ -5,49 +5,48 @@
     </head>
     <body>
         <div id="remotes">
-            <h2>Demo App</h2>
             <div id="container">
-
             </div>
         </div>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
         <script src="bundle.js"></script>
         <script>
-            var c = new conversant.ConversantAPI('917ed254-dd71-4f96-8e39-7870ae49e5b7');
+            var c = new conversant.ConversantAPI('[YOUR_API_KEY]');
             window.c = c;   // debug in console
-
 
             c.init(function(appInit){
                 console.log(appInit);
                 var app = appInit.app; // This is of type m.Apps.App
+                //alert('init is sync: ' + appInit.mode.mode);
                 var restoreState = appInit.restoreState;
-                var profile = appInit.profile; // This is of type m.Auth.ProfileInfo
-                var collaboration = appInit.collaboration; // This is of type m.Collaboration.Collaboration
+                var provider = appInit.provider; // This is of type m.Auth.Provider
+                var collaboration = appInit.collaboration; // This is of type Option[m.Collaboration.Collaboration]
                 var team = appInit.team; // This is of type m.Collaboration.SyncUserEvent[]
                 var peers = appInit.peers; // This is of type m.Peers.PeerState[]
-
+                var mode = c.isSyncMode ? "In Sync Panel" : "In App Panel"
                 console.log('restoreState', restoreState)
-
                 function handleSync(viewSync){
+                    console.log('handleSync',viewSync)
                     var src = viewSync.resource.uri;
                     $('#container').html('<img src="'+src+'" />');   // sync the view for all users
                 }
-
                 if(c.isSyncMode){
-                    $.each(restoreState,function(i, state){
-                        handleSync(state);
-                    });
+                    console.log('in sync view...')
+                    restoreState.foreach( function(r){ handleSync(r) } );
                     c.addResponder(m.Collaboration.SyncViewEvent.type(),function(sync){
                         handleSync(sync.viewerState);
                     });
+                    c.addResponder(m.Collaboration.BroadcastContent.type(),function(broadcast){
+                        broadcast.view.foreach( function(r){  handleSync(r) } );
+                    });
                 }else{
                     var spaceCats = [
-                            'https://pbs.twimg.com/media/ByZOMh8IUAE7cxj.jpg',
-                            'http://i.imgur.com/GaAI9uH.jpg',
-                            'http://i.imgur.com/PyKPjMh.jpg',
-                            'http://i.imgur.com/qqDXC4c.jpg',
-                            'http://i.imgur.com/2z39gDe.jpg',
-                            'http://i.imgur.com/AizmOYh.jpg',
+                        'https://pbs.twimg.com/media/ByZOMh8IUAE7cxj.jpg',
+                        'http://i.imgur.com/GaAI9uH.jpg',
+                        'http://i.imgur.com/PyKPjMh.jpg',
+                        'http://i.imgur.com/qqDXC4c.jpg',
+                        'http://i.imgur.com/2z39gDe.jpg',
+                        'http://i.imgur.com/AizmOYh.jpg',
                     ];
                     $('#container').append('<h2>click to inject image</h2>');
                     $.each(spaceCats,function(i,src){
@@ -55,14 +54,12 @@
                     });
                     $('#container img').click(function(){
                         var src = $(this).attr('src');
-                        var viewState = new m.Collaboration.ViewerState(app,new m.Resource.Resource( src,"image/jpg",src),0,{},m.Geom.Transform3d.identity());
-                        console.log(viewState)
+                        var viewState = new m.Collaboration.ImageView(collaboration.get().id, app,new m.Resource.Resource( src,"image/jpg",src),'',new Set(),m.Geom.Transform3d.identity());
                         c.syncView(viewState);
+                        c.sendMessage('space cat!!!', viewState);
                     });
-
                 }
             });
-	    console.log('win name:', window.name);
         </script>
     </body>
 </html>
