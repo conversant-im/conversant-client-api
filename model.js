@@ -143,6 +143,26 @@ Auth.zeroId = new UUID('00000000-0000-0000-0000-000000000000')
 
 
 /**
+ * @class GetPrimaryProfile
+ */
+Auth.GetPrimaryProfile = class extends Model{
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    static type(){ return 'm.Auth$GetPrimaryProfile'}
+    constructor(uid, orgId){
+        super(Auth.GetPrimaryProfile.type());
+        this.uuid = null
+        this.orgId = null
+        if(arguments.length) {
+            this.uuid = uuid;
+            this.orgId = orgId;
+        }
+    }
+}
+
+/**
  * @class OrganizationRoles
  * Construct an organization role.
  */

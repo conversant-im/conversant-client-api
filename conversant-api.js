@@ -90,6 +90,11 @@ class API {
 		this._send(this.mapper.write(sync))
 	}
 
+
+	getUser(uid, orgId){
+		this._send(new m.Auth.GetPrimaryProfile(uid, orgId))
+	}
+
 	/**
 	 * def syncView(sync:Collaboration.SyncViewEvent):Unit
 	 * Synchronize view/app state in the synchronization pannel.
