@@ -244,7 +244,45 @@ Auth.Provider = class extends Model{
             this.fullName = new String(fullName)
         }
     }
+}
 
+/**
+ * @class Provider
+ * A simple view of a provider for a user.  Users can have many providers for many different organization.
+ * Users will typically have 1 provider="conversant" per orgId.
+ */
+Auth.Bot = class extends Model{
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    static type(){ return 'm.Auth$Bot'}
+    /**
+     *
+     * @param orgId {String}
+     * @param source {String}
+     * @param provider {String}
+     * @param id {String}
+     * @param role {Auth.OrganizationRoles}
+     * @param fullName {String}
+     */
+    constructor(orgId, source, provider, id, role, fullName){
+        super(Auth.Bot.type())
+        this.orgId = null
+        this.source = null
+        this.provider = null
+        this.id = null
+        this.role = null
+        this.fullName = null
+        if(arguments.length) {
+            this.orgId = new UUID(orgId)
+            this.source = new UUID(source)
+            this.provider = new String(provider)
+            this.id = new String(id)
+            this.role = Type.check(role, Auth.OrganizationRoles)
+            this.fullName = new String(fullName)
+        }
+    }
 }
 
 /**
@@ -1336,8 +1374,6 @@ Collaboration.BroadcastContent = class extends Model{
         }
     }
 }
-
-
 
 /**
  * @namespace Apps

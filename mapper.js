@@ -255,14 +255,55 @@ class Mapper{
     }
 }
 
-module.exports = {
-    Mapper: Mapper
+function serialize(object) {
+    var jsonOutput = serializeToJson(object);
+
+    function serializeToJson(obj) {
+        var jobj = {};
+        for (var field in obj){
+            if (obj.hasOwnProperty(field)) {
+                if (obj[field].$type) {
+                    var type = obj[field].$type;
+                    if (type == "m.Some") {
+                        jobj[field] = [obj[field].val]; 
+                    } else if (type == "m.None") {
+                        jobj[field] = [];
+                    } else if (type == "m.List" || type == "m.Set") {
+                        jobj[field] = obj[field].values.map(x => serializeToJson(x));
+                    } else if (type == "m.UUID") {
+                        jobj[field] = obj[field].valueOf();
+                    } else {
+                        jobj[field] = serializeToJson(obj[field]);
+                    }
+                } else if (obj[field].constructor == Map) {
+                    jobj[field] = serializeToJson(obj[field]);
+                } else if (obj[field].constructor == Array) {
+                    jobj[field] = obj[field].map(x => serializeToJson(x));
+                } else {
+                    jobj[field] = obj[field];
+                }
+            }
+        }
+        return jobj;
+    }
+
+    // Replaces $ signs with . in the serialized json
+    function replaceDollarSigns(jsonString) {
+        var index = jsonString.search(/\$/);
+        if (index != -1) {
+            if (jsonString.substring(index, index + 5) != "$type") {
+                return jsonString.substring(0, index) + '.' + replaceDollarSigns(jsonString.substring(index + 1));
+            } else {
+                return jsonString.substring(0, index + 1) + replaceDollarSigns(jsonString.substring(index + 1));
+            }
+        }
+        return jsonString;
+    }
+
+    return replaceDollarSigns(JSON.stringify(jsonOutput));
 }
 
-
-
-
-
-
-
-
+module.exports = {
+    Mapper: Mapper,
+    serialize: serialize
+}
