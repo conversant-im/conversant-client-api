@@ -558,7 +558,7 @@ Collaboration.PlayerState = class extends Model{
      * Return the full class name of this type.
      * @returns {string}
      */
-    static type(){ return 'm.Auth$PlayerState'}
+    static type(){ return 'm.Collaboration$PlayerState'}
 
     /**
      *
