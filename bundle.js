@@ -167,6 +167,17 @@ var API = (function () {
 			});
 		}
 	}, {
+		key: 'sendAppEvent',
+		value: function sendAppEvent(msg, coverImgUrl, view) {
+			var _this5 = this;
+
+			this.appParams.collaboration.foreach(function (c) {
+				var content = new m.Collaboration.ContentAppEvent(m.Auth.zeroId, c.id, c.orgId, "", new Set([_this5.appParams.provider]), new Set([_this5.appParams.provider]), m.Option.Some(new m.Collaboration.MessageBasic(msg, new Set())), view.id, coverImgUrl, new Set([]));
+
+				_this5._send(_this5.mapper.write(new m.Collaboration.BroadcastContent(content, m.Option.Some(view))));
+			});
+		}
+	}, {
 		key: 'send',
 		value: function send(x) {
 			this._send(this.mapper.write(x));
@@ -251,7 +262,7 @@ var ConversantAPI = (function (_API) {
 				try {
 					(function () {
 						console.log('**data', event.data);
-						var x = _this5.mapper.read(event.data);
+						var x = _this6.mapper.read(event.data);
 						//console.log('sending to ('+observerList.length+') observers',x)
 						observerList.forEach(function (obs) {
 							return obs.onNext(x);
@@ -281,12 +292,12 @@ var ConversantAPI = (function (_API) {
 			};
 		});
 
-		var _this5 = _possibleConstructorReturn(this, Object.getPrototypeOf(ConversantAPI).call(this, observer, observable));
+		var _this6 = _possibleConstructorReturn(this, Object.getPrototypeOf(ConversantAPI).call(this, observer, observable));
 
-		_this5.id = id;
-		_this5.isSyncMode = window.name == "syncApp";
-		_this5.mode = new m.Apps.AppMode(window.name);
-		return _this5;
+		_this6.id = id;
+		_this6.isSyncMode = window.name == "syncApp";
+		_this6.mode = new m.Apps.AppMode(window.name);
+		return _this6;
 	}
 
 	/**
@@ -299,7 +310,7 @@ var ConversantAPI = (function (_API) {
 	_createClass(ConversantAPI, [{
 		key: 'init',
 		value: function init(fun) {
-			var _this6 = this;
+			var _this7 = this;
 
 			var pApp = this._futurePromise(m.Apps.InitApp.type());
 			var pOrganization = this._futurePromise(m.Apps.InitOrganization.type());
@@ -311,7 +322,7 @@ var ConversantAPI = (function (_API) {
 			Promise.all([pApp, pCollaboration, pPofile, pTeam, pPeers, pOrganization]).then(function (vals) {
 				console.log('-- APP INIT --');
 				var appParams = new AppParameters(vals[0].app, vals[0].restoreState, vals[5].organization, vals[1].collaboration, vals[2].provider, vals[3].team, vals[4].peers);
-				_this6.appParams = appParams;
+				_this7.appParams = appParams;
 				fun(appParams);
 			});
 			this._send(this.mapper.write(new m.Apps.Init(this.id, this.mode)));
@@ -1597,7 +1608,7 @@ Collaboration.PlayerState = (function (_Model10) {
          * @returns {string}
          */
         value: function type() {
-            return 'm.Auth$PlayerState';
+            return 'm.Collaboration$PlayerState';
         }
 
         /**
@@ -2566,7 +2577,7 @@ Collaboration.ContentNotification = (function (_Collaboration$Conten3) {
             _this38.severity = Type.check(severity, Collaboration.NotificationLevel);
             _this38.icon = new String(icon);
         } else {
-            var _this38 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class31).call(this, Collaboration.ContentAppEvent.type()));
+            var _this38 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class31).call(this, Collaboration.ContentNotification.type()));
 
             _this38.severity = null;
             _this38.icon = null;
@@ -2605,7 +2616,7 @@ Collaboration.ContentAppEvent = (function (_Collaboration$Conten4) {
          * @param message {Collaboration.Message}
          * @param viewId {UUID}
          * @param coverImg {String}
-         * @param actions {Apps.App[]}
+         * @param actions Set{Apps.App[]}
          */
 
     }]);
@@ -2617,9 +2628,8 @@ Collaboration.ContentAppEvent = (function (_Collaboration$Conten4) {
             var _this39 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class32).call(this, Collaboration.ContentAppEvent.type(), id, collaborationId, orgId, timestamp, authors, seen, message, viewId));
 
             _this39.coverImg = new String(coverImg);
-            _this39.actions = actions.map(function (s) {
-                return Type.check(s, Apps.App);
-            });
+            //this.actions = actions.map((s) => Type.check(s, Apps.App))
+            _this39.actions = actions;
         } else {
             var _this39 = _possibleConstructorReturn(this, Object.getPrototypeOf(_class32).call(this, Collaboration.ContentAppEvent.type()));
 

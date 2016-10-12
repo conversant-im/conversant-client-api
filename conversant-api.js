@@ -129,7 +129,24 @@ class API {
 
 			this._send(this.mapper.write(new m.Collaboration.BroadcastContent(content, m.Option.Some(view) ) ))
 		});
+	}
 
+	sendAppEvent(msg, coverImgUrl, view){
+		this.appParams.collaboration.foreach( (c) => {
+			let content = new m.Collaboration.ContentAppEvent(
+				m.Auth.zeroId,
+				c.id,
+				c.orgId,
+				"",
+				new Set([this.appParams.provider]),
+				new Set([this.appParams.provider]),
+				m.Option.Some(new m.Collaboration.MessageBasic(msg, new Set())),
+				view.id,
+				coverImgUrl,
+				new Set([]));
+
+			this._send(this.mapper.write(new m.Collaboration.BroadcastContent(content, m.Option.Some(view) ) ))
+		});
 	}
 
 	send(x){

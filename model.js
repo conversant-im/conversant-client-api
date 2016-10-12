@@ -1230,7 +1230,7 @@ Collaboration.ContentNotification = class extends Collaboration.Content{
             this.icon = new String(icon)
 
         }else{
-            super(Collaboration.ContentAppEvent.type())
+            super(Collaboration.ContentNotification.type())
             this.severity = null
             this.icon = null
         }
@@ -1259,13 +1259,14 @@ Collaboration.ContentAppEvent = class extends Collaboration.Content{
      * @param message {Collaboration.Message}
      * @param viewId {UUID}
      * @param coverImg {String}
-     * @param actions {Apps.App[]}
+     * @param actions Set{Apps.App[]}
      */
     constructor(id, collaborationId, orgId, timestamp, authors, seen, message, viewId, coverImg, actions){
         if(arguments.length) {
             super(Collaboration.ContentAppEvent.type(),id, collaborationId, orgId, timestamp, authors, seen, message, viewId)
             this.coverImg = new String(coverImg)
-            this.actions = actions.map((s) => Type.check(s, Apps.App))
+            //this.actions = actions.map((s) => Type.check(s, Apps.App))
+            this.actions = actions
         }else{
             super(Collaboration.ContentAppEvent.type())
             this.coverImg = null
