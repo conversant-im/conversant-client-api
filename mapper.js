@@ -117,9 +117,11 @@ class Mapper{
                 }else if(obj.size < 4){
                     t = "scala.collection.immutable.Map$Map"+(obj.size+1)
                 }
+                var hack = [];
+                obj.forEach( (v,k, map) => hack.push([k[0], v]) );
                 return  {
                     "t": t,
-                    "v": obj.entries().map( (x) => {
+                    "v": hack.map( (x) => {
                         return {
                             'k':that.pickleType(x[0]),
                             'v':that.pickleType(x[1])
@@ -181,9 +183,11 @@ class Mapper{
             var namespace = s[0].split('.')
             let className = s[1]
             namespace.push(className)
-            //console.log('className:',namespace)
             let classRef = namespace.reduce( (pre, cur) => pre[cur], window)
-            //console.log('classRef',classRef)
+            if(!classRef){
+                console.log('ERROR creating className:',namespace)
+                throw new Error('Error trying to create type: '+className)
+            }
             let inst = new classRef
             //console.log('instance',inst)
             for(let x in inst ){

@@ -1086,6 +1086,39 @@ Collaboration.CollaborationGroup = class extends Collaboration.Collaboration{
     }
 }
 
+
+
+/**
+ * @class CollaborationCustomer
+ */
+Collaboration.CollaborationCustomer = class extends Collaboration.Collaboration{
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    static type(){ return 'm.Collaboration$CollaborationCustomer'}
+
+    /**
+     *
+     * @param id {String}
+     * @param orgId {String}
+     * @param members {Auth.Provider[]}
+     * @param notifications {Collaboration.Notification[]}
+     * @param name OPTIONAL {String}
+     * @param avatarUrl OPTIONAL {String}
+     * @param cover OPTIONAL {String}
+     * @param content {Collaboration.Content[]}
+     * @param settings {Map}
+     */
+    constructor(id, orgId, members, notifications, name, avatarUrl, cover, content, settings){
+        if(arguments.length) {
+            super(Collaboration.CollaborationCustomer.type(), id, orgId, members, notifications, name, avatarUrl, cover, content, settings)
+        }else{
+            super(Collaboration.CollaborationCustomer.type())
+        }
+    }
+}
+
 /**
  * @class CollaborationContact
  */
