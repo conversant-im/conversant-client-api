@@ -285,6 +285,45 @@ Auth.Bot = class extends Model{
     }
 }
 
+
+/**
+ * @class Role
+ */
+Auth.Role = class extends Model{
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    static type(){ return 'm.Auth$Role'}
+    /**
+     *
+     * @param orgId {String}
+     * @param source {String}
+     * @param provider {String}
+     * @param id {String}
+     * @param role {Auth.OrganizationRoles}
+     * @param fullName {String}
+     */
+    constructor(orgId, source, provider, id, role, fullName){
+        super(Auth.Role.type())
+        this.orgId = null
+        this.source = null
+        this.provider = null
+        this.id = null
+        this.role = null
+        this.fullName = null
+        if(arguments.length) {
+            this.orgId = new UUID(orgId)
+            this.source = new UUID(source)
+            this.provider = new String(provider)
+            this.id = new String(id)
+            this.role = Type.check(role, Auth.OrganizationRoles)
+            this.fullName = new String(fullName)
+        }
+    }
+}
+
+
 /**
  * @class Organization
  * Organization Entity
@@ -1043,6 +1082,67 @@ Collaboration.CollaborationGroup = class extends Collaboration.Collaboration{
             super(Collaboration.CollaborationGroup.type(), id, orgId, members, notifications, name, avatarUrl, cover, content, settings)
         }else{
             super(Collaboration.CollaborationGroup.type())
+        }
+    }
+}
+
+/**
+ * @class CollaborationContact
+ */
+Collaboration.CollaborationContact = class extends Collaboration.Collaboration{
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    static type(){ return 'm.Collaboration$CollaborationContact'}
+
+    /**
+     *
+     * @param id {String}
+     * @param members {Auth.Provider[]}
+     * @param notifications {Collaboration.Notification[]}
+     * @param name OPTIONAL {String}
+     * @param avatarUrl OPTIONAL {String}
+     * @param cover OPTIONAL {String}
+     * @param content {Collaboration.Content[]}
+     * @param settings {Map}
+     */
+    constructor(id, members, notifications, name, avatarUrl, cover, content, settings){
+        if(arguments.length) {
+            super(Collaboration.CollaborationContact.type(), id, m.Auth.zeroId, members, notifications, name, avatarUrl, cover, content, settings)
+        }else{
+            super(Collaboration.CollaborationContact.type())
+        }
+    }
+}
+
+
+/**
+ * @class CollaborationConversation
+ */
+Collaboration.CollaborationConversation = class extends Collaboration.Collaboration{
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    static type(){ return 'm.Collaboration$CollaborationConversation'}
+
+    /**
+     *
+     * @param id {String}
+     * @param members {Auth.Provider[]}
+     * @param notifications {Collaboration.Notification[]}
+     * @param name OPTIONAL {String}
+     * @param avatarUrl OPTIONAL {String}
+     * @param cover OPTIONAL {String}
+     * @param content {Collaboration.Content[]}
+     * @param settings {Map}
+     */
+    constructor(id, members, notifications, name, avatarUrl, cover, content, settings){
+        if(arguments.length) {
+            super(Collaboration.CollaborationConversation.type(), id, m.Auth.zeroId, members, notifications, name, avatarUrl, cover, content, settings)
+        }else{
+            super(Collaboration.CollaborationConversation.type())
         }
     }
 }
