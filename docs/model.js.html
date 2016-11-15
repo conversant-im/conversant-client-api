@@ -28,20 +28,119 @@
         <article>
             <pre class="prettyprint source linenums"><code>"use strict"
 
+// TOOD: would like to extend String
+class UUID {
+    constructor(uuid){
+        this.$type = "m.UUID";
+        if(uuid.$type &amp;&amp; uuid.$type == this.$type){
+            this.uuid = uuid.uuid
+        }else {
+            this.uuid = uuid
+        }
+    }
+
+    static zero(){ new UUID('00000000-0000-0000-0000-000000000000') }
+
+    valueOf(){
+        return this.uuid
+    }
+}
+
+class Integer extends Number{
+    constructor(x){
+        super(x)
+        this.val = x
+        this.$type = "m.Integer";
+    }
+    valueOf(){
+        return this.val
+    }
+}
+
+class Float extends Number{
+    constructor(x){
+        super(x)
+        this.val = x
+        this.$type = "m.Float";
+    }
+    valueOf(){
+        return this.val
+    }
+}
+
+class Double extends Number{
+    constructor(x){
+        super(x)
+        this.val = x
+        this.$type = "m.Double";
+    }
+    valueOf(){
+        return this.val
+    }
+}
+
+class Long extends Number{
+    constructor(x){
+        super(x)
+        this.val = x
+        this.$type = "m.Long";
+    }
+    valueOf(){
+        return this.val
+    }
+}
+
+class List extends Array{
+    constructor(){
+        super()
+        this.$type = "m.List";
+    }
+}
+
+class Option{
+    static Some(val){ return new Some(val) }
+    static None() { return new None() }
+}
+class Some extends Option{
+    constructor(val){
+        super()
+        this.val = val
+        this.$type = "m.Some";
+    }
+    get(){
+        return this.val
+    }
+    valueOf(){
+        return this.val
+    }
+
+    map(f){ return f(this.val); }
+    foreach(f){ f(this.val); }
+}
+class None extends Option{
+    constructor(){
+        super()
+        this.$type = "m.None";
+    }
+
+    map(f){}
+    foreach(f){}
+}
+
 /**
  * @class Type
  * Helper class for doing runtime type checking and error reporting.
  */
 class Type{
-    static check(inst, type){
-        if( ! (inst instanceof type) ) {
-            throw new Error('[ERROR] Type Check failed. ' + typeof(inst) + ' is not ' + type)
-        }
-        return inst
-    }
     static check(inst, type, fail){
         if( ! (inst instanceof type) ) {
-            fail(new Error('[ERROR] Type Check failed. ' + typeof(inst) + ' is not ' + type))
+            if(type.type &amp;&amp; inst.$type &amp;&amp; type.type() == inst.$type){// FIXME: this is a hack until we have our own mapper.
+                return inst
+            }
+            if(typeof fail === "undefined")
+                throw new Error('[ERROR] Type Check failed. ' + typeof(inst) + ' is not ' + type)
+            else
+                fail(new Error('[ERROR] Type Check failed. ' + typeof(inst) + ' is not ' + type))
         }
         return inst
     }
@@ -58,7 +157,7 @@ class Model{
      */
     constructor(type){
         this.$type = type;
-        console.log('created type: '+ type);
+        //console.log('created type: '+ type);
     }
 }
 
@@ -67,8 +166,34 @@ class Model{
  */
 let Auth = {};
 
+
+Auth.zeroId = new UUID('00000000-0000-0000-0000-000000000000')
+
+
+/**
+ * @class GetPrimaryProfile
+ * @extends Model
+ */
+Auth.GetPrimaryProfile = class extends Model{
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    static type(){ return 'm.Auth$GetPrimaryProfile'}
+    constructor(uid, orgId){
+        super(Auth.GetPrimaryProfile.type());
+        this.uuid = null
+        this.orgId = null
+        if(arguments.length) {
+            this.uuid = uuid;
+            this.orgId = orgId;
+        }
+    }
+}
+
 /**
  * @class OrganizationRoles
+ * @extends Model
  * Construct an organization role.
  */
 Auth.OrganizationRoles = class extends Model{
@@ -76,10 +201,13 @@ Auth.OrganizationRoles = class extends Model{
      * Return the full class name of this type.
      * @returns {string}
      */
-    static type(){ return 'm.Auth.OrganizationRoles'}
+    static type(){ return 'm.Auth$OrganizationRoles'}
     constructor(role){
         super(Auth.OrganizationRoles.type());
-        this.role = role;
+        this.name = null
+        if(arguments.length) {
+            this.name = role;
+        }
     }
 
     /**
@@ -110,37 +238,165 @@ Auth.OrganizationRoles = class extends Model{
 }
 
 /**
- * @class ProfileInfo
+ * @class Provider
+ * @extends Model
  * A simple view of a provider for a user.  Users can have many providers for many different organization.
  * Users will typically have 1 provider="conversant" per orgId.
  */
-Auth.ProfileInfo = class extends Model{
+Auth.Provider = class extends Model{
     /**
      * Return the full class name of this type.
      * @returns {string}
      */
-    static type(){ return 'm.Auth.ProfileInfo'}
-
+    static type(){ return 'm.Auth$Provider'}
     /**
      *
      * @param orgId {String}
+     * @param source {String}
      * @param provider {String}
      * @param id {String}
      * @param role {Auth.OrganizationRoles}
      * @param fullName {String}
      */
-    constructor(orgId, provider, id, role, fullName){
-        super(Auth.ProfileInfo.type())
-        this.orgId = new String(orgId)
-        this.provider = new String(provider)
-        this.id = new String(id)
-        this.role = Type.check(role,Auth.OrganizationRoles)
-        this.fullName = new String(fullName)
+    constructor(orgId, source, provider, id, role, fullName){
+        super(Auth.Provider.type())
+        this.orgId = null
+        this.source = null
+        this.provider = null
+        this.id = null
+        this.role = null
+        this.fullName = null
+        if(arguments.length) {
+            this.orgId = new UUID(orgId)
+            this.source = new UUID(source)
+            this.provider = new String(provider)
+            this.id = new String(id)
+            this.role = Type.check(role, Auth.OrganizationRoles)
+            this.fullName = new String(fullName)
+        }
     }
 }
 
 /**
+ * @class Provider
+ * @extends Model
+ * A simple view of a provider for a user.  Users can have many providers for many different organization.
+ * Users will typically have 1 provider="conversant" per orgId.
+ */
+Auth.Bot = class extends Model{
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    static type(){ return 'm.Auth$Bot'}
+    /**
+     *
+     * @param orgId {String}
+     * @param source {String}
+     * @param provider {String}
+     * @param id {String}
+     * @param role {Auth.OrganizationRoles}
+     * @param fullName {String}
+     */
+    constructor(orgId, source, provider, id, role, fullName){
+        super(Auth.Bot.type())
+        this.orgId = null
+        this.source = null
+        this.provider = null
+        this.id = null
+        this.role = null
+        this.fullName = null
+        if(arguments.length) {
+            this.orgId = new UUID(orgId)
+            this.source = new UUID(source)
+            this.provider = new String(provider)
+            this.id = new String(id)
+            this.role = Type.check(role, Auth.OrganizationRoles)
+            this.fullName = new String(fullName)
+        }
+    }
+}
+
+
+/**
+ * @class Role
+ * @extends Model
+ */
+Auth.Role = class extends Model{
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    static type(){ return 'm.Auth$Role'}
+    /**
+     *
+     * @param orgId {String}
+     * @param source {String}
+     * @param provider {String}
+     * @param id {String}
+     * @param role {Auth.OrganizationRoles}
+     * @param fullName {String}
+     */
+    constructor(orgId, source, provider, id, role, fullName){
+        super(Auth.Role.type())
+        this.orgId = null
+        this.source = null
+        this.provider = null
+        this.id = null
+        this.role = null
+        this.fullName = null
+        if(arguments.length) {
+            this.orgId = new UUID(orgId)
+            this.source = new UUID(source)
+            this.provider = new String(provider)
+            this.id = new String(id)
+            this.role = Type.check(role, Auth.OrganizationRoles)
+            this.fullName = new String(fullName)
+        }
+    }
+}
+
+
+/**
+ * @class Organization
+ * @extends Model
+ * Organization Entity
+ */
+Auth.Organization = class extends Model{
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+
+    static type(){ return 'm.Auth$Organization'}
+    /**
+     *
+     * @param url {String}
+     * @param name {String}
+     * @param provider {Auth.Provider}
+     * @param members [Auth.Provider[]]
+     * @param settings {Map}
+     */
+    constructor(url, name, provider, members, settings){
+        super(Auth.Provider.type())
+        this.url = null
+        this.name = null
+        this.provider = null
+        this.members = null
+        this.settings = null
+        if(arguments.length) {
+            this.url = new String(url)
+            this.provider = Type.check(provider, Auth.Provider)
+            this.members = members.map( p => Type.check(p,Auth.Provider) )
+            this.settings = settings
+        }
+    }
+}
+
+
+/**
  * @class PrimaryProfile
+ * @extends Model
  * A list of profiles that are known for that user under that organiztion.
  * The primary will be a provider of type "conversant"
  */
@@ -149,22 +405,23 @@ Auth.PrimaryProfile = class extends Model{
      * Return the full class name of this type.
      * @returns {string}
      */
-    static type(){ return 'm.Auth.PrimaryProfile'}
+    static type(){ return 'm.Auth$PrimaryProfile'}
 
     /**
      *
-     * @param primary {Auth.ProfileInfo}
-     * @param providers {Auth.ProfileInfo[]}
+     * @param primary {Auth.Provider}
+     * @param providers {Auth.Provider[]}
      */
     constructor(primary, providers){
         super(Auth.PrimaryProfile.type())
-        this.primary = Type.check(primary,Auth.ProfileInfo)
-        this.providers = providers.map( p => Type.check(primary,Auth.ProfileInfo) )
+        this.primary = Type.check(primary,Auth.Provider)
+        this.providers = providers.map( p => Type.check(p,Auth.Provider) )
     }
 }
 
 /**
  * @class UserState
+ * @extends Model
  * Used to pass a user action that requires synchronization by the system.
  */
 Auth.UserState = class extends Model{
@@ -172,7 +429,9 @@ Auth.UserState = class extends Model{
      * Return the full class name of this type.
      * @returns {string}
      */
-    static type(){ return 'm.Auth.UserState'}
+    static type(){ return 'm.Auth$UserState'}
+
+    //isOnline:Boolean, action:UserAction, state: Map[String, String]
 
     /**
      *
@@ -182,15 +441,21 @@ Auth.UserState = class extends Model{
      */
     constructor(isOnline, action, state){
         super(Auth.UserState.type())
-        this.isOnline = new Boolean(isOnline)
-        this.action = Type.check(action, Auth.UserState)
-        this.state = state
+        this.isOnline = null
+        this.action = null
+        this.state = null
+        if(arguments.length) {
+            this.isOnline = isOnline
+            this.action = Type.check(action, Auth.UserAction)
+            this.state = state
+        }
     }
 
 }
 
 /**
  * @class UserAction
+ * @extends Model
  * Some User level event that requies syncing.
  */
 Auth.UserAction = class extends Model{
@@ -198,7 +463,7 @@ Auth.UserAction = class extends Model{
      * Return the full class name of this type.
      * @returns {string}
      */
-    static type(){ return 'm.Auth.UserAction'}
+    static type(){ return 'm.Auth$UserAction'}
 
     /**
      *
@@ -206,7 +471,10 @@ Auth.UserAction = class extends Model{
      */
     constructor(action){
         super(Auth.UserAction.type())
-        this.action = new String(action)
+        this.action = null
+        if(arguments.length) {
+            this.action = new String(action)
+        }
     }
 
     /**
@@ -243,41 +511,429 @@ Auth.UserAction = class extends Model{
 }
 
 /**
- * @namespace Collaboration
+ * @namespace Entities
  */
-let Collaboration = {};
+let Entities = {};
 
 /**
- * @class ViewerState
- * Used by applications to sync the view state of a sync panel.
+ * @class NamedEntity
+ * @extends Model
  */
-Collaboration.ViewerState = class extends Model{
+Entities.NamedEntity = class extends Model{
     /**
      * Return the full class name of this type.
      * @returns {string}
      */
-    static type(){ return 'm.Collaboration.ViewerState'}
 
     /**
      *
+     * @param uri {String}
+     * @param token {String}
+     */
+    constructor(type, uri, token){
+        super(type)
+
+        this.uri = null
+        this.token = null
+        if( arguments.length > 1) {
+            this.uri = new String(uri)
+            this.token = new String(token)
+        }
+    }
+}
+
+
+/**
+ * @class LocationEntity
+ * @extends NamedEntity
+ */
+Entities.LocationEntity = class extends Entities.NamedEntity{
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    static type(){ return 'm.Entities$LocationEntity'}
+
+    /**
+     *
+     * @param uri {String}
+     * @param token {String}
+     */
+    constructor(uri, token){
+        if(arguments.length) {
+            super(Entities.LocationEntity.type(), uri, token)
+        }else{
+            super(Entities.LocationEntity.type())
+        }
+    }
+}
+
+
+/**
+ * @class OrganizationEntity
+ * @extends NamedEntity
+ */
+Entities.OrganizationEntity = class extends Entities.NamedEntity{
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    static type(){ return 'm.Entities$OrganizationEntity'}
+
+    /**
+     *
+     * @param uri {String}
+     * @param token {String}
+     */
+    constructor(uri, token){
+        if(arguments.length) {
+            super(Entities.OrganizationEntity.type(), uri, token)
+        }else{
+            super(Entities.OrganizationEntity.type())
+        }
+    }
+}
+
+
+/**
+ * @class PersonEntity
+ * @extends NamedEntity
+ */
+Entities.PersonEntity = class extends Entities.NamedEntity{
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    static type(){ return 'm.Entities$PersonEntity'}
+
+    /**
+     *
+     * @param uri {String}
+     * @param token {String}
+     */
+    constructor(uri, token){
+        if(arguments.length) {
+            super(Entities.PersonEntity.type(), uri, token)
+        }else{
+            super(Entities.PersonEntity.type())
+        }
+    }
+}
+
+
+
+/**
+ * @namespace Collaboration
+ */
+let Collaboration = {};
+
+
+
+
+/**
+ * @class PlayerState
+ * @extends Model
+ */
+Collaboration.PlayerState = class extends Model{
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    static type(){ return 'm.Collaboration$PlayerState'}
+
+    /**
+     *
+     * @param action {String}
+     */
+    constructor(state){
+        super(Collaboration.PlayerState.type())
+        this.state = null
+        if(arguments.length) {
+            this.state = new Integer(state)
+        }
+    }
+
+    /**
+     * UNSTARTED PlayerState
+     * @returns {Collaboration.PlayerState}
+     */
+    static UNSTARTED(){ return Collaboration.PlayerState(-1) }
+    /**
+     * ENDED PlayerState
+     * @returns {Collaboration.PlayerState}
+     */
+    static ENDED(){ return Collaboration.PlayerState(0) }
+    /**
+     * PLAYING PlayerState
+     * @returns {Collaboration.PlayerState}
+     */
+    static PLAYING(){ return Collaboration.PlayerState(1) }
+    /**
+     * PAUSED PlayerState
+     * @returns {Collaboration.PlayerState}
+     */
+    static PAUSED(){ return Collaboration.PlayerState(2) }
+    /**
+     * BUFFERING PlayerState
+     * @returns {Collaboration.PlayerState}
+     */
+    static BUFFERING(){ return Collaboration.PlayerState(3) }
+    /**
+     * CUED PlayerState
+     * @returns {Collaboration.PlayerState}
+     */
+    static CUED(){ return Collaboration.PlayerState(5) }
+
+}
+
+
+
+/**
+ * @class View
+ * @extends Model
+ */
+Collaboration.View = class extends Model{
+    /**
+     *
+     * @param id {UUID}
+     * @param collaborationId {UUID}
      * @param app {Apps.App}
      * @param resource {Resource.Resource}
-     * @param sampleTimeMs {Number}
-     * @param settings {Map}
+     * @param key {String}
+     * @param entities {Entities.Entity[]}
+     */
+    constructor(type, id, collaborationId, app, resource, key, entities){
+        super(type)
+        this.id = null
+        this.collaborationId = null
+        this.app = null
+        this.resource = null
+        this.key = null
+        this.entities = new Set()
+        if(arguments.length > 1) {
+            this.id = new UUID(id)
+            this.collaborationId = new UUID(collaborationId)
+            this.app = Type.check(app, Apps.App)
+            this.resource = Type.check(resource, Resource.Resource)
+            this.key = new String(key)
+            // FIXME: Set does not define "map"
+            this.entities = entities
+        }
+    }
+}
+
+
+/**
+ * @class UrlView
+ * @extends View
+ */
+Collaboration.UrlView = class extends Collaboration.View{
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    static type(){ return 'm.Collaboration$UrlView'}
+
+    /**
+     *
+     * @param collaborationId {UUID}
+     * @param app {Apps.App}
+     * @param resource {Resource.Resource}
+     * @param key {String}
+     * @param entities {Entities.Entity[]}
+     */
+    constructor(collaborationId, app, resource, key, entities){
+        if(arguments.length) {
+            super(Collaboration.UrlView.type(), '00000000-0000-0000-0000-000000000000', collaborationId, app, resource, key, entities)
+        }else{
+            super(Collaboration.UrlView.type())
+        }
+    }
+}
+
+
+
+/**
+ * @class DocumentView
+ * @extends View
+ */
+Collaboration.DocumentView = class extends Collaboration.View{
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    static type(){ return 'm.Collaboration$DocumentView'}
+
+    /**
+     *
+     * @param collaborationId {UUID}
+     * @param app {Apps.App}
+     * @param resource {Resource.Resource}
+     * @param key {String}
+     * @param entities {Entities.Entity[]}
+     * @param page {Int}
+     */
+    constructor(collaborationId, app, resource, key, entities, sampleTimeMs, playerState){
+        if(arguments.length) {
+            super(Collaboration.DocumentView.type(), '00000000-0000-0000-0000-000000000000', collaborationId, app, resource, key, entities, page)
+            this.page = page
+        }else{
+            super(Collaboration.DocumentView.type())
+            this.page = null
+        }
+    }
+}
+
+/**
+ * @class VideoView
+ * @extends View
+ */
+Collaboration.VideoView = class extends Collaboration.View{
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    static type(){ return 'm.Collaboration$VideoView'}
+
+    /**
+     *
+     * @param collaborationId {UUID}
+     * @param app {Apps.App}
+     * @param resource {Resource.Resource}
+     * @param key {String}
+     * @param entities {Entities.Entity[]}
+     * @param sampleTimeMs {Double}
+     * @param playerState {Conversant.PlayerState}
+     */
+    constructor(collaborationId, app, resource, key, entities, sampleTimeMs, playerState){
+        if(arguments.length) {
+            super(Collaboration.VideoView.type(), '00000000-0000-0000-0000-000000000000', collaborationId, app, resource, key, entities, sampleTimeMs, playerState)
+            this.sampleTimeMs = sampleTimeMs
+            this.playerState = Type.check(playerState, Collaboration.PlayerState)
+        }else{
+            super(Collaboration.VideoView.type())
+            this.sampleTimeMs = null
+            this.playerState = null
+        }
+    }
+}
+
+/**
+ * @class ImageView
+ * @extends View
+ */
+Collaboration.ImageView = class extends Collaboration.View{
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    static type(){ return 'm.Collaboration$ImageView'}
+
+    /**
+     *
+     * @param collaborationId {UUID}
+     * @param app {Apps.App}
+     * @param resource {Resource.Resource}
+     * @param key {String}
+     * @param entities {Entities.Entity[]}
      * @param transform {Geom.Transform3d}
      */
-    constructor(app, resource, sampleTimeMs, settings, transform){
-        super(Collaboration.ViewerState.type())
-        this.app = Type.check(app, Apps.App)
-        this.resource = Type.check(resource, Resource.Resource)
-        this.sampleTimeMs = new Number(sampleTimeMs)
-        this.settings = settings
-        this.transform = Type.check(transform, Geom.Transform3d)
+    constructor(collaborationId, app, resource, key, entities, transform){
+        if(arguments.length) {
+            super(Collaboration.ImageView.type(), '00000000-0000-0000-0000-000000000000', collaborationId, app, resource, key, entities, transform)
+            this.transform = Type.check(transform, Geom.Transform3d)
+        }else{
+            super(Collaboration.ImageView.type())
+            this.transform =  null
+        }
+    }
+}
+
+
+
+/**
+ * @class GLView
+ * @extends View
+ */
+Collaboration.GLView = class extends Collaboration.View{
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    static type(){ return 'm.Collaboration$GLView'}
+
+    /**
+     *
+     * @param collaborationId {UUID}
+     * @param app {Apps.App}
+     * @param resource {Resource.Resource}
+     * @param key {String}
+     * @param entities {Entities.Entity[]}
+     * @param transform {Geom.Transform3d}
+     */
+    constructor(collaborationId, app, resource, key, entities, transform){
+        if(arguments.length) {
+            super(Collaboration.GLView.type(), '00000000-0000-0000-0000-000000000000', collaborationId, app, resource, key, entities, transform)
+            this.transform = Type.check(transform, Geom.Transform3d)
+        }else{
+            super(Collaboration.GLView.type())
+            this.transform =  null
+        }
+    }
+}
+
+/**
+ * @class MapView
+ * @extends View
+ */
+Collaboration.MapView = class extends Collaboration.View{
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    static type(){ return 'm.Collaboration$MapView'}
+
+    /**
+     *
+     * @param collaborationId {UUID}
+     * @param app {Apps.App}
+     * @param resource {Resource.Resource}
+     * @param key {String}
+     * @param entities {Entities.Entity[]}
+     * @param lat {Double}
+     * @param lng {Double}
+     * @param zoom {Double}
+     * @param markers {String}
+     * @param update {String}
+     * @param address {String}
+     * @param name {String}
+     */
+    constructor(collaborationId, app, resource, key, entities, lat, lng, zoom, markers, update, address, name){
+        if(arguments.length) {
+            super(Collaboration.MapView.type(), '00000000-0000-0000-0000-000000000000', collaborationId, app, resource, key, entities, transform)
+            this.lat = lat
+            this.lng = lng
+            this.zoom = zoom
+            this.markers = markers
+            this.update = update
+            this.address = address
+            this.name = name
+        }else{
+            super(Collaboration.MapView.type())
+            this.lat = null
+            this.lng = null
+            this.zoom = null
+            this.markers = null
+            this.update = null
+            this.address = null
+            this.name = null
+        }
     }
 }
 
 /**
  * @class SyncViewEvent
+ * @extends Model
  * Application Event to Sync the View state.
  */
 Collaboration.SyncViewEvent = class extends Model{
@@ -285,26 +941,33 @@ Collaboration.SyncViewEvent = class extends Model{
      * Return the full class name of this type.
      * @returns {string}
      */
-    static type(){ return 'm.Collaboration.SyncViewEvent'}
+    static type(){ return 'm.Collaboration$SyncViewEvent'}
 
     /**
      *
      * @param collaborationId {String}
      * @param orgId {String}
-     * @param profile {Auth.ProfileInfo}
-     * @param viewerState {Collaboration.ViewerState}
+     * @param provider {Auth.Provider}
+     * @param viewerState {Collaboration.View}
      */
-    constructor(collaborationId, orgId, profile, viewerState){
+    constructor(collaborationId, orgId, provider, viewerState){
         super(Collaboration.SyncViewEvent.type())
-        this.collaborationId = new String(collaborationId)
-        this.orgId = new String(orgId)
-        this.profile = Type.check(profile, Auth.ProfileInfo)
-        this.viewerState = Type.check(viewerState, Collaboration.ViewerState)
+        this.collaborationId = null
+        this.orgId = null
+        this.provider = null
+        this.viewerState = null
+        if(arguments.length) {
+            this.collaborationId = new UUID(collaborationId)
+            this.orgId = new UUID(orgId)
+            this.provider = Type.check(provider, Auth.Provider)
+            this.viewerState = viewerState
+        }
     }
 }
 
 /**
  * @class SyncUserEvent
+ * @extends Model
  * System level event for passing user state.
  */
 Collaboration.SyncUserEvent = class extends Model{
@@ -312,111 +975,307 @@ Collaboration.SyncUserEvent = class extends Model{
      * Return the full class name of this type.
      * @returns {string}
      */
-    static type(){ return 'm.Collaboration.SyncUserEvent'}
+    static type(){ return 'm.Collaboration$SyncUserEvent'}
 
     /**
      *
      * @param collaborationId {String}
      * @param orgId {String}
-     * @param profile {Auth.ProfileInfo}
+     * @param provider {Auth.Provider}
      * @param userState {Auth.UserState}
      */
-    constructor(collaborationId, orgId, profile, userState){
+    constructor(collaborationId, orgId, provider, userState){
         super(Collaboration.SyncUserEvent.type())
-        this.collaborationId = new String(collaborationId)
-        this.orgId = new String(orgId)
-        this.profile = Type.check(profile, Auth.ProfileInfo)
-        this.userState = Type.check(userState, Auth.UserState)
+        this.collaborationId = null
+        this.orgId = null
+        this.provider = null
+        this.userState = null
+        if(arguments.length) {
+            this.collaborationId = new UUID(collaborationId)
+            this.orgId = new UUID(orgId)
+            this.provider = Type.check(provider, Auth.Provider)
+            this.userState = Type.check(userState, Auth.UserState)
+        }
+    }
+}
+
+
+/**
+ * @class Notification
+ * @extends Model
+ */
+Collaboration.Notification = class extends Model{
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    static type(){ return 'm.Collaboration$Notification'}
+
+    /**
+     *
+     * @param providerKey {String}
+     * @param rules {Collaboration.NotificationRule[]}
+     */
+    constructor(providerKey, rules){
+        super(Collaboration.Notification.type())
+        this.providerKey = null
+        this.rules = null
+        if(arguments.length) {
+            this.providerKey = new String(providerKey)
+            // TOOD: rules [NotificationRule]
+        }
     }
 }
 
 /**
  * @class Collaboration
+ * @extends Model
  */
 Collaboration.Collaboration = class extends Model{
     /**
      * Return the full class name of this type.
      * @returns {string}
      */
-    static type(){ return 'm.Collaboration.Collaboration'}
 
     /**
      *
      * @param id {String}
      * @param orgId {String}
-     * @param collaborationType {Collaboration.CollaborationType}
-     * @param members {Auth.ProfileInfo[]}
+     * @param members {Auth.Provider[]}
+     * @param notifications {Collaboration.Notification[]}
      * @param name OPTIONAL {String}
      * @param avatarUrl OPTIONAL {String}
      * @param cover OPTIONAL {String}
      * @param content {Collaboration.Content[]}
      * @param settings {Map}
      */
-    constructor(id, orgId, collaborationType, members, name, avatarUrl, cover, content, settings){
-        super(Collaboration.Collaboration.type())
-        this.id = new String(id)
-        this.orgId = new String(orgId)
-        this.collaborationType = Type.check(collaborationType, Collaboration.CollaborationType)
-        this.members = members.map( (m) => Type.check(m, Auth.ProfileInfo)  )
-        this.name = typeof name === "undefined" ? [] : [new String(name)]
-        this.avatarUrl = typeof avatarUrl === "undefined" ? [] : [new String(avatarUrl)]
-        this.cover = typeof cover === "undefined" ? [] : [new String(cover)]
-        this.content = content.map( (c) => Type.check(c, Collaboration.Content)  )
-        this.settings = settings
+    constructor(type, id, orgId, members, notifications, name, avatarUrl, cover, content, settings){
+        super(type)
+
+        this.id = null
+        this.orgId = null
+        this.members = null
+        this.notifications = null
+        this.name = null
+        this.avatarUrl = null
+        this.cover = null
+        this.content = null
+        this.settings = null
+        console.log('arguments.length',arguments.length)
+        if( arguments.length > 1) {
+            this.id = new UUID(id)
+            this.orgId = new UUID(orgId)
+            this.members = members.map((m) => Type.check(m, Auth.Provider))
+            this.notifications = Type.check(notifications, Collaboration.Notification)
+            this.name = typeof name === "undefined" ? null : new String(name)
+            this.avatarUrl = avatarUrl
+            this.cover = cover
+            this.content = content.map((c) => Type.check(c, Collaboration.Content))
+            this.settings = settings
+        }
     }
 }
 
 /**
- * @class CollaborationType
+ * @class CollaborationAdHoc
+ * @extends Collaboration
  */
-Collaboration.CollaborationType = class extends Model{
+Collaboration.CollaborationAdHoc = class extends Collaboration.Collaboration{
     /**
      * Return the full class name of this type.
      * @returns {string}
      */
-    static type(){ return 'm.Collaboration.CollaborationType'}
+    static type(){ return 'm.Collaboration$CollaborationAdHoc'}
 
     /**
      *
-     * @param name {String}
+     * @param id {String}
+     * @param orgId {String}
+     * @param members {Auth.Provider[]}
+     * @param notifications {Collaboration.Notification[]}
+     * @param name OPTIONAL {String}
+     * @param avatarUrl OPTIONAL {String}
+     * @param cover OPTIONAL {String}
+     * @param content {Collaboration.Content[]}
+     * @param settings {Map}
      */
-    constructor(name){
-        super(Collaboration.CollaborationType.type())
-        this.name = new String(name)
+    constructor(id, orgId, members, notifications, name, avatarUrl, cover, content, settings){
+        if(arguments.length) {
+            super(Collaboration.CollaborationAdHoc.type(), id, orgId, members, notifications, name, avatarUrl, cover, content, settings)
+        }else{
+            super(Collaboration.CollaborationAdHoc.type())
+        }
     }
+}
+
+/**
+ * @class CollaborationGroup
+ * @extends Collaboration
+ */
+Collaboration.CollaborationGroup = class extends Collaboration.Collaboration{
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    static type(){ return 'm.Collaboration$CollaborationGroup'}
 
     /**
-     * AD-HOC collaboration type
-     * @returns {Collaboration.CollaborationType}
+     *
+     * @param id {String}
+     * @param orgId {String}
+     * @param members {Auth.Provider[]}
+     * @param notifications {Collaboration.Notification[]}
+     * @param name OPTIONAL {String}
+     * @param avatarUrl OPTIONAL {String}
+     * @param cover OPTIONAL {String}
+     * @param content {Collaboration.Content[]}
+     * @param settings {Map}
      */
-    static adHoc(){ return Collaboration.CollaborationType("ad-hoc") }
+    constructor(id, orgId, members, notifications, name, avatarUrl, cover, content, settings){
+        if(arguments.length) {
+            super(Collaboration.CollaborationGroup.type(), id, orgId, members, notifications, name, avatarUrl, cover, content, settings)
+        }else{
+            super(Collaboration.CollaborationGroup.type())
+        }
+    }
+}
+
+
+
+/**
+ * @class CollaborationCustomer
+ * @extends Collaboration
+ */
+Collaboration.CollaborationCustomer = class extends Collaboration.Collaboration{
     /**
-     * GROUP collaboration type
-     * @returns {Collaboration.CollaborationType}
+     * Return the full class name of this type.
+     * @returns {string}
      */
-    static group(){ return Collaboration.CollaborationType("group") }
+    static type(){ return 'm.Collaboration$CollaborationCustomer'}
+
     /**
-     * CHANNEL collaboration type
-     * @returns {Collaboration.CollaborationType}
+     *
+     * @param id {String}
+     * @param orgId {String}
+     * @param members {Auth.Provider[]}
+     * @param notifications {Collaboration.Notification[]}
+     * @param name OPTIONAL {String}
+     * @param avatarUrl OPTIONAL {String}
+     * @param cover OPTIONAL {String}
+     * @param content {Collaboration.Content[]}
+     * @param settings {Map}
      */
-    static channel(){ return Collaboration.CollaborationType("channel") }
+    constructor(id, orgId, members, notifications, name, avatarUrl, cover, content, settings){
+        if(arguments.length) {
+            super(Collaboration.CollaborationCustomer.type(), id, orgId, members, notifications, name, avatarUrl, cover, content, settings)
+        }else{
+            super(Collaboration.CollaborationCustomer.type())
+        }
+    }
+}
+
+/**
+ * @class CollaborationContact
+ * @extends Collaboration
+ */
+Collaboration.CollaborationContact = class extends Collaboration.Collaboration{
     /**
-     * QUEUE collaboration type
-     * @returns {Collaboration.CollaborationType}
+     * Return the full class name of this type.
+     * @returns {string}
      */
-    static queue(){ return Collaboration.CollaborationType("queue") }
+    static type(){ return 'm.Collaboration$CollaborationContact'}
+
+    /**
+     *
+     * @param id {String}
+     * @param members {Auth.Provider[]}
+     * @param notifications {Collaboration.Notification[]}
+     * @param name OPTIONAL {String}
+     * @param avatarUrl OPTIONAL {String}
+     * @param cover OPTIONAL {String}
+     * @param content {Collaboration.Content[]}
+     * @param settings {Map}
+     */
+    constructor(id, members, notifications, name, avatarUrl, cover, content, settings){
+        if(arguments.length) {
+            super(Collaboration.CollaborationContact.type(), id, m.Auth.zeroId, members, notifications, name, avatarUrl, cover, content, settings)
+        }else{
+            super(Collaboration.CollaborationContact.type())
+        }
+    }
+}
+
+
+/**
+ * @class CollaborationConversation
+ * @extends Collaboration
+ */
+Collaboration.CollaborationConversation = class extends Collaboration.Collaboration{
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    static type(){ return 'm.Collaboration$CollaborationConversation'}
+
+    /**
+     *
+     * @param id {String}
+     * @param members {Auth.Provider[]}
+     * @param notifications {Collaboration.Notification[]}
+     * @param name OPTIONAL {String}
+     * @param avatarUrl OPTIONAL {String}
+     * @param cover OPTIONAL {String}
+     * @param content {Collaboration.Content[]}
+     * @param settings {Map}
+     */
+    constructor(id, members, notifications, name, avatarUrl, cover, content, settings){
+        if(arguments.length) {
+            super(Collaboration.CollaborationConversation.type(), id, m.Auth.zeroId, members, notifications, name, avatarUrl, cover, content, settings)
+        }else{
+            super(Collaboration.CollaborationConversation.type())
+        }
+    }
+}
+
+
+/**
+ * @class CollaborationChannel
+ * @extends Collaboration
+ */
+Collaboration.CollaborationChannel = class extends Collaboration.Collaboration{
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    static type(){ return 'm.Collaboration$CollaborationChannel'}
+
+    /**
+     *
+     * @param id {String}
+     * @param orgId {String}
+     * @param members {Auth.Provider[]}
+     * @param notifications {Collaboration.Notification[]}
+     * @param name Option{String}
+     * @param avatarUrl OPTIONAL {String}
+     * @param cover OPTIONAL {String}
+     * @param content {Collaboration.Content[]}
+     * @param settings {Map}
+     */
+    constructor(id, orgId, members, notifications, name, avatarUrl, cover, content, settings){
+        if(arguments.length) {
+            super(Collaboration.CollaborationChannel.type(), id, orgId, members, notifications, name, avatarUrl, cover, content, settings)
+        }else{
+            super(Collaboration.CollaborationChannel.type())
+        }
+    }
 }
 
 
 /**
  * @class Content
+ * @extends Model
  */
 Collaboration.Content = class extends Model{
-    /**
-     * Return the full class name of this type.
-     * @returns {string}
-     */
-    static type(){ return 'm.Collaboration.Content'}
 
     /**
      *
@@ -424,82 +1283,297 @@ Collaboration.Content = class extends Model{
      * @param collaborationId {String}
      * @param orgId {String}
      * @param timestamp {String}
-     * @param authors {Auth.ProfileInfo[]}
-     * @param seen {Auth.ProfileInfo[]}
-     * @param path OPTIONAL {String}
-     * @param sentiment OPTIONAL {String}
-     * @param nlp OPTIONAL {String}
-     * @param content OPTIONAL {String}
-     * @param meta {Map}
-     * @param contentType {String}
-     * @param contentClass {Collaboration.ContentClass}
-     * @param contentUri {String}
-     * @param view {Collaboration.ViewerState}
+     * @param authors {Auth.Provider[]}
+     * @param seen {Auth.Provider[]}
+     * @param message {Collaboration.Message}
+     * @param viewId {UUID}
      */
-    constructor(id, collaborationId, orgId, timestamp, authors, seen, path, sentiment, nlp, content, meta, contentType, contentClass, contentUri, view){
-        super(Collaboration.Content.type())
-        this.id = new String(id)
-        this.collaborationId = new String(collaborationId)
-        this.orgId = new String(orgId)
-        this.timestamp = new String(timestamp)
-        this.authors = authors.map( (a) => Type.check(a, Auth.ProfileInfo) )
-        this.seen = seen.map( (s) => Type.check(s, Auth.ProfileInfo) )
-        this.path = typeof path === "undefined" ? [] : [new String(path)]
-        this.nlp = typeof nlp === "undefined" ? [] : [new String(nlp)]
-        this.sentiment = typeof sentiment === "undefined" ? [] : [new String(sentiment)]
-        this.content = typeof content === "undefined" ? [] : [new String(content)]
-        this.meta = meta
-        this.contentType = new String(contentType)
-        this.contentClass = Type.check(contentClass, Collaboration.ContentClass)
-        this.contentUri = new String(contentUri)
-        this.view = Type.check(view, Collaboration.ViewerState)
+    constructor(type, id, collaborationId, orgId, timestamp, authors, seen, message, viewId){
+        super(type)
+        this.id = null
+        this.collaborationId = null
+        this.orgId = null
+        this.timestamp = null
+        this.authors = null
+        this.seen = null
+        this.message = null
+        this.viewId = null
+        if(arguments.length > 1) {
+            this.id = new UUID(id)
+            this.collaborationId = new UUID(collaborationId)
+            this.orgId = new UUID(orgId)
+            this.timestamp = new String(timestamp)
+            // FIXME: Set does not define "map"
+            //this.authors = authors.map((a) => Type.check(a, Auth.Provider))
+            this.authors = authors
+            //this.seen = seen.map((s) => Type.check(s, Auth.Provider))
+            this.seen = seen
+            this.message = message
+            this.viewId = new UUID(viewId)
+        }
     }
 }
 
 /**
- * @class ContentClass
+ * @class ContentMsg
+ * @extends Content
  */
-Collaboration.ContentClass = class extends Model{
+Collaboration.ContentMsg = class extends Collaboration.Content{
     /**
      * Return the full class name of this type.
      * @returns {string}
      */
-    static type(){ return 'm.Collaboration.ContentClass'}
+    static type(){ return 'm.Collaboration$ContentMsg'}
 
     /**
      *
-     * @param className {String}
+     * @param id {String}
+     * @param collaborationId {String}
+     * @param orgId {String}
+     * @param timestamp {String}
+     * @param authors {Auth.Provider[]}
+     * @param seen {Auth.Provider[]}
+     * @param sentiment Option{String}
+     * @param nlp Option{String}
+     * @param ner {Entities.NamedEntity[]}
+     * @param message {Collaboration.Message}
+     * @param viewId {UUID}
      */
-    constructor(className){
-        super(Collaboration.ContentClass.type())
-        this["class"] = new String(className)
+    constructor(id, collaborationId, orgId, timestamp, authors, seen, sentiment, nlp, ner, message, viewId){
+
+        if(arguments.length) {
+            super(Collaboration.ContentMsg.type(),id, collaborationId, orgId, timestamp, authors, seen, message, viewId)
+            this.sentiment = sentiment
+            this.nlp = nlp
+            //this.ner = ner.map((s) => Type.check(s, Entities.NamedEntity))  // FIXME: Set does not have "map" defined on it..
+            this.ner = ner
+        }else{
+            super(Collaboration.ContentMsg.type())
+            this.sentiment = null
+            this.nlp = null
+            this.ner = null
+        }
+
     }
+}
+
+/**
+ * @class ContentLinkCard
+ * @extends Content
+ */
+Collaboration.ContentLinkCard = class extends Collaboration.Content{
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    static type(){ return 'm.Collaboration$ContentLinkCard'}
 
     /**
-     * MSG content class
-     * @returns {Collaboration.ContentClass}
+     *
+     * @param id {String}
+     * @param collaborationId {String}
+     * @param orgId {String}
+     * @param timestamp {String}
+     * @param authors {Auth.Provider[]}
+     * @param seen {Auth.Provider[]}
+     * @param message {Collaboration.Message}
+     * @param entityUri {String}
+     * @param viewId {UUID}
+     * @param meta {ETL.Meta}
      */
-    static msg(){ return Collaboration.ContentClass("msg") }
+    constructor(id, collaborationId, orgId, timestamp, authors, seen, message, entityUri, viewId, meta){
+        if(arguments.length) {
+            super(Collaboration.ContentLinkCard.type(),id, collaborationId, orgId, timestamp, authors, seen, message, viewId)
+            this.entityUri = new String(entityUri)
+            this.meta = Type.check(s, ETL.EntityMeta)
+        }else{
+            super(Collaboration.ContentLinkCard.type())
+            this.entityUri = null
+            this.meta = null
+        }
+    }
+}
+
+/**
+ * @class ContentNotification
+ * @extends Content
+ */
+Collaboration.ContentNotification = class extends Collaboration.Content{
     /**
-     * EVENT content class
-     * @returns {Collaboration.ContentClass}
+     * Return the full class name of this type.
+     * @returns {string}
      */
-    static event(){ return Collaboration.ContentClass("event") }
+    static type(){ return 'm.Collaboration$ContentNotification'}
+
     /**
-     * LINK content class
-     * @returns {Collaboration.ContentClass}
+     *
+     * @param id {String}
+     * @param collaborationId {String}
+     * @param orgId {String}
+     * @param timestamp {String}
+     * @param authors {Auth.Provider[]}
+     * @param seen {Auth.Provider[]}
+     * @param message {Collaboration.Message}
+     * @param viewId {UUID}
+     * @param severity {Collaboration.NotificationLevel}
+     * @param icon {String}
      */
-    static link(){ return Collaboration.ContentClass("link") }
+    constructor(id, collaborationId, orgId, timestamp, authors, seen, message, viewId, severity, icon){
+        if(arguments.length) {
+            super(Collaboration.ContentNotification.type(),id, collaborationId, orgId, timestamp, authors, seen, message, viewId)
+            this.severity = Type.check(severity, Collaboration.NotificationLevel)
+            this.icon = new String(icon)
+
+        }else{
+            super(Collaboration.ContentNotification.type())
+            this.severity = null
+            this.icon = null
+        }
+    }
+}
+
+
+/**
+ * @class ContentAppEvent
+ * @extends Content
+ */
+Collaboration.ContentAppEvent = class extends Collaboration.Content{
     /**
-     * GHOST content class
-     * @returns {Collaboration.ContentClass}
+     * Return the full class name of this type.
+     * @returns {string}
      */
-    static ghost(){ return Collaboration.ContentClass("ghost") }
+    static type(){ return 'm.Collaboration$ContentAppEvent'}
+
     /**
-     * COMPACT content class
-     * @returns {Collaboration.ContentClass}
+     *
+     * @param id {String}
+     * @param collaborationId {String}
+     * @param orgId {String}
+     * @param timestamp {String}
+     * @param authors {Auth.Provider[]}
+     * @param seen {Auth.Provider[]}
+     * @param message {Collaboration.Message}
+     * @param viewId {UUID}
+     * @param coverImg {String}
+     * @param actions Set{Apps.App[]}
      */
-    static compact(){ return Collaboration.ContentClass("compact") }
+    constructor(id, collaborationId, orgId, timestamp, authors, seen, message, viewId, coverImg, actions){
+        if(arguments.length) {
+            super(Collaboration.ContentAppEvent.type(),id, collaborationId, orgId, timestamp, authors, seen, message, viewId)
+            this.coverImg = new String(coverImg)
+            //this.actions = actions.map((s) => Type.check(s, Apps.App))
+            this.actions = actions
+        }else{
+            super(Collaboration.ContentAppEvent.type())
+            this.coverImg = null
+            this.actions = null
+        }
+    }
+}
+
+
+/**
+ * @class NotificationLevel
+ * @extends Model
+ */
+Collaboration.NotificationLevel = class extends Model{
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    static type(){ return 'm.Collaboration$NotificationLevel'}
+
+    /**
+     * @param severity {String}
+     */
+    constructor( severity ){
+        super(Collaboration.NotificationLevel.type())
+        this.severity = null
+        if(arguments.length) {
+            this.severity = new String(severity)
+        }
+    }
+
+    static info() { new NotificationLevel("info") }
+    static warning() { new NotificationLevel("warning") }
+    static error(){ new NotificationLevel("error")}
+}
+
+
+/**
+ * @class Message
+ * @extends Model
+ */
+Collaboration.Message = class extends Model{
+
+    /**
+     *
+     * @param text {String}
+     * @param mentions {Auth.Provider[]}
+     */
+    constructor(type, text, mentions){
+        super(type)
+        this.text = null
+        this.mentions = null
+        if(arguments.length > 1) {
+            this.text = new String(text)
+            // FIXME: no "map" on Set
+            //this.mentions = mentions.map((a) => Type.check(a, Auth.Provider))
+            this.mentions = mentions
+        }
+    }
+}
+
+/**
+ * @class MessageBasic
+ * @extends Message
+ */
+Collaboration.MessageBasic = class extends Collaboration.Message{
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    static type(){ return 'm.Collaboration$MessageBasic'}
+
+    /**
+     *
+     * @param text {String}
+     * @param mentions {Auth.Provider[]}
+     */
+    constructor(text, mentions){
+        if(arguments.length) {
+            super(Collaboration.MessageBasic.type(), text, mentions)
+        }else{
+            super(Collaboration.MessageBasic.type())
+        }
+    }
+}
+
+/**
+ * @class BroadcastContent
+ * @extends Model
+ */
+Collaboration.BroadcastContent = class extends Model{
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    static type(){ return 'm.Collaboration$BroadcastContent'}
+
+    /**
+     *
+     * @param content {Collaboration.Content}
+     * @param view Option{Collaboration.View}
+     */
+    constructor(content, view){
+        super(Collaboration.BroadcastContent.type())
+        this.content = null
+        this.view = null
+        if(arguments.length) {
+            this.content = content
+            this.view = view
+        }
+    }
 }
 
 /**
@@ -509,6 +1583,7 @@ let Apps = {};
 
 /**
  * @class App
+ * @extends Model
  * Identifies an application of the system.
  */
 Apps.App = class extends Model{
@@ -516,24 +1591,104 @@ Apps.App = class extends Model{
      * Return the full class name of this type.
      * @returns {string}
      */
-    static type(){ return 'm.Apps.App'}
+    static type(){ return 'm.Apps$App'}
 
     /**
      *
      * @param id {String}
      * @param name {String}
+     * @param icon {String}
+     * @param origin {String} The origin fo the iframe that the app will be hosted in
+     * @param entry {String} The entry point for the application
      * @param args {String}
      */
-    constructor(id, name, args){
+    constructor(id, name, icon, origin, entry, args){
         super(Apps.App.type())
         this.id = new String(id)
         this.name = new String(name)
+        this.icon = new String(icon)
+        this.origin = new String(origin)
+        this.entry = new String(entry)
         this.args = args
+    }
+
+    static info(){ new Apps.App("info","Chat Info", "fa fa-info ", "apps.conversant.im", "https://apps.conversant.im/app/info", {}) }
+    static invite(){ new Apps.App("invite","Add People", "fa fa-user-plus ", "apps.conversant.im", "https://apps.conversant.im/app/invite", {}) }
+    static drive(){ new Apps.App("drive","Drive", "fa fa-folder ", "apps.conversant.im", "https://apps.conversant.im/app/drive", {}) }
+    static webCall(){ new Apps.App("call","Web Call", "fa fa-phone ", "*.conversant.im", "https://apps.conversant.im/app/call", {}) }
+    static youtube(){ new Apps.App("youtube","YouTube", "fa fa-youtube ", "apps.conversant.im", "https://apps.conversant.im/app/youtube", {}) }
+    static map(){ new Apps.App("map","Maps", "fa fa-map-marker", "apps.conversant.im", "https://apps.conversant.im/app/map", {}) }
+    static image(){ new Apps.App("image","Image Viewer", "fa fa-picture-o", "apps.conversant.im", "https://apps.conversant.im/app/image", {}) }
+    static giffy(){ new Apps.App("giffy","Giffy", "fa fa-file-o", "apps.conversant.im", "https://apps.conversant.im/app/giffy", {}) }
+}
+
+
+/**
+ * @class AppMode
+ * @extends Model
+ *
+ */
+Apps.AppMode = class extends Model{
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    static type(){ return 'm.Apps$AppMode'}
+
+    /**
+     *
+     * @param mode {String} mode the app is to run in
+     */
+    constructor(mode){
+        super(Apps.AppMode.type())
+        this.mode = null
+        if(arguments.length){
+            this.mode = new String(mode)
+        }
+    }
+
+    static syncApp(){ new Apps.AppMode("syncApp") }
+    static collaborationApp(){ new Apps.AppMode("collaborationApp") }
+    static standAloneApp(){ new Apps.AppMode("standAloneApp") }
+}
+
+
+/**
+ * @class Launch
+ * @extends Model
+ *
+ */
+Apps.Launch = class extends Model{
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    static type(){ return 'm.Apps$Launch'}
+
+    /**
+     *
+     * @param app {Apps.App} App to load
+     * @param url {String} url to send to app
+     * @param mode {Apps.Mode} The mode the app is expected to handle
+     */
+    constructor(load, url, mode){
+        super(Apps.Launch.type())
+        this.load = null
+        this.url = null
+        this.mode = null
+        if(arguments.length){
+            this.app = Type.check(app, Apps.App)
+            this.url = new String(url)
+            this.mode = Type.check(mode, Apps.AppMode)
+        }
+
     }
 }
 
+
 /**
  * @class Init
+ * @extends Model
  * Signal the host that the app is ready for initialization.
  */
 Apps.Init = class extends Model{
@@ -541,65 +1696,131 @@ Apps.Init = class extends Model{
      * Return the full class name of this type.
      * @returns {string}
      */
-    static type(){ return 'm.Apps.Init'}
+    static type(){ return 'm.Apps$Init'}
 
     /**
      *
+     * @param appId {String} Your app id to initialize
+     * @param mode {Apps.AppMode} mode you app is running in.
      */
-    constructor(){
+    constructor(appId, mode){
         super(Apps.Init.type())
+        this.appId = new String(appId)
+        this.mode = Type.check(mode, Apps.AppMode)
+    }
+}
+
+
+/**
+ * @class InitApp
+ * @extends Model
+ */
+Apps.InitApp = class extends Model{
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    static type(){ return 'm.Apps$InitApp'}
+
+    /**
+     *
+     * @param app {Apps.App}
+     * @param restoreState {Collaboration.View} OPTIONAL The view state that is to be restored
+     * @param mode {Apps.AppMode}
+     */
+    constructor(app, restoreState, mode){
+        super(Apps.InitApp.type())
+        this.app = null
+        this.restoreState = null
+        if(arguments.length) {
+            this.app = Type.check(app, Apps.App)
+            this.restoreState = restoreState
+        }
     }
 }
 
 /**
  * @class InitProfile
+ * @extends Model
  */
-Apps.InitProfile = class extends Model{
+Apps.InitProvider = class extends Model{
     /**
      * Return the full class name of this type.
      * @returns {string}
      */
-    static type(){ return 'm.Apps.InitProfile'}
+    static type(){ return 'm.Apps$InitProvider'}
 
     /**
      *
-     * @param profile {Auth.ProfileInfo}
+     * @param provider {Auth.Provider}
      */
-    constructor(profile){
-        super(Apps.InitProfile.type())
-        this.profile = Type.check(profile, Auth.ProfileInfo)
+    constructor(provider){
+        super(Apps.InitProvider.type())
+        this.provider = null
+        if(arguments.length) {
+            this.provider = Type.check(provider, Auth.Provider)
+        }
+    }
+}
+
+/**
+ * @class InitOrganization
+ * @extends Model
+ */
+Apps.InitOrganization = class extends Model{
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    static type(){ return 'm.Apps$InitOrganization'}
+
+    /**
+     *
+     * @param organization {Auth.Organization}
+     */
+    constructor(organization){
+        super(Apps.InitOrganization.type())
+        this.organization = null
+        if(arguments.length) {
+            this.organization = Type.check(organization, Auth.Organization)
+        }
     }
 }
 
 /**
  * @class InitCollaboration
+ * @extends Model
  */
 Apps.InitCollaboration = class extends Model{
     /**
      * Return the full class name of this type.
      * @returns {string}
      */
-    static type(){ return 'm.Apps.InitCollaboration'}
+    static type(){ return 'm.Apps$InitCollaboration'}
 
     /**
      *
-     * @param collaboration {Collaboration.Collaboration}
+     * @param collaboration Option{Collaboration.Collaboration}
      */
     constructor(collaboration){
         super(Apps.InitCollaboration.type())
-        this.collaboration = Type.check(collaboration, Collaboration.Collaboration)
+        this.collaboration = null
+        if(arguments.length) {
+            this.collaboration = collaboration
+        }
     }
 }
 
 /**
  * @class InitTeam
+ * @extends Model
  */
 Apps.InitTeam = class extends Model{
     /**
      * Return the full class name of this type.
      * @returns {string}
      */
-    static type(){ return 'm.Apps.InitTeam'}
+    static type(){ return 'm.Apps$InitTeam'}
 
     /**
      *
@@ -607,29 +1828,140 @@ Apps.InitTeam = class extends Model{
      */
     constructor(team){
         super(Apps.InitTeam.type())
-        this.team = team.map( (t) => Type.check(t, Collaboration.SyncUserEvent) )
+        this.team = null
+        if(arguments.length) {
+            this.team = team.map((t) => Type.check(t, Collaboration.SyncUserEvent))
+        }
     }
 }
 
 /**
  * @class InitPeers
+ * @extends Model
  */
 Apps.InitPeers = class extends Model{
     /**
      * Return the full class name of this type.
      * @returns {string}
      */
-    static type(){ return 'm.Apps.InitPeers'}
+    static type(){ return 'm.Apps$InitPeers'}
 
     /**
      *
      * @param peers {Peers.PeerState[]}
      */
-    constructor(peers){
+    constructor(peers, room){
         super(Apps.InitPeers.type())
-        this.peers = peers.map( (p) => Type.check(t, Peers.PeerState) )
+        this.peers = null
+        this.room = null
+        if(arguments.length) {
+            this.peers = peers.map((p) => Type.check(t, Peers.PeerState))
+            this.room = new String(room)
+        }
     }
 }
+
+/**
+ * @namespace Peers
+ */
+let Peers = {};
+
+/**
+ * @class PeerState
+ * @extends Model
+ */
+Peers.PeerState = class extends Model{
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    static type(){ return 'm.Peers$PeerState'}
+
+    /**
+     * @param provider {Auth.Provider}
+     * @param collaborationId {String}
+     * @param userAgent {String}
+     * @param iceConnectionState {Peers.IceConnectionState}
+     * @param signalingState {Peers.SignalingState}
+     */
+    constructor( provider, collaborationId, userAgent, iceConnectionState, signalingState ){
+        super(Peers.PeerState.type())
+        this.provider = null
+        this.collaborationId = null
+        this.userAgent = null
+        this.iceConnectionState = null
+        this.signalingState = null
+        if(arguments.length) {
+            this.provider = null
+            this.collaborationId = new String(collaborationId)
+            this.userAgent = typeof userAgent === "undefined" ? null : new String(userAgent)
+            this.iceConnectionState = Type.check(iceConnectionState, Peers.IceConnectionState)
+            this.signalingState = Type.check(signalingState, Peers.SignalingState)
+        }
+    }
+}
+
+/**
+ * @class IceConnectionState
+ * @extends Model
+ */
+Peers.IceConnectionState = class extends Model{
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    static type(){ return 'm.Peers$IceConnectionState'}
+
+    /**
+     * @param state {String}
+     */
+    constructor( state ){
+        super(Peers.IceConnectionState.type())
+        this.state = null
+        if(arguments.length) {
+            this.state = new String(state)
+        }
+    }
+
+    static new() { new IceConnectionState("new") }
+    static checking() { new IceConnectionState("checking") }
+    static connected(){ new IceConnectionState("connected")}
+    static completed(){ new IceConnectionState("completed")}
+    static failed(){ new IceConnectionState("failed")}
+    static disconnected(){ new IceConnectionState("disconnected")}
+    static closed(){ new IceConnectionState("closed")}
+}
+
+
+/**
+ * @class SignalingState
+ * @extends Model
+ */
+Peers.SignalingState = class extends Model{
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    static type(){ return 'm.Peers$SignalingState'}
+
+    /**
+     * @param state {String}
+     */
+    constructor( state ){
+        super(Peers.SignalingState.type())
+        this.state = null
+        if(arguments.length) {
+            this.state = new String(state)
+        }
+    }
+
+    static stable() { new SignalingState("stable") }
+    static haveLocalOffer() { new SignalingState("have-local-offer") }
+    static haveLocalPranswer(){ new SignalingState("have-local-pranswer")}
+    static haveRemotePranswer(){ new SignalingState("have-remote-pranswer")}
+    static closed(){ new SignalingState("closed")}
+}
+
 
 /**
  * @namespace Resource
@@ -638,13 +1970,14 @@ let Resource = {};
 
 /**
  * @class Resource
+ * @extends Model
  */
 Resource.Resource = class extends Model{
     /**
      * Return the full class name of this type.
      * @returns {string}
      */
-    static type(){ return 'm.Resource.Resource'}
+    static type(){ return 'm.Resource$Resource'}
 
     /**
      * @param uri {String}
@@ -666,6 +1999,7 @@ let Geom = {};
 
 /**
  * @class Transform3d
+ * @extends Model
  * A 3D transformation
  */
 Geom.Transform3d = class extends Model{
@@ -673,7 +2007,7 @@ Geom.Transform3d = class extends Model{
      * Return the full class name of this type.
      * @returns {string}
      */
-    static type(){ return 'm.Geom.Transform3d'}
+    static type(){ return 'm.Geom$Transform3d'}
 
     /**
      *
@@ -681,8 +2015,16 @@ Geom.Transform3d = class extends Model{
      */
     constructor(matrix){
         super(Geom.Transform3d.type())
-        this.matrix = matrix.map( x => new Number(x))
-        assert( this.matrix.length == (4 * 4) )
+        this.matrix = [1.0, 0.0, 0.0, 0.0,
+            0.0, 1.0, 0.0, 0.0,
+            0.0, 0.0, 1.0, 0.0,
+            0.0, 0.0, 0.0, 1.0]
+        if( arguments.length ) {
+            this.matrix = matrix
+            if (this.matrix.length != (4 * 4)) {
+                throw new Error('Matrix is not 4x4')
+            }
+        }
     }
 
     /**
@@ -690,38 +2032,111 @@ Geom.Transform3d = class extends Model{
      * @returns {number[]}
      */
     static identity(){
-        return [1, 0, 0, 0,
-                0, 1, 0, 0,
-                0, 0, 1, 0,
-                0, 0, 0, 1]
+        return new Geom.Transform3d([1.0, 0.0, 0.0, 0.0,
+            0.0, 1.0, 0.0, 0.0,
+            0.0, 0.0, 1.0, 0.0,
+            0.0, 0.0, 0.0, 1.0]);
+    }
+}
+
+/**
+ * @namespace ETL
+ */
+let ETL = {};
+
+
+/**
+ * @class EntityMeta
+ * @extends Model
+ */
+ETL.EntityMeta = class extends Model{
+    /**
+     * Return the full class name of this type.
+     * @returns {string}
+     */
+    static type(){ return 'm.ETL$EntityMeta'}
+
+    /**
+     * @param uri {String}
+     * @param timestamp {String}
+     * @param version {String}
+     * @param icon {String}
+     * @param thumb {String}
+     * @param domain {String}
+     * @param publishDate {String}
+     * @param contentType {String}
+     * @param title {String}
+     * @param description {String}
+     * @param authors {String[]}
+     * @param keywords {String[]}
+     * @param coverUrl {String}
+     * @param imgs {String[]}
+     * @param meta {Map}
+     * @param content {String}
+     * @param raw {String}
+     */
+    constructor(uri,timestamp,version,icon,thumb,domain,publishDate,contentType,title,description,authors,keywords,coverUrl,imgs,meta,content,raw){
+        super(ETL.EntityMeta.type())
+        this.uri = null
+        this.timestamp = null
+        this.version = null
+        this.icon= null
+        this.thumb = null
+        this.domain = null
+        this.publishDate = null
+        this.contentType = null
+        this.title = null
+        this.description = null
+        this.authors = null
+        this.keywords = null
+        this.coverUrl = null
+        this.imgs = null
+        this.meta = null
+        this.content = null
+        this.raw = null
+        if(arguments.length){
+            this.uri = new String(uri)
+            this.timestamp = new String(timestamp)
+            this.version = new String(version)
+            this.icon= new String(icon)
+            this.thumb = new String(thumb)
+            this.domain = new String(domain)
+            this.publishDate = typeof publishDate === "undefined" ? null : new String(publishDate)
+            this.contentType =  new String(contentType)
+            this.title = new String(title)
+            this.description = new String(description)
+            this.authors = authors
+            this.keywords = keywords
+            this.coverUrl = new String(coverUrl)
+            this.imgs = imgs
+            this.meta = meta
+            this.content = typeof content === "undefined" ? null : new String(content)
+            this.raw = typeof raw === "undefined" ? null : new String(raw)
+        }
     }
 }
 
 
 module.exports = {
     Type: Type,
-    Auth:{
-        OrganizationRoles: Auth.OrganizationRoles,
-        ProfileInfo: Auth.ProfileInfo
-    },
-    Collaboration:{
-        ViewerState: Collaboration.ViewerState,
-        SyncViewEvent: Collaboration.SyncViewEvent
-    },
-    Apps:{
-        App: Apps.App
-    },
-    Geom:{
-        Transform3d: Geom.Transform3d
-    },
-    Resource: {
-        Resource: Resource.Resource
-    }
+    UUID: UUID,
+    List: List,
+    Integer: Integer,
+    Float: Float,
+    Double: Double,
+    Long: Long,
+    Option: Option,
+    Auth:Auth,
+    Collaboration:Collaboration,
+    Apps:Apps,
+    Entities: Entities,
+    Geom:Geom,
+    Peers: Peers,
+    Resource: Resource,
+    ETL:ETL
 }
 
 
-// Expose to None NODE.js clients
-// TODO make this an option so we do not pollute the namespace
 window.m = module.exports
 
 
@@ -739,13 +2154,13 @@ window.m = module.exports
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="API.html">API</a></li><li><a href="AppParameters.html">AppParameters</a></li><li><a href="Apps.App.html">App</a></li><li><a href="Apps.Init.html">Init</a></li><li><a href="Apps.InitCollaboration.html">InitCollaboration</a></li><li><a href="Apps.InitPeers.html">InitPeers</a></li><li><a href="Apps.InitProfile.html">InitProfile</a></li><li><a href="Apps.InitTeam.html">InitTeam</a></li><li><a href="Auth.OrganizationRoles.html">OrganizationRoles</a></li><li><a href="Auth.PrimaryProfile.html">PrimaryProfile</a></li><li><a href="Auth.ProfileInfo.html">ProfileInfo</a></li><li><a href="Auth.UserAction.html">UserAction</a></li><li><a href="Auth.UserState.html">UserState</a></li><li><a href="Collaboration.html">Collaboration</a></li><li><a href="Collaboration.Collaboration.html">Collaboration</a></li><li><a href="Collaboration.CollaborationType.html">CollaborationType</a></li><li><a href="Collaboration.Content.html">Content</a></li><li><a href="Collaboration.ContentClass.html">ContentClass</a></li><li><a href="Collaboration.SyncUserEvent.html">SyncUserEvent</a></li><li><a href="Collaboration.SyncViewEvent.html">SyncViewEvent</a></li><li><a href="Collaboration.ViewerState.html">ViewerState</a></li><li><a href="CollaborationType.html">CollaborationType</a></li><li><a href="Content.html">Content</a></li><li><a href="ContentClass.html">ContentClass</a></li><li><a href="ConversantAPI.html">ConversantAPI</a></li><li><a href="Geom.Transform3d.html">Transform3d</a></li><li><a href="InitCollaboration.html">InitCollaboration</a></li><li><a href="InitPeers.html">InitPeers</a></li><li><a href="InitProfile.html">InitProfile</a></li><li><a href="InitTeam.html">InitTeam</a></li><li><a href="Model.html">Model</a></li><li><a href="Resource.html">Resource</a></li><li><a href="Resource.Resource.html">Resource</a></li><li><a href="Type.html">Type</a></li></ul><h3>Namespaces</h3><ul><li><a href="Apps.html">Apps</a></li><li><a href="Auth.html">Auth</a></li><li><a href="Geom.html">Geom</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="App.html">App</a></li><li><a href="AppMode.html">AppMode</a></li><li><a href="Apps.App.html">App</a></li><li><a href="Apps.AppMode.html">AppMode</a></li><li><a href="Apps.Init.html">Init</a></li><li><a href="Apps.InitApp.html">InitApp</a></li><li><a href="Apps.InitCollaboration.html">InitCollaboration</a></li><li><a href="Apps.InitOrganization.html">InitOrganization</a></li><li><a href="Apps.InitPeers.html">InitPeers</a></li><li><a href="Apps.InitProvider.html">InitProvider</a></li><li><a href="Apps.InitTeam.html">InitTeam</a></li><li><a href="Apps.Launch.html">Launch</a></li><li><a href="Auth.Bot.html">Bot</a></li><li><a href="Auth.Organization.html">Organization</a></li><li><a href="Auth.PrimaryProfile.html">PrimaryProfile</a></li><li><a href="Auth.Provider.html">Provider</a></li><li><a href="Auth.Role.html">Role</a></li><li><a href="Auth.UserAction.html">UserAction</a></li><li><a href="Auth.UserState.html">UserState</a></li><li><a href="BroadcastContent.html">BroadcastContent</a></li><li><a href="Collaboration.html">Collaboration</a></li><li><a href="Collaboration.BroadcastContent.html">BroadcastContent</a></li><li><a href="Collaboration.Collaboration.html">Collaboration</a></li><li><a href="Collaboration.CollaborationAdHoc.html">CollaborationAdHoc</a></li><li><a href="Collaboration.CollaborationChannel.html">CollaborationChannel</a></li><li><a href="Collaboration.CollaborationContact.html">CollaborationContact</a></li><li><a href="Collaboration.CollaborationConversation.html">CollaborationConversation</a></li><li><a href="Collaboration.CollaborationCustomer.html">CollaborationCustomer</a></li><li><a href="Collaboration.CollaborationGroup.html">CollaborationGroup</a></li><li><a href="Collaboration.Content.html">Content</a></li><li><a href="Collaboration.ContentAppEvent.html">ContentAppEvent</a></li><li><a href="Collaboration.ContentLinkCard.html">ContentLinkCard</a></li><li><a href="Collaboration.ContentMsg.html">ContentMsg</a></li><li><a href="Collaboration.ContentNotification.html">ContentNotification</a></li><li><a href="Collaboration.DocumentView.html">DocumentView</a></li><li><a href="Collaboration.GLView.html">GLView</a></li><li><a href="Collaboration.ImageView.html">ImageView</a></li><li><a href="Collaboration.MapView.html">MapView</a></li><li><a href="Collaboration.Message.html">Message</a></li><li><a href="Collaboration.MessageBasic.html">MessageBasic</a></li><li><a href="Collaboration.Notification.html">Notification</a></li><li><a href="Collaboration.NotificationLevel.html">NotificationLevel</a></li><li><a href="Collaboration.PlayerState.html">PlayerState</a></li><li><a href="Collaboration.SyncUserEvent.html">SyncUserEvent</a></li><li><a href="Collaboration.SyncViewEvent.html">SyncViewEvent</a></li><li><a href="Collaboration.UrlView.html">UrlView</a></li><li><a href="Collaboration.VideoView.html">VideoView</a></li><li><a href="Collaboration.View.html">View</a></li><li><a href="CollaborationAdHoc.html">CollaborationAdHoc</a></li><li><a href="CollaborationChannel.html">CollaborationChannel</a></li><li><a href="CollaborationContact.html">CollaborationContact</a></li><li><a href="CollaborationConversation.html">CollaborationConversation</a></li><li><a href="CollaborationCustomer.html">CollaborationCustomer</a></li><li><a href="CollaborationGroup.html">CollaborationGroup</a></li><li><a href="Content.html">Content</a></li><li><a href="ContentAppEvent.html">ContentAppEvent</a></li><li><a href="ContentLinkCard.html">ContentLinkCard</a></li><li><a href="ContentMsg.html">ContentMsg</a></li><li><a href="ContentNotification.html">ContentNotification</a></li><li><a href="DocumentView.html">DocumentView</a></li><li><a href="Entities.LocationEntity.html">LocationEntity</a></li><li><a href="Entities.NamedEntity.html">NamedEntity</a></li><li><a href="Entities.OrganizationEntity.html">OrganizationEntity</a></li><li><a href="Entities.PersonEntity.html">PersonEntity</a></li><li><a href="EntityMeta.html">EntityMeta</a></li><li><a href="ETL.EntityMeta.html">EntityMeta</a></li><li><a href="Geom.Transform3d.html">Transform3d</a></li><li><a href="GetPrimaryProfile.html">GetPrimaryProfile</a></li><li><a href="GLView.html">GLView</a></li><li><a href="IceConnectionState.html">IceConnectionState</a></li><li><a href="ImageView.html">ImageView</a></li><li><a href="Init.html">Init</a></li><li><a href="InitApp.html">InitApp</a></li><li><a href="InitCollaboration.html">InitCollaboration</a></li><li><a href="InitOrganization.html">InitOrganization</a></li><li><a href="InitPeers.html">InitPeers</a></li><li><a href="InitProfile.html">InitProfile</a></li><li><a href="InitTeam.html">InitTeam</a></li><li><a href="Launch.html">Launch</a></li><li><a href="LocationEntity.html">LocationEntity</a></li><li><a href="MapView.html">MapView</a></li><li><a href="Message.html">Message</a></li><li><a href="MessageBasic.html">MessageBasic</a></li><li><a href="Model.html">Model</a></li><li><a href="NamedEntity.html">NamedEntity</a></li><li><a href="Notification.html">Notification</a></li><li><a href="NotificationLevel.html">NotificationLevel</a></li><li><a href="Organization.html">Organization</a></li><li><a href="OrganizationEntity.html">OrganizationEntity</a></li><li><a href="OrganizationRoles.html">OrganizationRoles</a></li><li><a href="Peers.IceConnectionState.html">IceConnectionState</a></li><li><a href="Peers.PeerState.html">PeerState</a></li><li><a href="Peers.SignalingState.html">SignalingState</a></li><li><a href="PeerState.html">PeerState</a></li><li><a href="PersonEntity.html">PersonEntity</a></li><li><a href="PlayerState.html">PlayerState</a></li><li><a href="PrimaryProfile.html">PrimaryProfile</a></li><li><a href="Provider.html">Provider</a></li><li><a href="Resource.html">Resource</a></li><li><a href="Resource.Resource.html">Resource</a></li><li><a href="Role.html">Role</a></li><li><a href="SignalingState.html">SignalingState</a></li><li><a href="SyncUserEvent.html">SyncUserEvent</a></li><li><a href="SyncViewEvent.html">SyncViewEvent</a></li><li><a href="Transform3d.html">Transform3d</a></li><li><a href="Type.html">Type</a></li><li><a href="UrlView.html">UrlView</a></li><li><a href="UserAction.html">UserAction</a></li><li><a href="UserState.html">UserState</a></li><li><a href="VideoView.html">VideoView</a></li><li><a href="View.html">View</a></li></ul><h3>Namespaces</h3><ul><li><a href="Apps.html">Apps</a></li><li><a href="Auth.html">Auth</a></li><li><a href="Entities.html">Entities</a></li><li><a href="ETL.html">ETL</a></li><li><a href="Geom.html">Geom</a></li><li><a href="Peers.html">Peers</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Tue Dec 22 2015 14:03:41 GMT-0800 (PST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Tue Nov 15 2016 10:18:20 GMT-0800 (PST)
 </footer>
 
 <script> prettyPrint(); </script>
