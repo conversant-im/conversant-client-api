@@ -144,6 +144,7 @@ Auth.zeroId = new UUID('00000000-0000-0000-0000-000000000000')
 
 /**
  * @class GetPrimaryProfile
+ * @extends Model
  */
 Auth.GetPrimaryProfile = class extends Model{
     /**
@@ -164,6 +165,7 @@ Auth.GetPrimaryProfile = class extends Model{
 
 /**
  * @class OrganizationRoles
+ * @extends Model
  * Construct an organization role.
  */
 Auth.OrganizationRoles = class extends Model{
@@ -209,6 +211,7 @@ Auth.OrganizationRoles = class extends Model{
 
 /**
  * @class Provider
+ * @extends Model
  * A simple view of a provider for a user.  Users can have many providers for many different organization.
  * Users will typically have 1 provider="conversant" per orgId.
  */
@@ -248,6 +251,7 @@ Auth.Provider = class extends Model{
 
 /**
  * @class Provider
+ * @extends Model
  * A simple view of a provider for a user.  Users can have many providers for many different organization.
  * Users will typically have 1 provider="conversant" per orgId.
  */
@@ -288,6 +292,7 @@ Auth.Bot = class extends Model{
 
 /**
  * @class Role
+ * @extends Model
  */
 Auth.Role = class extends Model{
     /**
@@ -326,6 +331,7 @@ Auth.Role = class extends Model{
 
 /**
  * @class Organization
+ * @extends Model
  * Organization Entity
  */
 Auth.Organization = class extends Model{
@@ -362,6 +368,7 @@ Auth.Organization = class extends Model{
 
 /**
  * @class PrimaryProfile
+ * @extends Model
  * A list of profiles that are known for that user under that organiztion.
  * The primary will be a provider of type "conversant"
  */
@@ -386,6 +393,7 @@ Auth.PrimaryProfile = class extends Model{
 
 /**
  * @class UserState
+ * @extends Model
  * Used to pass a user action that requires synchronization by the system.
  */
 Auth.UserState = class extends Model{
@@ -419,6 +427,7 @@ Auth.UserState = class extends Model{
 
 /**
  * @class UserAction
+ * @extends Model
  * Some User level event that requies syncing.
  */
 Auth.UserAction = class extends Model{
@@ -480,6 +489,7 @@ let Entities = {};
 
 /**
  * @class NamedEntity
+ * @extends Model
  */
 Entities.NamedEntity = class extends Model{
     /**
@@ -507,6 +517,7 @@ Entities.NamedEntity = class extends Model{
 
 /**
  * @class LocationEntity
+ * @extends NamedEntity
  */
 Entities.LocationEntity = class extends Entities.NamedEntity{
     /**
@@ -532,6 +543,7 @@ Entities.LocationEntity = class extends Entities.NamedEntity{
 
 /**
  * @class OrganizationEntity
+ * @extends NamedEntity
  */
 Entities.OrganizationEntity = class extends Entities.NamedEntity{
     /**
@@ -557,6 +569,7 @@ Entities.OrganizationEntity = class extends Entities.NamedEntity{
 
 /**
  * @class PersonEntity
+ * @extends NamedEntity
  */
 Entities.PersonEntity = class extends Entities.NamedEntity{
     /**
@@ -591,6 +604,7 @@ let Collaboration = {};
 
 /**
  * @class PlayerState
+ * @extends Model
  */
 Collaboration.PlayerState = class extends Model{
     /**
@@ -648,6 +662,7 @@ Collaboration.PlayerState = class extends Model{
 
 /**
  * @class View
+ * @extends Model
  */
 Collaboration.View = class extends Model{
     /**
@@ -682,6 +697,7 @@ Collaboration.View = class extends Model{
 
 /**
  * @class UrlView
+ * @extends View
  */
 Collaboration.UrlView = class extends Collaboration.View{
     /**
@@ -711,6 +727,7 @@ Collaboration.UrlView = class extends Collaboration.View{
 
 /**
  * @class DocumentView
+ * @extends View
  */
 Collaboration.DocumentView = class extends Collaboration.View{
     /**
@@ -741,6 +758,7 @@ Collaboration.DocumentView = class extends Collaboration.View{
 
 /**
  * @class VideoView
+ * @extends View
  */
 Collaboration.VideoView = class extends Collaboration.View{
     /**
@@ -774,6 +792,7 @@ Collaboration.VideoView = class extends Collaboration.View{
 
 /**
  * @class ImageView
+ * @extends View
  */
 Collaboration.ImageView = class extends Collaboration.View{
     /**
@@ -806,6 +825,7 @@ Collaboration.ImageView = class extends Collaboration.View{
 
 /**
  * @class GLView
+ * @extends View
  */
 Collaboration.GLView = class extends Collaboration.View{
     /**
@@ -836,6 +856,7 @@ Collaboration.GLView = class extends Collaboration.View{
 
 /**
  * @class MapView
+ * @extends View
  */
 Collaboration.MapView = class extends Collaboration.View{
     /**
@@ -884,6 +905,7 @@ Collaboration.MapView = class extends Collaboration.View{
 
 /**
  * @class SyncViewEvent
+ * @extends Model
  * Application Event to Sync the View state.
  */
 Collaboration.SyncViewEvent = class extends Model{
@@ -917,6 +939,7 @@ Collaboration.SyncViewEvent = class extends Model{
 
 /**
  * @class SyncUserEvent
+ * @extends Model
  * System level event for passing user state.
  */
 Collaboration.SyncUserEvent = class extends Model{
@@ -951,7 +974,7 @@ Collaboration.SyncUserEvent = class extends Model{
 
 /**
  * @class Notification
- *
+ * @extends Model
  */
 Collaboration.Notification = class extends Model{
     /**
@@ -978,6 +1001,7 @@ Collaboration.Notification = class extends Model{
 
 /**
  * @class Collaboration
+ * @extends Model
  */
 Collaboration.Collaboration = class extends Model{
     /**
@@ -1026,6 +1050,7 @@ Collaboration.Collaboration = class extends Model{
 
 /**
  * @class CollaborationAdHoc
+ * @extends Collaboration
  */
 Collaboration.CollaborationAdHoc = class extends Collaboration.Collaboration{
     /**
@@ -1057,6 +1082,7 @@ Collaboration.CollaborationAdHoc = class extends Collaboration.Collaboration{
 
 /**
  * @class CollaborationGroup
+ * @extends Collaboration
  */
 Collaboration.CollaborationGroup = class extends Collaboration.Collaboration{
     /**
@@ -1090,6 +1116,7 @@ Collaboration.CollaborationGroup = class extends Collaboration.Collaboration{
 
 /**
  * @class CollaborationCustomer
+ * @extends Collaboration
  */
 Collaboration.CollaborationCustomer = class extends Collaboration.Collaboration{
     /**
@@ -1121,6 +1148,7 @@ Collaboration.CollaborationCustomer = class extends Collaboration.Collaboration{
 
 /**
  * @class CollaborationContact
+ * @extends Collaboration
  */
 Collaboration.CollaborationContact = class extends Collaboration.Collaboration{
     /**
@@ -1152,6 +1180,7 @@ Collaboration.CollaborationContact = class extends Collaboration.Collaboration{
 
 /**
  * @class CollaborationConversation
+ * @extends Collaboration
  */
 Collaboration.CollaborationConversation = class extends Collaboration.Collaboration{
     /**
@@ -1183,6 +1212,7 @@ Collaboration.CollaborationConversation = class extends Collaboration.Collaborat
 
 /**
  * @class CollaborationChannel
+ * @extends Collaboration
  */
 Collaboration.CollaborationChannel = class extends Collaboration.Collaboration{
     /**
@@ -1215,6 +1245,7 @@ Collaboration.CollaborationChannel = class extends Collaboration.Collaboration{
 
 /**
  * @class Content
+ * @extends Model
  */
 Collaboration.Content = class extends Model{
 
@@ -1257,6 +1288,7 @@ Collaboration.Content = class extends Model{
 
 /**
  * @class ContentMsg
+ * @extends Content
  */
 Collaboration.ContentMsg = class extends Collaboration.Content{
     /**
@@ -1299,6 +1331,7 @@ Collaboration.ContentMsg = class extends Collaboration.Content{
 
 /**
  * @class ContentLinkCard
+ * @extends Content
  */
 Collaboration.ContentLinkCard = class extends Collaboration.Content{
     /**
@@ -1335,6 +1368,7 @@ Collaboration.ContentLinkCard = class extends Collaboration.Content{
 
 /**
  * @class ContentNotification
+ * @extends Content
  */
 Collaboration.ContentNotification = class extends Collaboration.Content{
     /**
@@ -1373,6 +1407,7 @@ Collaboration.ContentNotification = class extends Collaboration.Content{
 
 /**
  * @class ContentAppEvent
+ * @extends Content
  */
 Collaboration.ContentAppEvent = class extends Collaboration.Content{
     /**
@@ -1411,6 +1446,7 @@ Collaboration.ContentAppEvent = class extends Collaboration.Content{
 
 /**
  * @class NotificationLevel
+ * @extends Model
  */
 Collaboration.NotificationLevel = class extends Model{
     /**
@@ -1438,6 +1474,7 @@ Collaboration.NotificationLevel = class extends Model{
 
 /**
  * @class Message
+ * @extends Model
  */
 Collaboration.Message = class extends Model{
 
@@ -1461,6 +1498,7 @@ Collaboration.Message = class extends Model{
 
 /**
  * @class MessageBasic
+ * @extends Message
  */
 Collaboration.MessageBasic = class extends Collaboration.Message{
     /**
@@ -1485,6 +1523,7 @@ Collaboration.MessageBasic = class extends Collaboration.Message{
 
 /**
  * @class BroadcastContent
+ * @extends Model
  */
 Collaboration.BroadcastContent = class extends Model{
     /**
@@ -1516,6 +1555,7 @@ let Apps = {};
 
 /**
  * @class App
+ * @extends Model
  * Identifies an application of the system.
  */
 Apps.App = class extends Model{
@@ -1556,7 +1596,8 @@ Apps.App = class extends Model{
 
 
 /**
- * @class Launch
+ * @class AppMode
+ * @extends Model
  *
  */
 Apps.AppMode = class extends Model{
@@ -1586,6 +1627,7 @@ Apps.AppMode = class extends Model{
 
 /**
  * @class Launch
+ * @extends Model
  *
  */
 Apps.Launch = class extends Model{
@@ -1618,6 +1660,7 @@ Apps.Launch = class extends Model{
 
 /**
  * @class Init
+ * @extends Model
  * Signal the host that the app is ready for initialization.
  */
 Apps.Init = class extends Model{
@@ -1642,6 +1685,7 @@ Apps.Init = class extends Model{
 
 /**
  * @class InitApp
+ * @extends Model
  */
 Apps.InitApp = class extends Model{
     /**
@@ -1669,6 +1713,7 @@ Apps.InitApp = class extends Model{
 
 /**
  * @class InitProfile
+ * @extends Model
  */
 Apps.InitProvider = class extends Model{
     /**
@@ -1692,6 +1737,7 @@ Apps.InitProvider = class extends Model{
 
 /**
  * @class InitOrganization
+ * @extends Model
  */
 Apps.InitOrganization = class extends Model{
     /**
@@ -1715,6 +1761,7 @@ Apps.InitOrganization = class extends Model{
 
 /**
  * @class InitCollaboration
+ * @extends Model
  */
 Apps.InitCollaboration = class extends Model{
     /**
@@ -1738,6 +1785,7 @@ Apps.InitCollaboration = class extends Model{
 
 /**
  * @class InitTeam
+ * @extends Model
  */
 Apps.InitTeam = class extends Model{
     /**
@@ -1761,6 +1809,7 @@ Apps.InitTeam = class extends Model{
 
 /**
  * @class InitPeers
+ * @extends Model
  */
 Apps.InitPeers = class extends Model{
     /**
@@ -1791,6 +1840,7 @@ let Peers = {};
 
 /**
  * @class PeerState
+ * @extends Model
  */
 Peers.PeerState = class extends Model{
     /**
@@ -1825,6 +1875,7 @@ Peers.PeerState = class extends Model{
 
 /**
  * @class IceConnectionState
+ * @extends Model
  */
 Peers.IceConnectionState = class extends Model{
     /**
@@ -1856,6 +1907,7 @@ Peers.IceConnectionState = class extends Model{
 
 /**
  * @class SignalingState
+ * @extends Model
  */
 Peers.SignalingState = class extends Model{
     /**
@@ -1890,6 +1942,7 @@ let Resource = {};
 
 /**
  * @class Resource
+ * @extends Model
  */
 Resource.Resource = class extends Model{
     /**
@@ -1918,6 +1971,7 @@ let Geom = {};
 
 /**
  * @class Transform3d
+ * @extends Model
  * A 3D transformation
  */
 Geom.Transform3d = class extends Model{
@@ -1964,7 +2018,8 @@ let ETL = {};
 
 
 /**
- * @class Resource
+ * @class EntityMeta
+ * @extends Model
  */
 ETL.EntityMeta = class extends Model{
     /**
