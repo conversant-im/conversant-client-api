@@ -85,36 +85,3 @@ conversant.init(function(appInit){
   });
 });
 ```
-
-### Word of Caution on Promise
-Do not use Promise API when events happen in close time proximaty to one another.  Use `addResponder` instead and filter the data for your expected result.  Here is an example of what `NOT TO DO`.
-```javascript
-var bob = new m.Auth.ProfileInfo(profile.orgId, 'email', 'some@email.com', m.Auth.OrganizationRoles.guest(), 'Sponge Bob');
-var patrick = new m.Auth.ProfileInfo(profile.orgId, 'email', 'some2@email.com', m.Auth.OrganizationRoles.guest(), 'Patrick');
-
-conversant.addGuest(bob).then(function(primaryProfile){
-  console.log('bob?',primaryProfile);
-});
-conversant.addGuest(patrick).then(function(primaryProfile){
-  console.log('patrick?',primaryProfile);
-});
-
-// The order that these events will be serviced by the backend cluster is Not garenteed.  
-// So for example it is possible that `patrick` returned before `bob` or `bob` then `patric`.
-// In addition which ever one is returned first will fill BOTH promises.
-
-```
-The order that these events will be serviced by the backend cluster is Not garenteed. So for example it is possible that `patrick` returned before `bob` or `bob` then `patric`. In addition which ever one is returned first will fill BOTH promises.  So for example if patric was returned first.  You would get.
-* `> bob? <patric object>`
-* `> patrick? <patric object>`
-
-If you need to predictably handle these you would do it as follows.
-```javascript
-conversant.addResponder(m.Auth.PrimaryProfile.type(),function(profile){
-  if( profile.primary.fullName == 'Sponge Bob' ){
-    // do stuff..
-  }else if(profile.primary.fullName == 'Patrick'){
-    // other stuff
-  }
-});
-```
